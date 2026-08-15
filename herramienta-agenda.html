@@ -12,8 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <!-- html2canvas para exportación de imagen -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -160,25 +158,6 @@
                 </div>
             </div>
 
-            <!-- Botones de Exportación -->
-            <div class="space-y-2.5">
-                <button onclick="downloadPosterImage()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 transition-all active:scale-98 text-sm">
-                    <i class="fa-solid fa-download text-base"></i>
-                    <span>Descargar Póster Ajustado HD (1080x1920)</span>
-                </button>
-
-                <div class="grid grid-cols-2 gap-2.5">
-                    <button onclick="copyToClipboardSim()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                        <i class="fa-regular fa-copy"></i>
-                        <span>Copiar Imagen</span>
-                    </button>
-                    <button onclick="shareWhatsAppSim()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                        <i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i>
-                        <span>Publicar Estado</span>
-                    </button>
-                </div>
-            </div>
-
         </section>
 
         <!-- VISTA PREVIA DEL PÓSTER 9:16 (Columna Derecha) -->
@@ -225,21 +204,11 @@
                     </div>
 
                     <!-- CUERPO DE 2 COLUMNAS + DOMINGO ACOMPASADO DE FORMA PROPORCIONAL -->
-                    <!-- NOTA: se usa flexbox en vez de CSS Grid porque html2canvas 1.4.1 no
-                    implementa "display: grid" (no figura en su lista de propiedades CSS
-                    soportadas) ni la propiedad "gap". Con grid, la vista previa en el
-                    navegador se veía perfecta pero la imagen exportada colapsaba todo en
-                    una sola columna sin espaciado, porque html2canvas ignoraba por completo
-                    esas reglas. El espaciado ahora se logra con márgenes explícitos
-                    (mr-/mb-) en cada tarjeta, generados en updatePoster(). -->
                     <div id="posterSlotsGrid" class="relative z-10 my-0.5 flex flex-wrap overflow-hidden pr-0.5 min-w-0">
                         <!-- Generado dinámicamente -->
                     </div>
 
                     <!-- PIE DEL PÓSTER DENTRO DE LÍMITES -->
-                    <!-- "space-y-1" en vez de "gap-1": Tailwind implementa space-y con
-                    margin-top (soportado por html2canvas), mientras que "gap" en flexbox
-                    no está entre las propiedades que html2canvas sabe interpretar. -->
                     <div class="relative z-10 pt-1 border-t border-emerald-200/20 flex flex-col items-center text-center space-y-1 text-xs">
                         <p class="text-[8.5px] italic font-sans text-emerald-100/80 leading-none">
                             * Sesiones de 50 min. Reserva previa por WhatsApp.
@@ -407,8 +376,6 @@
                 const isSunday = slot.day.toLowerCase() === 'domingo';
                 const card = document.createElement('div');
 
-                // "space-y-0.5" en vez de "gap-0.5" por el mismo motivo que el resto de
-                // cambios en esta función: gap no está soportado por html2canvas.
                 if (isSunday) {
                     card.className = "w-full mb-1.5 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-0.5 font-sans";
                     col = 0;
@@ -420,10 +387,6 @@
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
-                    // Igual que arriba: se sustituye "grid-cols-4 gap-1" por flexbox con
-                    // ancho fijo + margen derecho (sin margen en cada 4º elemento, donde
-                    // terminaría la fila del grid original) porque html2canvas tampoco
-                    // soporta "gap" en flexbox.
                     hoursHtml = slot.hours.map((h, i) => {
                         const isRowEnd = i % 4 === 3;
                         return `<div class="time-pill${isRowEnd ? '' : ' mr-[2.5%]'} mb-1 w-[23.1%] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`;
@@ -451,82 +414,6 @@
             if (grid.lastElementChild) {
                 grid.lastElementChild.classList.remove('mb-1.5');
             }
-        }
-
-        // Función de exportación con html2canvas (misma lógica que sharePoster() en index.html)
-        async function downloadPosterImage() {
-            const poster = document.getElementById('posterContainer');
-            showToast("Generando póster...", "info");
-
-            // Precargar EXPLÍCITAMENTE cada combinación familia/peso/estilo que usa
-            // el póster. "document.fonts.ready" no es suficiente por sí solo: solo
-            // resuelve para fuentes que el navegador ya decidió cargar, y algunas
-            // (como Lora en negrita en los nombres de los días) recién se piden
-            // cuando el JS inyecta ese HTML dinámicamente. Si html2canvas empieza a
-            // pintar antes de que el archivo de la fuente termine de descargarse y
-            // decodificarse, dibuja el texto con una fuente de reemplazo cuya altura
-            // no coincide con la caja ya calculada (por eso el borde inferior de
-            // cada tarjeta de día terminaba cortando el texto por la mitad).
-            const fontSpecs = [
-                '500 12px "Lora"', '600 12px "Lora"', 'italic 400 12px "Lora"',
-                '500 12px "Plus Jakarta Sans"', '600 12px "Plus Jakarta Sans"',
-                '700 12px "Plus Jakarta Sans"', '800 12px "Plus Jakarta Sans"',
-                '600 12px "Cormorant Garamond"', '700 12px "Cormorant Garamond"',
-                'italic 400 12px "Cormorant Garamond"'
-            ];
-            await Promise.all(fontSpecs.map(spec => document.fonts.load(spec).catch(() => {})));
-            await document.fonts.ready;
-            // Margen extra: algunos navegadores marcan fonts.ready antes de
-            // terminar de repintar con la fuente ya aplicada.
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            // El póster usa "aspect-ratio" + "width: 100%" (clase .story-aspect) para
-            // su tamaño responsive en pantalla. html2canvas 1.4.1 no interpreta la
-            // propiedad CSS "aspect-ratio" (no existe en su parser), así que al
-            // renderizar el documento clonado que usa internamente para capturar,
-            // puede resolver el alto del póster de forma distinta a como se ve en
-            // el navegador, desacomodando el header/grilla/pie que dependen de ese
-            // alto (flex + justify-between). Por eso, antes de capturar, fijamos el
-            // ancho y alto EXACTOS que ya se ven en pantalla como estilos inline en
-            // píxeles: así el documento clonado no necesita resolver aspect-ratio
-            // ni porcentajes, solo copia el tamaño real.
-            const rect = poster.getBoundingClientRect();
-            const originalWidth = poster.style.width;
-            const originalHeight = poster.style.height;
-            const originalAspectRatio = poster.style.aspectRatio;
-
-            poster.style.width = `${rect.width}px`;
-            poster.style.height = `${rect.height}px`;
-            poster.style.aspectRatio = 'auto';
-
-            // El botón promete "HD (1080x1920)", pero con scale:1 se descargaba al
-            // tamaño chico en el que se ve la vista previa (~380px de ancho). Se
-            // escala para que el ancho de salida sea realmente 1080px, sin alterar
-            // el diseño (mismo mecanismo que usa scale para pantallas retina).
-            const targetScale = 1080 / rect.width;
-
-            const canvas = await html2canvas(poster, { scale: targetScale, useCORS: true, logging: false });
-
-            // Restaurar los estilos originales para que la vista previa en pantalla
-            // siga siendo responsive como antes de la captura.
-            poster.style.width = originalWidth;
-            poster.style.height = originalHeight;
-            poster.style.aspectRatio = originalAspectRatio;
-
-            const link = document.createElement('a');
-            link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-
-            showToast("¡Póster descargado correctamente!");
-        }
-
-        function copyToClipboardSim() {
-            showToast("¡Imagen copiada al portapapeles!");
-        }
-
-        function shareWhatsAppSim() {
-            showToast("Abriendo WhatsApp para publicar en tus Estados...");
         }
 
         function installPWA() {
