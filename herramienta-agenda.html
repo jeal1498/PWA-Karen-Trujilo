@@ -336,15 +336,14 @@
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
-                    hoursHtml = slot.hours.map((h, i) => {
-                        const isRowEnd = i % 4 === 3;
-                        return `<div class="time-pill${isRowEnd ? '' : ' mr-[3.5%]'} mb-1.5 w-[22.3%] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`;
+                    hoursHtml = slot.hours.map((h) => {
+                        return `<div class="time-pill w-full py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`;
                     }).join('');
                 } else {
                     hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin citas disponibles</span>`;
                 }
 
-                const hoursContainerClass = isSunday ? "flex flex-wrap pt-0.5 max-w-[85%] mx-auto" : "flex flex-wrap pt-0.5";
+                const hoursContainerClass = isSunday ? "grid grid-cols-4 gap-x-1 gap-y-1.5 pt-0.5 max-w-[85%] mx-auto" : "grid grid-cols-4 gap-x-1 gap-y-1.5 pt-0.5";
 
                 card.innerHTML = `
                     <div class="flex items-center justify-center border-b border-emerald-200/10 pb-0.5 px-0.5 min-w-0">
