@@ -425,6 +425,15 @@
             const poster = document.getElementById('posterContainer');
             showToast("Generando póster...", "info");
 
+            // Esperar a que las tipografías (Cormorant Garamond, Lora) terminen de
+            // cargar antes de capturar. Sin esto, html2canvas puede dibujar con una
+            // fuente de reemplazo cuyas métricas no coinciden, produciendo texto
+            // solapado o ilegible en el resultado.
+            await document.fonts.ready;
+            // Pequeño margen extra: algunos navegadores marcan fonts.ready antes de
+            // terminar de repintar con la fuente ya aplicada.
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const canvas = await html2canvas(poster, { scale: 1, useCORS: true, logging: false });
 
             const link = document.createElement('a');
