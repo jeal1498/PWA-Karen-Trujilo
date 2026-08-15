@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <!-- html-to-image para exportación fiel (reemplaza a html2canvas) -->
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+    <!-- html2canvas para exportación de imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -420,95 +420,19 @@
             });
         }
 
-        // Convierte todas las clases de Tailwind (y demás CSS) en estilos inline,
-        // copiando el estilo computado real del elemento original a su clon.
-        // Esto es necesario porque html-to-image no logra copiar correctamente
-        // la hoja de estilos que el CDN de Tailwind inyecta dinámicamente,
-        // y sin esto el póster se exporta en blanco (solo el fondo se ve).
-        function inlineComputedStyles(sourceRoot, cloneRoot) {
-            const applyStyle = (source, target) => {
-                const computed = window.getComputedStyle(source);
-                let cssText = '';
-                for (let i = 0; i < computed.length; i++) {
-                    const prop = computed[i];
-                    cssText += `${prop}:${computed.getPropertyValue(prop)};`;
-                }
-                target.style.cssText = cssText;
-            };
-
-            applyStyle(sourceRoot, cloneRoot);
-
-            const sourceEls = sourceRoot.querySelectorAll('*');
-            const cloneEls = cloneRoot.querySelectorAll('*');
-            for (let i = 0; i < sourceEls.length; i++) {
-                applyStyle(sourceEls[i], cloneEls[i]);
-            }
-        }
-
-        // Función de exportación corregida con html-to-image
+        // Función de exportación con html2canvas (misma lógica que sharePoster() en index.html)
         async function downloadPosterImage() {
-            showToast("Generando póster ajustado HD (1080x1920)...", "info");
+            const poster = document.getElementById('posterContainer');
+            showToast("Generando póster...", "info");
 
-            // Esperar a que las fuentes estén listas
-            await document.fonts.ready;
+            const canvas = await html2canvas(poster, { scale: 1, useCORS: true, logging: false });
 
-            const original = document.getElementById('posterContainer');
+            const link = document.createElement('a');
+            link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
 
-            // Tamaño base del clon: 360x640 (proporción 9:16 exacta).
-            // pixelRatio:3 hará que la imagen final salga en 1080x1920.
-            const BASE_W = 360;
-            const BASE_H = 640;
-
-            // Crear un clon con dimensiones fijas para exportación exacta
-            const clone = original.cloneNode(true);
-
-            // Congelar todos los estilos de Tailwind como inline ANTES de tocar
-            // width/height/position, para no perder ningún estilo original.
-            inlineComputedStyles(original, clone);
-
-            clone.style.width = BASE_W + 'px';
-            clone.style.height = BASE_H + 'px';
-            // Se posiciona DENTRO del viewport (esquina 0,0) pero invisible con opacity:0,
-            // en vez de moverlo a -10000px, para evitar que el navegador se salte el
-            // renderizado/pintado de fuentes y estilos por estar demasiado lejos del viewport.
-            clone.style.position = 'fixed';
-            clone.style.top = '0';
-            clone.style.left = '0';
-            clone.style.opacity = '0';
-            clone.style.pointerEvents = 'none';
-            clone.style.zIndex = '-1000';
-            clone.style.transform = 'none';
-            clone.style.maxWidth = 'none';
-            clone.style.minWidth = '0';
-            clone.style.aspectRatio = 'auto'; // anular aspect-ratio del CSS
-
-            document.body.appendChild(clone);
-
-            try {
-                // Esperar a que el navegador realmente pinte el clon antes de capturarlo
-                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                // Usamos html-to-image: pixelRatio 3 escala el contenido 360x640 -> 1080x1920
-                const dataUrl = await htmlToImage.toPng(clone, {
-                    pixelRatio: 3,
-                    quality: 1,
-                    backgroundColor: '#0f160f', // Fondo base por si hay transparencias
-                    cacheBust: true,
-                    skipFonts: false,
-                });
-
-                const link = document.createElement('a');
-                link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
-                link.href = dataUrl;
-                link.click();
-                showToast("¡Póster descargado correctamente!");
-            } catch (error) {
-                console.error('Error en la exportación:', error);
-                showToast("Error al exportar la imagen", "error");
-            } finally {
-                document.body.removeChild(clone);
-            }
+            showToast("¡Póster descargado correctamente!");
         }
 
         function copyToClipboardSim() {
