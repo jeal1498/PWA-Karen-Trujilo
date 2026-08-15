@@ -149,9 +149,13 @@
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </button>
                     <span id="syncBadge" class="absolute right-0 flex h-2 w-2">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      <span id="syncBadgePing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span id="syncBadgeDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
+                </div>
+
+                <div class="flex items-center justify-center">
+                    <span id="syncStatusText" class="text-[9px] text-slate-400 font-sans"></span>
                 </div>
 
                 <!-- Lista de los 7 días para edición rápida -->
@@ -212,9 +216,114 @@
             }
         }
 
+        // ---- Reglas de agenda ----
+        const APPOINTMENT_DURATION_MINUTES = 50; // duración de cada sesión
+        const BUFFER_MINUTES = 10;                // colchón antes/después de cada cita
+        const MIN_LEAD_MINUTES = 120;              // no mostrar horas con menos de 2h de aviso
+        const BLOCKED_DATES_KEY = 'karen_blocked_dates'; // días festivos/bloqueados manualmente
+
+        function dateKey(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function loadBlockedDates() {
+            try {
+                const saved = localStorage.getItem(BLOCKED_DATES_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) {
+                console.error('No se pudieron leer los días bloqueados.', e);
+            }
+            return [];
+        }
+
+        function saveBlockedDates(dates) {
+            try {
+                localStorage.setItem(BLOCKED_DATES_KEY, JSON.stringify(dates));
+            } catch (e) {
+                console.error('No se pudieron guardar los días bloqueados.', e);
+            }
+        }
+
+        function isDateBlocked(date) {
+            return appState.blockedDates.includes(dateKey(date));
+        }
+
+        function toggleDayBlocked(date) {
+            const key = dateKey(date);
+            if (appState.blockedDates.includes(key)) {
+                appState.blockedDates = appState.blockedDates.filter(k => k !== key);
+            } else {
+                appState.blockedDates.push(key);
+            }
+            saveBlockedDates(appState.blockedDates);
+            renderSlotsEditor();
+            updatePoster();
+        }
+
+        // ¿La hora choca con un evento ya agendado en Calendar? Se aplica el
+        // buffer antes/después de cada cita para no dejarlas pegadas.
+        function isHourBusy(dayDate, hourStr, busyEvents) {
+            const [h, m] = hourStr.split(':').map(Number);
+            const slotStart = new Date(dayDate);
+            slotStart.setHours(h, m, 0, 0);
+            const slotEnd = new Date(slotStart.getTime() + APPOINTMENT_DURATION_MINUTES * 60000);
+
+            const bufferedStart = new Date(slotStart.getTime() - BUFFER_MINUTES * 60000);
+            const bufferedEnd = new Date(slotEnd.getTime() + BUFFER_MINUTES * 60000);
+
+            return busyEvents.some(ev => {
+                const evStart = new Date(ev.start);
+                const evEnd = new Date(ev.end);
+                return bufferedStart < evEnd && bufferedEnd > evStart;
+            });
+        }
+
+        // ¿Falta menos del mínimo de anticipación permitido?
+        function isBeforeMinLeadTime(dayDate, hourStr) {
+            const [h, m] = hourStr.split(':').map(Number);
+            const slotStart = new Date(dayDate);
+            slotStart.setHours(h, m, 0, 0);
+            const minAllowed = new Date(Date.now() + MIN_LEAD_MINUTES * 60000);
+            return slotStart < minAllowed;
+        }
+
+        // Calcula, para el póster, los horarios realmente disponibles de la
+        // semana visible: parte de la plantilla base y descarta días
+        // bloqueados manualmente, horas ya ocupadas en Calendar (con buffer)
+        // y horas por debajo de la anticipación mínima.
+        function getAvailablePosterSlots() {
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const weekDates = getWeekDates();
+
+            return appState.slots
+                .filter(slot => slot.active)
+                .map(slot => {
+                    const dateIndex = dayOrder.indexOf(slot.day);
+                    const dayDate = dateIndex !== -1 ? weekDates[dateIndex] : null;
+
+                    if (!dayDate || isDateBlocked(dayDate)) {
+                        return { ...slot, hours: [], blocked: !!dayDate && isDateBlocked(dayDate) };
+                    }
+
+                    const hours = slot.hours.filter(h =>
+                        !isHourBusy(dayDate, h, appState.busyEvents) &&
+                        !isBeforeMinLeadTime(dayDate, h)
+                    );
+
+                    return { ...slot, hours };
+                });
+        }
+
         let appState = {
             slots: [],
-            busyEvents: [] // eventos ya agendados en Google Calendar para la semana visible
+            busyEvents: [], // eventos ya agendados en Google Calendar para la semana visible
+            blockedDates: loadBlockedDates(),
+            lastSyncAt: null,
+            lastSyncOk: true,
+            consecutiveFailures: 0
         };
 
         let weekOffset = 0;
@@ -262,12 +371,15 @@
             setInterval(() => {
                 triggerAutoSync(true);
             }, 300000);
+
+            // Refresca el texto "hace X min" aunque no haya sync nueva
+            setInterval(renderSyncStatus, 30000);
         };
 
-        // Sincroniza los 6 días de la semana que se está viendo (weekOffset),
-        // no siempre la semana actual. Recarga la plantilla base guardada por
-        // Karen y trae los eventos ya ocupados de Calendar para ese rango; el
-        // cruce entre ambos (restar horas ocupadas) se conecta en el siguiente paso.
+        // Sincroniza los 6 días de la semana que se está viendo (weekOffset).
+        // Recarga la plantilla base guardada por Karen y trae los eventos ya
+        // ocupados de Calendar para ese rango. Si falla, NO se pisa el
+        // último estado válido conocido.
         async function triggerAutoSync(silent = false) {
             if (!silent) {
                 showToast("Sincronizando citas desde Google Calendar...", "info");
@@ -283,19 +395,65 @@
 
                 appState.slots = template;
                 appState.busyEvents = busyEvents;
+                appState.lastSyncAt = new Date();
+                appState.lastSyncOk = true;
+                appState.consecutiveFailures = 0;
 
                 renderSlotsEditor();
                 updatePoster();
+                renderSyncStatus();
 
                 if (!silent) {
                     showToast("¡Citas reajustadas con éxito!");
                 }
             } catch (e) {
-                console.error('Fallo la sincronización con Calendar:', e);
-                if (!silent) {
-                    showToast("No se pudo sincronizar con Calendar.", "error");
+                console.error('Falló la sincronización con Calendar:', e);
+                appState.lastSyncOk = false;
+                appState.consecutiveFailures += 1;
+                renderSyncStatus();
+
+                if (!silent || appState.consecutiveFailures >= 3) {
+                    showToast("No se pudo sincronizar con Calendar. Mostrando últimos datos guardados.", "error");
                 }
             }
+        }
+
+        function formatRelativeTime(date) {
+            if (!date) return 'sin sincronizar aún';
+            const diffMs = Date.now() - new Date(date).getTime();
+            const diffMin = Math.floor(diffMs / 60000);
+            if (diffMin < 1) return 'justo ahora';
+            if (diffMin < 60) return `hace ${diffMin} min`;
+            const diffH = Math.floor(diffMin / 60);
+            return `hace ${diffH} h`;
+        }
+
+        function renderSyncStatus() {
+            const text = document.getElementById('syncStatusText');
+            const dot = document.getElementById('syncBadgeDot');
+            const ping = document.getElementById('syncBadgePing');
+            if (!text || !dot || !ping) return;
+
+            const failing = appState.consecutiveFailures >= 3;
+            const warning = !appState.lastSyncOk && !failing;
+
+            let color = 'bg-emerald-500';
+            let pingColor = 'bg-emerald-400';
+            let label = `Última sincronización: ${formatRelativeTime(appState.lastSyncAt)}`;
+
+            if (failing) {
+                color = 'bg-rose-500';
+                pingColor = 'bg-rose-400';
+                label = `Sin conexión con Calendar (${appState.consecutiveFailures} intentos fallidos) · últimos datos guardados`;
+            } else if (warning) {
+                color = 'bg-amber-500';
+                pingColor = 'bg-amber-400';
+                label = `Falló la última sincronización · últimos datos guardados`;
+            }
+
+            dot.className = `relative inline-flex rounded-full h-2 w-2 ${color}`;
+            ping.className = `animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`;
+            text.innerText = label;
         }
 
         function shiftWeek(delta) {
@@ -315,18 +473,26 @@
                 const slot = appState.slots.find(s => s.day === dayName);
                 if (!slot) return;
 
+                const dayDate = weekDates[i];
+                const blocked = isDateBlocked(dayDate);
+
                 const item = document.createElement('div');
                 item.className = "flex flex-col items-center flex-1 min-w-0";
                 item.innerHTML = `
                     <div class="w-full bg-slate-900 rounded-t-2xl pt-2 pb-4 flex items-center justify-center">
                         <span class="text-white font-bold text-[10px] font-serif tracking-wide lowercase">${dayAbbrev[dayName]}</span>
                     </div>
-                    <div class="w-full bg-slate-800 border-t border-slate-700 rounded-b-2xl -mt-3 pt-4 pb-2 flex items-center justify-center">
-                        <span class="text-white font-bold text-lg font-serif tracking-wide">${weekDates[i].getDate()}</span>
+                    <div class="w-full ${blocked ? 'bg-slate-700' : 'bg-slate-800'} border-t border-slate-700 rounded-b-2xl -mt-3 pt-4 pb-2 flex items-center justify-center">
+                        <span class="text-white font-bold text-lg font-serif tracking-wide ${blocked ? 'line-through opacity-50' : ''}">${dayDate.getDate()}</span>
                     </div>
-                    <button onclick="editSlotHours(${slot.id})" class="mt-1.5 w-6 h-6 rounded-full bg-emerald-950 border border-emerald-800/60 flex items-center justify-center text-emerald-400 text-xs shadow">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
+                    <div class="mt-1.5 flex items-center gap-1">
+                        <button onclick="editSlotHours(${slot.id})" class="w-6 h-6 rounded-full bg-emerald-950 border border-emerald-800/60 flex items-center justify-center text-emerald-400 text-xs shadow" aria-label="Editar horarios">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="toggleDayBlocked(new Date(${dayDate.getFullYear()}, ${dayDate.getMonth()}, ${dayDate.getDate()}))" class="w-6 h-6 rounded-full ${blocked ? 'bg-rose-950 border-rose-800/60 text-rose-400' : 'bg-slate-950 border-slate-700 text-slate-400'} border flex items-center justify-center text-xs shadow" aria-label="${blocked ? 'Desbloquear día' : 'Bloquear día (festivo)'}">
+                            <i class="fa-solid ${blocked ? 'fa-calendar-xmark' : 'fa-calendar-check'}"></i>
+                        </button>
+                    </div>
                 `;
                 list.appendChild(item);
             });
@@ -350,7 +516,7 @@
             const grid = document.getElementById('posterSlotsGrid');
             grid.innerHTML = '';
 
-            const activeSlots = appState.slots.filter(s => s.active);
+            const activeSlots = getAvailablePosterSlots();
 
             if (activeSlots.length === 0) {
                 grid.innerHTML = `<p class="w-full text-center text-xs opacity-50 py-8">No hay días activados.</p>`;
@@ -377,7 +543,7 @@
                         return `<div class="time-pill w-full min-h-[22px] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-muted-gold/30 bg-white/60 text-eucalyptus-dark font-sans leading-none flex items-center justify-center text-center">${h}</div>`;
                     }).join('');
                 } else {
-                    hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin citas disponibles</span>`;
+                    hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</span>`;
                 }
 
                 const hoursContainerClass = "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5";
