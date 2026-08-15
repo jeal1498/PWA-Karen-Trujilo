@@ -434,7 +434,38 @@
             // terminar de repintar con la fuente ya aplicada.
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            const canvas = await html2canvas(poster, { scale: 1, useCORS: true, logging: false });
+            // El póster usa "aspect-ratio" + "width: 100%" (clase .story-aspect) para
+            // su tamaño responsive en pantalla. html2canvas 1.4.1 no interpreta la
+            // propiedad CSS "aspect-ratio" (no existe en su parser), así que al
+            // renderizar el documento clonado que usa internamente para capturar,
+            // puede resolver el alto del póster de forma distinta a como se ve en
+            // el navegador, desacomodando el header/grilla/pie que dependen de ese
+            // alto (flex + justify-between). Por eso, antes de capturar, fijamos el
+            // ancho y alto EXACTOS que ya se ven en pantalla como estilos inline en
+            // píxeles: así el documento clonado no necesita resolver aspect-ratio
+            // ni porcentajes, solo copia el tamaño real.
+            const rect = poster.getBoundingClientRect();
+            const originalWidth = poster.style.width;
+            const originalHeight = poster.style.height;
+            const originalAspectRatio = poster.style.aspectRatio;
+
+            poster.style.width = `${rect.width}px`;
+            poster.style.height = `${rect.height}px`;
+            poster.style.aspectRatio = 'auto';
+
+            // El botón promete "HD (1080x1920)", pero con scale:1 se descargaba al
+            // tamaño chico en el que se ve la vista previa (~380px de ancho). Se
+            // escala para que el ancho de salida sea realmente 1080px, sin alterar
+            // el diseño (mismo mecanismo que usa scale para pantallas retina).
+            const targetScale = 1080 / rect.width;
+
+            const canvas = await html2canvas(poster, { scale: targetScale, useCORS: true, logging: false });
+
+            // Restaurar los estilos originales para que la vista previa en pantalla
+            // siga siendo responsive como antes de la captura.
+            poster.style.width = originalWidth;
+            poster.style.height = originalHeight;
+            poster.style.aspectRatio = originalAspectRatio;
 
             const link = document.createElement('a');
             link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
