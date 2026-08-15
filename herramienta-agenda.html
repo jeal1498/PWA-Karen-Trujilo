@@ -130,21 +130,32 @@
                     <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-600/15 rounded-full pointer-events-none"></div>
                     <div class="absolute -bottom-10 -left-10 w-52 h-52 bg-emerald-700/15 rounded-full pointer-events-none"></div>
 
+                    <!-- Logo como marca de agua de fondo -->
+                    <img src="Logo_Karen_Trujillo.webp" alt="" class="absolute inset-0 m-auto w-[75%] opacity-[0.08] pointer-events-none select-none" />
+
                     <!-- ENCABEZADO OPTIMIZADO -->
                     <div class="relative z-10 text-center space-y-0.5 pt-0">
-                        <div class="flex justify-center">
+                        <div class="flex justify-center items-center gap-1.5">
+                            <span class="italic text-[8px] font-serif text-emerald-100/80 tracking-wide">MODALIDAD:</span>
                             <span class="text-[8px] font-sans font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full border border-emerald-200/40 text-emerald-100/90 bg-emerald-950/40">
                                 ONLINE & PRESENCIAL
                             </span>
                         </div>
 
-                        <div class="space-y-0 pt-0.5">
-                            <h3 class="text-lg sm:text-xl font-bold tracking-wide text-white leading-tight">Karen Trujillo</h3>
-                            <p class="text-[9px] font-sans text-emerald-100/80 font-medium leading-none">Neuropsicóloga</p>
-                            <p class="text-[8px] font-sans opacity-60 leading-tight">Cédula profesional: 11009616</p>
+                        <div class="space-y-0 pt-1 relative">
+                            <h3 class="text-2xl sm:text-3xl font-bold tracking-wide text-emerald-200 leading-tight relative inline-block">
+                                Karen Trujillo
+                                <i class="fa-solid fa-brain absolute -top-1.5 -right-4 text-emerald-200/25 text-base rotate-12"></i>
+                            </h3>
+                            <p class="text-[11px] font-sans text-white font-medium leading-none pt-1">Neuropsicóloga</p>
+                            <p class="text-[8.5px] font-sans opacity-75 leading-tight pt-0.5">Cédula profesional: 11009616</p>
                         </div>
 
-                        <div class="w-8 h-0.5 bg-emerald-200/30 mx-auto my-1 rounded-full"></div>
+                        <div class="flex items-center gap-2 my-2 px-2">
+                            <div class="flex-1 h-px bg-emerald-200/30"></div>
+                            <i class="fa-regular fa-calendar text-emerald-200/60 text-[10px]"></i>
+                            <div class="flex-1 h-px bg-emerald-200/30"></div>
+                        </div>
 
                         <div>
                             <h2 class="text-xs sm:text-sm font-bold tracking-wider font-sans uppercase text-white leading-none">TURNOS DISPONIBLES</h2>
@@ -152,7 +163,7 @@
                         </div>
                     </div>
 
-                    <!-- CUERPO: TODOS LOS DÍAS EN ANCHO COMPLETO (mismo formato que antes tenía Domingo) -->
+                    <!-- CUERPO: 2 COLUMNAS, DOMINGO A ANCHO COMPLETO -->
                     <div id="posterSlotsGrid" class="relative z-10 my-0.5 flex flex-wrap overflow-hidden pr-0.5 min-w-0">
                         <!-- Generado dinámicamente -->
                     </div>
@@ -162,12 +173,20 @@
                         <p class="text-[8.5px] italic font-sans text-emerald-100/80 leading-none">
                             * Sesiones de 50 min. Reserva previa por WhatsApp.
                         </p>
-                        
-                        <!-- Píldora de Contacto (sin backdrop-blur) -->
-                        <div class="w-full bg-emerald-950/80 py-1 px-2.5 rounded-xl border border-emerald-200/30 flex items-center justify-center font-sans">
-                            <div class="flex items-center space-x-1.5 font-bold text-[10.5px] text-white">
-                                <i class="fa-brands fa-whatsapp text-emerald-400 text-xs"></i>
-                                <span class="time-pill">+52 998 321 1547</span>
+
+                        <!-- Píldora de Contacto -->
+                        <div class="w-full bg-emerald-950/80 py-1.5 px-2.5 rounded-xl border border-emerald-200/30 flex items-center gap-2 font-sans">
+                            <div class="flex items-center gap-1 shrink-0">
+                                <div class="w-5 h-5 rounded-full border border-emerald-300/40 flex items-center justify-center">
+                                    <i class="fa-solid fa-phone text-emerald-300 text-[8px]"></i>
+                                </div>
+                                <div class="w-5 h-5 rounded-full border border-emerald-300/40 flex items-center justify-center">
+                                    <i class="fa-brands fa-whatsapp text-emerald-300 text-[10px]"></i>
+                                </div>
+                            </div>
+                            <div class="text-left leading-tight min-w-0">
+                                <p class="font-bold text-[9px] text-white time-pill truncate">AGENDAR TURNO: +52 998 321 1547</p>
+                                <p class="text-[7.5px] text-emerald-100/70 truncate">Contáctanos • www.karentrujillo.com</p>
                             </div>
                         </div>
                     </div>
@@ -224,9 +243,8 @@
 
             const monthOptions = { month: 'long' };
             const month = sunday.toLocaleDateString('es-ES', monthOptions);
-            const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
 
-            return `Semana del ${startDay} al ${endDay} de ${monthCapitalized}`;
+            return `Semana del ${startDay} al ${endDay} de ${month}`;
         }
 
         // Sincronizar los 7 días
@@ -332,30 +350,41 @@
                 return;
             }
 
-            // Todos los días usan el mismo formato de ancho completo que antes
-            // tenía Domingo. Las píldoras de horario pasan de 4 a 8 por fila
-            // (el doble de ancho disponible por tarjeta) para que la altura
-            // total siga cabiendo dentro del póster 9:16.
+            // Cada día ocupa una columna (2 por fila); Domingo es la
+            // excepción de ancho completo, centrado.
+            let col = 0;
+
             activeSlots.forEach(slot => {
+                const isSunday = slot.day.toLowerCase() === 'domingo';
                 const card = document.createElement('div');
-                card.className = "w-full mb-1 min-w-0 p-1 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-0.5 font-sans";
+
+                if (isSunday) {
+                    card.className = "w-full mb-1.5 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-0.5 font-sans";
+                    col = 0;
+                } else {
+                    const isFirstColumn = col === 0;
+                    card.className = `${isFirstColumn ? 'mr-[3%]' : ''} w-[48.5%] mb-1.5 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-0.5 font-sans`;
+                    col = isFirstColumn ? 1 : 0;
+                }
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
                     hoursHtml = slot.hours.map((h, i) => {
-                        const isRowEnd = i % 8 === 7;
-                        return `<div class="time-pill${isRowEnd ? '' : ' mr-[1.3%]'} mb-0.5 w-[11%] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`;
+                        const isRowEnd = i % 4 === 3;
+                        return `<div class="time-pill${isRowEnd ? '' : ' mr-[2.5%]'} mb-1 w-[23.1%] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`;
                     }).join('');
                 } else {
                     hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin turnos disponibles</span>`;
                 }
+
+                const hoursContainerClass = isSunday ? "flex flex-wrap pt-0.5 max-w-[85%] mx-auto" : "flex flex-wrap pt-0.5";
 
                 card.innerHTML = `
                     <div class="flex items-center justify-between border-b border-emerald-200/10 pb-0.5 px-0.5 min-w-0">
                         <span class="font-bold text-[10px] font-serif tracking-wide text-white leading-none truncate">${slot.day}</span>
                         <span class="text-[7.5px] text-emerald-300/70 font-sans leading-none whitespace-nowrap shrink-0 ml-1">${slot.hours.length} turnos</span>
                     </div>
-                    <div class="flex flex-wrap pt-0.5 min-w-0">${hoursHtml}</div>
+                    <div class="${hoursContainerClass} min-w-0">${hoursHtml}</div>
                 `;
                 grid.appendChild(card);
             });
@@ -364,7 +393,7 @@
             // espacio de sobra al final del bloque (el "gap" original tampoco
             // añadía espacio después de la última fila).
             if (grid.lastElementChild) {
-                grid.lastElementChild.classList.remove('mb-1');
+                grid.lastElementChild.classList.remove('mb-1.5');
             }
         }
 
