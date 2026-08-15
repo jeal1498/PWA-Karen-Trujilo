@@ -274,16 +274,18 @@
 
         function getWeekDates() {
             const now = new Date();
-            const sunday = new Date(now);
-            sunday.setDate(now.getDate() - now.getDay() + (weekOffset * 7));
+            const currentDay = now.getDay();
+            const distanceToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + distanceToMonday + (weekOffset * 7));
 
             const dates = [];
             for (let i = 0; i < 7; i++) {
-                const d = new Date(sunday);
-                d.setDate(sunday.getDate() + i);
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
                 dates.push(d);
             }
-            return dates; // índice 0 = Domingo ... índice 6 = Sábado
+            return dates; // índice 0 = Lunes ... índice 6 = Domingo
         }
 
         function shiftWeek(delta) {
@@ -297,7 +299,7 @@
             list.innerHTML = '';
 
             const dayAbbrev = { "Domingo": "dom", "Lunes": "lun", "Martes": "mar", "Miércoles": "mié", "Jueves": "jue", "Viernes": "vie", "Sábado": "sáb" };
-            const dayOrder = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
             const weekDates = getWeekDates();
 
             dayOrder.forEach((dayName, i) => {
