@@ -77,19 +77,6 @@
                 <button onclick="loadPage('agenda')" class="bg-[#2D3A32] text-white p-5 rounded-2xl flex items-center justify-center gap-3 shadow-lg mb-4">
                     <i class="fas fa-calendar-alt"></i> Gestionar Agenda
                 </button>
-
-                <div class="bg-gray-100 text-[#2D3A32] p-5 rounded-t-2xl flex items-center justify-center gap-3 border-x border-t border-gray-200 opacity-60">
-                    <i class="fas fa-credit-card"></i> Datos de Pago
-                </div>
-
-                <div class="grid grid-cols-2 gap-0 border-x border-b border-gray-200 rounded-b-2xl overflow-hidden shadow-sm">
-                    <a href="https://psicologakarentrujillo.com.mx/cuentas" target="_blank" class="bg-white text-[#2D3A32] p-4 flex items-center justify-center gap-2 font-semibold text-sm border-r border-gray-100">
-                        <i class="fas fa-eye"></i> Ver
-                    </a>
-                    <button onclick="shareLink()" class="bg-white text-[#2D3A32] p-4 flex items-center justify-center gap-2 font-semibold text-sm">
-                        <i class="fas fa-share-alt"></i> Compartir
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -115,9 +102,6 @@
         <button onclick="loadPage('agenda')" class="nav-btn">
             <i class="fas fa-calendar-day"></i> Mi Agenda
         </button>
-        <button onclick="window.open('https://psicologakarentrujillo.com.mx/cuentas', '_blank')" class="nav-btn">
-            <i class="fas fa-wallet"></i> Ver Cuentas
-        </button>
     </div>
 
     <script>
@@ -126,6 +110,8 @@
         const homeView = document.getElementById('home-view');
         const sidebar = document.getElementById('sidebar');
         const fab = document.getElementById('menu-fab');
+
+        loadPage('agenda');
 
         function loadPage(page) {
             if (page === 'home') {
@@ -150,21 +136,6 @@
                 sidebar.classList.remove('open');
             } else {
                 sidebar.classList.toggle('open');
-            }
-        }
-
-        function shareLink() {
-            const shareData = {
-                title: 'Datos de Pago - Psic. Karen Trujillo',
-                text: 'Hola, te comparto los datos bancarios para el pago de la sesión:',
-                url: 'https://psicologakarentrujillo.com.mx/cuentas'
-            }
-
-            if (navigator.share) {
-                navigator.share(shareData).catch((error) => console.log('Error compartiendo', error));
-            } else {
-                navigator.clipboard.writeText(shareData.url);
-                alert("Enlace copiado al portapapeles.");
             }
         }
     </script>
