@@ -8,25 +8,32 @@
  * de la plantilla base antes de armar el póster.
  *
  * ────────────────────────────────────────────────────────────────────────
- * CONFIGURACIÓN
+ * CONFIGURACIÓN (cuenta secundaria, sin usar el Drive de Karen)
  * ────────────────────────────────────────────────────────────────────────
- * 1. Cambia CALENDAR_ID por el correo del calendario de Karen, o deja
- *    "primary" para usar el calendario principal de la cuenta que despliega
- *    el script.
- * 2. En el editor de Apps Script: Implementar > Nueva implementación >
- *    Aplicación web.
- *      - Ejecutar como: Yo (tu cuenta / la cuenta de Karen)
- *      - Quién tiene acceso: Cualquier usuario (para que la herramienta,
- *        que corre en el navegador de Karen, pueda llamarla sin login)
- * 3. Copia la URL de la implementación (termina en /exec) y pégala en
+ * Este script está pensado para desplegarse desde una cuenta de Google
+ * SECUNDARIA (no la de Karen), porque el Drive de Karen no tiene espacio
+ * disponible y Apps Script necesita poder guardar el proyecto ahí.
+ *
+ * 1. Karen comparte su Google Calendar con la cuenta secundaria (Calendar
+ *    > Configuración > su calendario > "Compartir con determinadas
+ *    personas" > agregar el correo secundario con permiso "Ver todos los
+ *    detalles del evento").
+ * 2. CALENDAR_ID ya está puesto al correo real de Karen
+ *    (karentrujillopsic@gmail.com) — es el calendario que se va a leer,
+ *    no el de la cuenta que ejecuta el script.
+ * 3. En el editor de Apps Script (con sesión iniciada en la cuenta
+ *    SECUNDARIA): Implementar > Nueva implementación > Aplicación web.
+ *      - Ejecutar como: Yo (la cuenta secundaria)
+ *      - Quién tiene acceso: Cualquier usuario
+ * 4. Copia la URL de la implementación (termina en /exec) y pégala en
  *    CALENDAR_SYNC_WEBAPP_URL dentro de herramienta-agenda.html.
- * 4. Cada vez que edites este script y quieras que el cambio aplique,
+ * 5. Cada vez que edites este script y quieras que el cambio aplique,
  *    tienes que crear una NUEVA implementación (o gestionar versiones)
  *    desde el mismo menú.
  * ────────────────────────────────────────────────────────────────────────
  */
 
-const CALENDAR_ID = 'primary';
+const CALENDAR_ID = 'karentrujillopsic@gmail.com';
 
 /**
  * GET /exec?start=ISO_STRING&end=ISO_STRING
