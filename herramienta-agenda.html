@@ -8,15 +8,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tipografía consistente con index.html -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    colors: {
+                        'eucalyptus-dark': '#2D3A32',
+                        'eucalyptus-soft': '#5C7C69',
+                        'silk-cream': '#F9F7F2',
+                        'muted-gold': '#96715E',
+                        'slate-warm': '#4A4E51'
+                    },
                     fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-                        serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif']
+                        sans: ['Montserrat', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                        serif: ['Playfair Display', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif']
                     }
                 }
             }
@@ -39,7 +48,7 @@
 
         /* Degradado de fondo exacto */
         .poster-bg-custom {
-            background: radial-gradient(circle at 80% 20%, #2a3a2a 0%, #151e15 65%, #0f160f 100%);
+            background: radial-gradient(circle at 80% 20%, #ffffff 0%, #F9F7F2 55%, #F2EEE5 100%);
         }
 
         /* Formato numérico consistente */
@@ -77,33 +86,33 @@
                 </div>
 
                 <!-- CANVAS DEL PÓSTER 9:16 REAJUSTADO -->
-                <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl border border-slate-800 poster-bg-custom text-white font-serif">
+                <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl border border-muted-gold/30 poster-bg-custom text-eucalyptus-dark font-serif">
                     
                     <!-- Elementos de Fondo (sin blur para compatibilidad) -->
-                    <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-600/15 rounded-full pointer-events-none"></div>
-                    <div class="absolute -bottom-10 -left-10 w-52 h-52 bg-emerald-700/15 rounded-full pointer-events-none"></div>
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-muted-gold/10 rounded-full pointer-events-none"></div>
+                    <div class="absolute -bottom-10 -left-10 w-52 h-52 bg-eucalyptus-soft/10 rounded-full pointer-events-none"></div>
 
                     <!-- Logo como marca de agua de fondo completo -->
-                    <img src="Logo_Karen_Trujillo.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.08] pointer-events-none select-none" />
+                    <img src="Logo_Karen_Trujillo.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.06] pointer-events-none select-none" />
 
                     <!-- ENCABEZADO OPTIMIZADO -->
                     <div class="relative z-10 text-center space-y-0.5 pt-0">
                         <div class="space-y-0 pt-1 relative">
-                            <h3 class="text-2xl sm:text-3xl font-bold tracking-wide text-emerald-200 leading-tight relative inline-block pt-1">
+                            <h3 class="text-2xl sm:text-3xl font-bold tracking-wide text-eucalyptus-dark leading-tight relative inline-block pt-1">
                                 Karen Trujillo
                             </h3>
-                            <p class="text-[11px] font-sans text-white font-medium leading-none pt-1">Neuropsicóloga</p>
+                            <p class="text-[11px] font-sans text-eucalyptus-soft font-medium leading-none pt-1">Neuropsicóloga</p>
                         </div>
 
                         <div class="flex items-center gap-2 my-2 px-2">
-                            <div class="flex-1 h-px bg-emerald-200/30"></div>
-                            <i class="fa-regular fa-calendar text-emerald-200/60 text-[10px]"></i>
-                            <div class="flex-1 h-px bg-emerald-200/30"></div>
+                            <div class="flex-1 h-px bg-muted-gold/40"></div>
+                            <i class="fa-regular fa-calendar text-muted-gold/70 text-[10px]"></i>
+                            <div class="flex-1 h-px bg-muted-gold/40"></div>
                         </div>
 
                         <div>
-                            <h2 class="text-xs sm:text-sm font-bold tracking-wider font-sans uppercase text-white leading-none">CITAS DISPONIBLES</h2>
-                            <p id="posterDynamicDate" class="text-[9.5px] italic text-emerald-100/90 opacity-90 leading-tight">Calculando fechas...</p>
+                            <h2 class="text-xs sm:text-sm font-bold tracking-wider font-sans uppercase text-eucalyptus-dark leading-none">CITAS DISPONIBLES</h2>
+                            <p id="posterDynamicDate" class="text-[9.5px] italic text-muted-gold opacity-90 leading-tight">Calculando fechas...</p>
                         </div>
                     </div>
 
@@ -113,12 +122,12 @@
                     </div>
 
                     <!-- PIE DEL PÓSTER DENTRO DE LÍMITES -->
-                    <div class="relative z-10 pt-1.5 border-t border-emerald-200/20 flex flex-col items-center text-center space-y-1 text-xs">
-                        <p class="text-[8.5px] italic font-sans text-emerald-100/80 leading-none">
+                    <div class="relative z-10 pt-1.5 border-t border-muted-gold/25 flex flex-col items-center text-center space-y-1 text-xs">
+                        <p class="text-[8.5px] italic font-sans text-slate-warm leading-none">
                             Sesiones de 50 min · Reserva por WhatsApp
                         </p>
-                        <p class="text-[9px] font-bold font-sans text-white time-pill leading-none">
-                            <i class="fa-brands fa-whatsapp text-emerald-300 text-[10px]"></i>
+                        <p class="text-[9px] font-bold font-sans text-eucalyptus-dark time-pill leading-none">
+                            <i class="fa-brands fa-whatsapp text-[#25D366] text-[10px]"></i>
                             Contáctame: 998 321 1547
                         </p>
                     </div>
@@ -320,18 +329,18 @@
                 const card = document.createElement('div');
 
                 if (isSunday) {
-                    card.className = "w-full mb-2 min-w-0 p-2 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-1 font-sans";
+                    card.className = "w-full mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans";
                     col = 0;
                 } else {
                     const isFirstColumn = col === 0;
-                    card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-1 font-sans`;
+                    card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans`;
                     col = isFirstColumn ? 1 : 0;
                 }
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
                     hoursHtml = slot.hours.map((h) => {
-                        return `<div class="time-pill w-full py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans leading-none text-center">${h}</div>`;
+                        return `<div class="time-pill w-full py-0.5 px-1 rounded text-[8.5px] font-semibold border border-muted-gold/30 bg-white text-eucalyptus-dark font-sans leading-none text-center">${h}</div>`;
                     }).join('');
                 } else {
                     hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin citas disponibles</span>`;
@@ -340,8 +349,8 @@
                 const hoursContainerClass = isSunday ? "grid grid-cols-6 gap-x-1 gap-y-1.5 pt-0.5" : "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5";
 
                 card.innerHTML = `
-                    <div class="flex items-center justify-center border-b border-emerald-200/10 pb-0.5 px-0.5 min-w-0">
-                        <span class="font-bold text-[10px] font-serif tracking-wide text-white leading-none truncate">${slot.day}</span>
+                    <div class="flex items-center justify-center border-b border-muted-gold/20 pb-0.5 px-0.5 min-w-0">
+                        <span class="font-bold text-[10px] font-serif tracking-wide text-eucalyptus-dark leading-none truncate">${slot.day}</span>
                     </div>
                     <div class="${hoursContainerClass} min-w-0">${hoursHtml}</div>
                 `;
