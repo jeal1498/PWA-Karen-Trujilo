@@ -355,6 +355,31 @@
         }
 
         // Punto de conexión con el script real de Google Calendar. Debe
+        // ---- Conexión con el Apps Script publicado (calendar-sync/Code.gs) ----
+        // Pega aquí la URL de la implementación (termina en /exec). Mientras
+        // esté vacía, no se llama a Calendar y no se inventan datos.
+        const CALENDAR_SYNC_WEBAPP_URL = '';
+
+        window.CalendarSync = {
+            async fetchBusyEvents(start, end) {
+                if (!CALENDAR_SYNC_WEBAPP_URL) return [];
+
+                const url = `${CALENDAR_SYNC_WEBAPP_URL}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Apps Script respondió ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                return data.busy || [];
+            }
+        };
+
         // devolver una promesa que resuelva con la lista de eventos ya
         // agendados dentro de [start, end]. Mientras no esté conectado el
         // script, devuelve un arreglo vacío (no bloquea ni inventa datos).
