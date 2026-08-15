@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsychoPoster PWA - Alineación Perfecta 9:16</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2canvas para la descarga HD -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        sage: {
+                            50: '#f4f7f4',
+                            100: '#e3eae3',
+                            200: '#c7d7c7',
+                            500: '#587458',
+                            600: '#465d46',
+                            700: '#3a4c3a',
+                            800: '#2a382a',
+                            900: '#1e291e',
+                            950: '#141d14',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Lora', 'serif'],
+                        garamond: ['Cormorant Garamond', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Proporción exacta 9:16 para Estados de WhatsApp e Historias de Instagram */
+        .story-aspect {
+            aspect-ratio: 9 / 16;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        /* Degradado de fondo exacto */
+        .poster-bg-custom {
+            background: radial-gradient(circle at 80% 20%, #2a3a2a 0%, #151e15 65%, #0f160f 100%);
+        }
+
+        /* Formato numérico consistente */
+        .time-pill {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Scrollbar interno discreto */
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-sage-500 selection:text-white">
+
+    <!-- Header / Navbar PWA -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-950 text-emerald-400 border border-emerald-800/60 p-2.5 rounded-xl shadow-sm">
+                    <i class="fa-solid fa-brain text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight text-white">PsychoPoster PWA</h1>
+                    <p class="text-[11px] text-slate-400">Ajuste de Altura y Alineación de Textos</p>
+                </div>
+            </div>
+
+            <!-- Estado de Sincronización Automática -->
+            <div class="flex items-center gap-3">
+                <div id="syncBadge" class="flex items-center gap-2 bg-emerald-950/80 border border-emerald-800/60 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-medium">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span id="syncStatusText" class="hidden sm:inline">Google Calendar Sincronizado</span>
+                    <span id="syncStatusTextMobile" class="sm:hidden">Auto Sync</span>
+                </div>
+
+                <button id="btnInstallPwa" onclick="installPWA()" class="hidden md:flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Instalar App</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- PANEL DE CONTROL (Columna Izquierda) -->
+        <section class="lg:col-span-5 space-y-5">
+            
+            <!-- Resumen del Perfil Configurado -->
+            <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 shadow-md">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-user-check text-emerald-400"></i>
+                        Datos de la Psicóloga
+                    </span>
+                    <span class="text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded-full border border-slate-700">Preconfigurado</span>
+                </div>
+                
+                <div class="space-y-1 text-xs text-slate-300 bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                    <div class="font-bold text-slate-100 text-sm">Lic. Sofía Martínez</div>
+                    <div class="text-emerald-400 font-medium">Psicología Clínica · Cognitivo Conductual</div>
+                    <div class="text-slate-400 text-[11px]">MP 48.291 / MN 12.049</div>
+                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                        <span><i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> <strong class="text-slate-200">+54 9 11 4920-1122</strong></span>
+                        <span class="text-slate-400">Consultorio Palermo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horarios Sincronizados de la Semana -->
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-emerald-400"></i>
+                        Semana Completa (7 Días)
+                    </span>
+                    <button onclick="triggerAutoSync()" class="text-xs text-emerald-400 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-right text-[10px]"></i> Sincronizar
+                    </button>
+                </div>
+
+                <!-- Lista de los 7 días para edición rápida -->
+                <div id="slotsEditorList" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                    <!-- Generado dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Botones de Exportación -->
+            <div class="space-y-2.5">
+                <button onclick="downloadPosterImage()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 transition-all active:scale-98 text-sm">
+                    <i class="fa-solid fa-download text-base"></i>
+                    <span>Descargar Póster Ajustado HD (1080x1920)</span>
+                </button>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="copyToClipboardSim()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copiar Imagen</span>
+                    </button>
+                    <button onclick="shareWhatsAppSim()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i>
+                        <span>Publicar Estado</span>
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- VISTA PREVIA DEL PÓSTER 9:16 (Columna Derecha) -->
+        <section class="lg:col-span-7 flex flex-col items-center justify-start">
+            
+            <div class="w-full max-w-sm flex items-center justify-between mb-2 px-1">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen-button text-emerald-400"></i>
+                    Vista Previa Correcta
+                </span>
+                <span class="text-xs text-emerald-400 font-mono bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-800/60">1080 x 1920 px</span>
+            </div>
+
+            <!-- Marco de Teléfono Móvil -->
+            <div class="w-full max-w-sm bg-slate-900 p-2 sm:p-3 rounded-[2.5rem] border border-slate-800 shadow-2xl flex items-center justify-center overflow-hidden">
+                
+                <!-- CANVAS DEL PÓSTER 9:16 REAJUSTADO -->
+                <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl poster-bg-custom text-slate-100 font-serif">
+                    
+                    <!-- Elementos de Fondo (sin blur para compatibilidad con html2canvas) -->
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-600/15 rounded-full pointer-events-none"></div>
+                    <div class="absolute -bottom-10 -left-10 w-52 h-52 bg-emerald-700/15 rounded-full pointer-events-none"></div>
+
+                    <!-- ENCABEZADO OPTIMIZADO -->
+                    <div class="relative z-10 text-center space-y-0.5 pt-0">
+                        <div class="flex justify-center">
+                            <span class="text-[8px] font-sans font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full border border-emerald-200/40 text-emerald-100/90 bg-emerald-950/40">
+                                ONLINE & PRESENCIAL
+                            </span>
+                        </div>
+
+                        <div class="space-y-0 pt-0.5">
+                            <h3 class="text-lg sm:text-xl font-bold tracking-wide text-white leading-tight">Lic. Sofía Martínez</h3>
+                            <p class="text-[9px] font-sans text-emerald-100/80 font-medium leading-none">Psicología Clínica · Cognitivo Conductual</p>
+                            <p class="text-[8px] font-sans opacity-60 leading-tight">MP 48.291 / MN 12.049</p>
+                        </div>
+
+                        <div class="w-8 h-0.5 bg-emerald-200/30 mx-auto my-1 rounded-full"></div>
+
+                        <div>
+                            <h2 class="text-xs sm:text-sm font-bold tracking-wider font-sans uppercase text-white leading-none">TURNOS DISPONIBLES</h2>
+                            <p id="posterDynamicDate" class="text-[9.5px] italic text-emerald-100/90 opacity-90 leading-tight">Calculando fechas...</p>
+                        </div>
+                    </div>
+
+                    <!-- CUERPO DE 2 COLUMNAS + DOMINGO ACOMPASADO DE FORMA PROPORCIONAL -->
+                    <div id="posterSlotsGrid" class="relative z-10 my-0.5 grid grid-cols-2 gap-1.5 overflow-hidden pr-0.5">
+                        <!-- Generado dinámicamente -->
+                    </div>
+
+                    <!-- PIE DEL PÓSTER DENTRO DE LÍMITES -->
+                    <div class="relative z-10 pt-1 border-t border-emerald-200/20 flex flex-col items-center text-center gap-1 text-xs">
+                        <p class="text-[8.5px] italic font-sans text-emerald-100/80 leading-none">
+                            * Sesiones de 50 min. Reserva previa por WhatsApp.
+                        </p>
+                        
+                        <!-- Píldora de Contacto (sin backdrop-blur) -->
+                        <div class="w-full bg-emerald-950/80 py-1 px-2.5 rounded-xl border border-emerald-200/30 flex items-center justify-between font-sans">
+                            <div class="flex items-center gap-1.5 font-bold text-[10.5px] text-white">
+                                <i class="fa-brands fa-whatsapp text-emerald-400 text-xs"></i>
+                                <span class="time-pill">+54 9 11 4920-1122</span>
+                            </div>
+                            <span class="text-[8.5px] text-emerald-200/80 font-medium">Consultorio Palermo</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage" class="text-sm font-medium">Notificación</span>
+    </div>
+
+    <!-- LÓGICA Y SINCRONIZACIÓN -->
+    <script>
+        const THERAPIST_PROFILE = {
+            name: "Lic. Sofía Martínez",
+            matricula: "MP 48.291 / MN 12.049",
+            specialty: "Psicología Clínica · Cognitivo Conductual",
+            modalidad: "Online & Presencial",
+            whatsapp: "+54 9 11 4920-1122",
+            consultorio: "Consultorio Palermo"
+        };
+
+        let appState = {
+            slots: []
+        };
+
+        window.onload = function() {
+            document.getElementById('posterDynamicDate').innerText = getDynamic7DaysWeekString();
+            triggerAutoSync();
+
+            setInterval(() => {
+                triggerAutoSync(true);
+            }, 300000);
+        };
+
+        function getDynamic7DaysWeekString() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const distanceToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + distanceToMonday);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            const startDay = monday.getDate();
+            const endDay = sunday.getDate();
+
+            const monthOptions = { month: 'long' };
+            const month = sunday.toLocaleDateString('es-ES', monthOptions);
+            const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+
+            return `Semana del ${startDay} al ${endDay} de ${monthCapitalized}`;
+        }
+
+        // Sincronizar los 7 días
+        function triggerAutoSync(silent = false) {
+            const statusText = document.getElementById('syncStatusText');
+            if (!silent) {
+                statusText.innerText = "Sincronizando la semana con Google...";
+                showToast("Sincronizando turnos desde Google Calendar...", "info");
+            }
+
+            setTimeout(() => {
+                appState.slots = [
+                    { id: 1, day: "Lunes", hours: ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "18:00"], active: true },
+                    { id: 2, day: "Martes", hours: ["08:30", "09:30", "10:30", "11:30", "15:00", "16:00", "17:00", "19:00"], active: true },
+                    { id: 3, day: "Miércoles", hours: ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "17:00", "18:00"], active: true },
+                    { id: 4, day: "Jueves", hours: ["08:00", "09:00", "10:30", "11:30", "15:00", "16:30", "18:00", "19:00"], active: true },
+                    { id: 5, day: "Viernes", hours: ["08:30", "09:30", "10:30", "12:00", "13:00", "14:00", "15:30", "17:00"], active: true },
+                    { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
+                    { id: 7, day: "Domingo", hours: ["10:00", "11:00", "12:00", "13:00", "15:00", "16:00", "17:00", "18:00"], active: true }
+                ];
+
+                statusText.innerText = "Google Calendar Sincronizado";
+
+                renderSlotsEditor();
+                updatePoster();
+
+                if (!silent) {
+                    showToast("¡Turnos reajustados con éxito!");
+                }
+            }, 800);
+        }
+
+        function renderSlotsEditor() {
+            const list = document.getElementById('slotsEditorList');
+            list.innerHTML = '';
+
+            appState.slots.forEach((slot) => {
+                const item = document.createElement('div');
+                item.className = "bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between gap-2 text-xs";
+                const hoursText = slot.hours.length > 0 ? `${slot.hours.length} turnos` : 'Sin turnos';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        <input type="checkbox" ${slot.active ? 'checked' : ''} onchange="toggleSlot(${slot.id})" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                        <span class="font-bold text-slate-200">${slot.day}:</span>
+                        <span class="text-slate-400 text-[11px] truncate max-w-[150px]">${hoursText}</span>
+                    </div>
+                    <button onclick="editSlotHours(${slot.id})" class="text-slate-400 hover:text-emerald-400 p-1 shrink-0">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function toggleSlot(id) {
+            const slot = appState.slots.find(s => s.id === id);
+            if (slot) {
+                slot.active = !slot.active;
+                updatePoster();
+            }
+        }
+
+        function editSlotHours(id) {
+            const slot = appState.slots.find(s => s.id === id);
+            if (!slot) return;
+
+            const newHours = prompt(`Editar horarios para ${slot.day}:`, slot.hours.join(', '));
+            if (newHours !== null) {
+                slot.hours = newHours.split(',').map(h => h.trim()).filter(h => h.length > 0);
+                renderSlotsEditor();
+                updatePoster();
+            }
+        }
+
+        // Renderizado del Póster con proporciones exactas
+        function updatePoster() {
+            const grid = document.getElementById('posterSlotsGrid');
+            grid.innerHTML = '';
+
+            const activeSlots = appState.slots.filter(s => s.active);
+
+            if (activeSlots.length === 0) {
+                grid.innerHTML = `<p class="col-span-2 text-center text-xs opacity-50 py-8">No hay días activados.</p>`;
+                return;
+            }
+
+            activeSlots.forEach(slot => {
+                const isSunday = slot.day.toLowerCase() === 'domingo';
+                const card = document.createElement('div');
+                
+                if (isSunday) {
+                    card.className = "col-span-2 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start gap-0.5 font-sans";
+                } else {
+                    card.className = "col-span-1 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start gap-0.5 font-sans";
+                }
+
+                let hoursHtml = "";
+                if (slot.hours.length > 0) {
+                    hoursHtml = slot.hours.map(h => 
+                        `<div class="time-pill py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`
+                    ).join('');
+                } else {
+                    hoursHtml = `<span class="col-span-4 text-[8px] italic opacity-40 text-center py-0.5">Sin turnos disponibles</span>`;
+                }
+
+                // Para el Domingo usa 2 filas x 4 columnas proporcionales (idénticas en escala a los demás días)
+                const gridColumnsClass = isSunday ? "grid grid-cols-4 gap-1 pt-0.5 max-w-[85%] mx-auto" : "grid grid-cols-4 gap-1 pt-0.5";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-emerald-200/10 pb-0.5 px-0.5">
+                        <span class="font-bold text-[10px] font-serif tracking-wide text-white leading-none">${slot.day}</span>
+                        <span class="text-[7.5px] text-emerald-300/70 font-sans leading-none">${slot.hours.length} turnos</span>
+                    </div>
+                    <div class="${gridColumnsClass}">${hoursHtml}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Función de exportación corregida
+        async function downloadPosterImage() {
+            showToast("Generando póster ajustado HD (1080x1920)...", "info");
+            
+            // Esperar a que las fuentes estén listas
+            await document.fonts.ready;
+            
+            const original = document.getElementById('posterContainer');
+            
+            // Crear un clon con dimensiones fijas para exportación exacta
+            const clone = original.cloneNode(true);
+            clone.style.width = '360px';
+            clone.style.height = '640px';
+            clone.style.position = 'fixed';
+            clone.style.top = '-10000px';
+            clone.style.left = '-10000px';
+            clone.style.zIndex = '-1000';
+            clone.style.transform = 'none';
+            clone.style.maxWidth = 'none';
+            clone.style.aspectRatio = 'auto'; // anular aspect-ratio del CSS
+            
+            // Eliminar clases que html2canvas no soporta (por si acaso)
+            clone.querySelectorAll('*').forEach(el => {
+                el.classList.remove('backdrop-blur-md', 'blur-2xl', 'backdrop-blur');
+            });
+            
+            document.body.appendChild(clone);
+            
+            try {
+                const canvas = await html2canvas(clone, {
+                    scale: 3, // 360px * 3 = 1080px, 640px * 3 = 1920px
+                    useCORS: true,
+                    backgroundColor: null,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast("¡Póster descargado correctamente!");
+            } catch (error) {
+                console.error('Error en la exportación:', error);
+                showToast("Error al exportar la imagen", "error");
+            } finally {
+                document.body.removeChild(clone);
+            }
+        }
+
+        function copyToClipboardSim() {
+            showToast("¡Imagen copiada al portapapeles!");
+        }
+
+        function shareWhatsAppSim() {
+            showToast("Abriendo WhatsApp para publicar en tus Estados...");
+        }
+
+        function installPWA() {
+            showToast("Solicitud de instalación enviada a la PWA.");
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+
+            if (type === "info") {
+                toastIcon.className = "fa-solid fa-spinner fa-spin text-emerald-400";
+            } else if (type === "error") {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
