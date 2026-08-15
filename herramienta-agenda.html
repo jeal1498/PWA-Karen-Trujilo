@@ -112,7 +112,6 @@
 
                         <div>
                             <h2 class="text-xs sm:text-sm font-bold tracking-wider font-sans uppercase text-eucalyptus-dark leading-none">CITAS DISPONIBLES</h2>
-                            <p id="posterDynamicDate" class="text-[9.5px] italic text-muted-gold opacity-90 leading-tight">Calculando fechas...</p>
                         </div>
                     </div>
 
@@ -190,7 +189,6 @@
         };
 
         window.onload = function() {
-            document.getElementById('posterDynamicDate').innerText = getDynamic7DaysWeekString();
             triggerAutoSync();
 
             setInterval(() => {
@@ -264,7 +262,7 @@
         function shiftWeek(delta) {
             weekOffset += delta;
             renderSlotsEditor();
-            document.getElementById('posterDynamicDate').innerText = getDynamic7DaysWeekString();
+            updatePoster();
         }
 
         function renderSlotsEditor() {
@@ -323,10 +321,14 @@
             // Cada día ocupa una columna (2 por fila); Domingo es la
             // excepción de ancho completo, centrado.
             let col = 0;
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+            const weekDates = getWeekDates();
 
             activeSlots.forEach(slot => {
                 const isSunday = slot.day.toLowerCase() === 'domingo';
                 const card = document.createElement('div');
+                const dateIndex = dayOrder.indexOf(slot.day);
+                const dayNumber = dateIndex !== -1 ? weekDates[dateIndex].getDate() : '';
 
                 if (isSunday) {
                     card.className = "w-full mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans";
@@ -350,7 +352,7 @@
 
                 card.innerHTML = `
                     <div class="flex items-center justify-center border-b border-muted-gold/20 pb-0.5 px-0.5 min-w-0">
-                        <span class="font-bold text-[10px] font-serif tracking-wide text-eucalyptus-dark leading-none truncate">${slot.day}</span>
+                        <span class="font-bold text-[10px] font-serif tracking-wide text-eucalyptus-dark leading-none truncate">${slot.day} ${dayNumber}</span>
                     </div>
                     <div class="${hoursContainerClass} min-w-0">${hoursHtml}</div>
                 `;
