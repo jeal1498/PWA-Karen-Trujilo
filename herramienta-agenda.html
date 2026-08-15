@@ -139,18 +139,15 @@
 
             <!-- Horarios Sincronizados de la Semana -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-days text-emerald-400"></i>
-                        Semana Completa (7 Días)
+                <div class="border-b border-slate-800 pb-2">
+                    <span class="text-sm font-extrabold text-emerald-400 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        Mi Agenda Semanal
                     </span>
-                    <button onclick="triggerAutoSync()" class="text-xs text-emerald-400 hover:underline flex items-center gap-1">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i> Sincronizar
-                    </button>
                 </div>
 
                 <!-- Lista de los 7 días para edición rápida -->
-                <div id="slotsEditorList" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                <div id="slotsEditorList" class="flex gap-1.5">
                     <!-- Generado dinámicamente -->
                 </div>
             </div>
@@ -306,34 +303,47 @@
             }, 800);
         }
 
+        function getWeekDates() {
+            const now = new Date();
+            const sunday = new Date(now);
+            sunday.setDate(now.getDate() - now.getDay());
+
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(sunday);
+                d.setDate(sunday.getDate() + i);
+                dates.push(d);
+            }
+            return dates; // índice 0 = Domingo ... índice 6 = Sábado
+        }
+
         function renderSlotsEditor() {
             const list = document.getElementById('slotsEditorList');
             list.innerHTML = '';
 
-            appState.slots.forEach((slot) => {
+            const dayAbbrev = { "Domingo": "dom", "Lunes": "lun", "Martes": "mar", "Miércoles": "mié", "Jueves": "jue", "Viernes": "vie", "Sábado": "sáb" };
+            const dayOrder = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const weekDates = getWeekDates();
+
+            dayOrder.forEach((dayName, i) => {
+                const slot = appState.slots.find(s => s.day === dayName);
+                if (!slot) return;
+
                 const item = document.createElement('div');
-                item.className = "bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between gap-2 text-xs";
-                const hoursText = slot.hours.length > 0 ? `${slot.hours.length} turnos` : 'Sin turnos';
+                item.className = "flex flex-col items-center flex-1 min-w-0";
                 item.innerHTML = `
-                    <div class="flex items-center gap-2 truncate">
-                        <input type="checkbox" ${slot.active ? 'checked' : ''} onchange="toggleSlot(${slot.id})" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
-                        <span class="font-bold text-slate-200">${slot.day}:</span>
-                        <span class="text-slate-400 text-[11px] truncate max-w-[150px]">${hoursText}</span>
+                    <div class="w-full bg-slate-900 rounded-t-2xl pt-2 pb-4 flex items-center justify-center">
+                        <span class="text-white font-bold text-[11px] lowercase">${dayAbbrev[dayName]}</span>
                     </div>
-                    <button onclick="editSlotHours(${slot.id})" class="text-slate-400 hover:text-emerald-400 p-1 shrink-0">
-                        <i class="fa-solid fa-pen-to-square"></i>
+                    <button onclick="editSlotHours(${slot.id})" class="-mt-3 w-6 h-6 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-700 text-[10px] shadow z-10">
+                        <i class="fa-solid fa-pen"></i>
                     </button>
+                    <div class="w-full bg-white rounded-b-2xl -mt-3 pt-4 pb-2 flex items-center justify-center">
+                        <span class="text-slate-900 font-extrabold text-base">${weekDates[i].getDate()}</span>
+                    </div>
                 `;
                 list.appendChild(item);
             });
-        }
-
-        function toggleSlot(id) {
-            const slot = appState.slots.find(s => s.id === id);
-            if (slot) {
-                slot.active = !slot.active;
-                updatePoster();
-            }
         }
 
         function editSlotHours(id) {
