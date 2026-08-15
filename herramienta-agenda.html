@@ -425,14 +425,27 @@
             const poster = document.getElementById('posterContainer');
             showToast("Generando póster...", "info");
 
-            // Esperar a que las tipografías (Cormorant Garamond, Lora) terminen de
-            // cargar antes de capturar. Sin esto, html2canvas puede dibujar con una
-            // fuente de reemplazo cuyas métricas no coinciden, produciendo texto
-            // solapado o ilegible en el resultado.
+            // Precargar EXPLÍCITAMENTE cada combinación familia/peso/estilo que usa
+            // el póster. "document.fonts.ready" no es suficiente por sí solo: solo
+            // resuelve para fuentes que el navegador ya decidió cargar, y algunas
+            // (como Lora en negrita en los nombres de los días) recién se piden
+            // cuando el JS inyecta ese HTML dinámicamente. Si html2canvas empieza a
+            // pintar antes de que el archivo de la fuente termine de descargarse y
+            // decodificarse, dibuja el texto con una fuente de reemplazo cuya altura
+            // no coincide con la caja ya calculada (por eso el borde inferior de
+            // cada tarjeta de día terminaba cortando el texto por la mitad).
+            const fontSpecs = [
+                '500 12px "Lora"', '600 12px "Lora"', 'italic 400 12px "Lora"',
+                '500 12px "Plus Jakarta Sans"', '600 12px "Plus Jakarta Sans"',
+                '700 12px "Plus Jakarta Sans"', '800 12px "Plus Jakarta Sans"',
+                '600 12px "Cormorant Garamond"', '700 12px "Cormorant Garamond"',
+                'italic 400 12px "Cormorant Garamond"'
+            ];
+            await Promise.all(fontSpecs.map(spec => document.fonts.load(spec).catch(() => {})));
             await document.fonts.ready;
-            // Pequeño margen extra: algunos navegadores marcan fonts.ready antes de
+            // Margen extra: algunos navegadores marcan fonts.ready antes de
             // terminar de repintar con la fuente ya aplicada.
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 200));
 
             // El póster usa "aspect-ratio" + "width: 100%" (clase .story-aspect) para
             // su tamaño responsive en pantalla. html2canvas 1.4.1 no interpreta la
