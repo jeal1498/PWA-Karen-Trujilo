@@ -225,7 +225,7 @@
             const currentDay = now.getDay();
             const distanceToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
             const monday = new Date(now);
-            monday.setDate(now.getDate() + distanceToMonday);
+            monday.setDate(now.getDate() + distanceToMonday + (weekOffset * 7));
 
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
@@ -289,6 +289,7 @@
         function shiftWeek(delta) {
             weekOffset += delta;
             renderSlotsEditor();
+            document.getElementById('posterDynamicDate').innerText = getDynamic7DaysWeekString();
         }
 
         function renderSlotsEditor() {
