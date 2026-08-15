@@ -225,19 +225,29 @@
                     </div>
 
                     <!-- CUERPO DE 2 COLUMNAS + DOMINGO ACOMPASADO DE FORMA PROPORCIONAL -->
-                    <div id="posterSlotsGrid" class="relative z-10 my-0.5 grid grid-cols-2 gap-1.5 overflow-hidden pr-0.5 min-w-0">
+                    <!-- NOTA: se usa flexbox en vez de CSS Grid porque html2canvas 1.4.1 no
+                    implementa "display: grid" (no figura en su lista de propiedades CSS
+                    soportadas) ni la propiedad "gap". Con grid, la vista previa en el
+                    navegador se veía perfecta pero la imagen exportada colapsaba todo en
+                    una sola columna sin espaciado, porque html2canvas ignoraba por completo
+                    esas reglas. El espaciado ahora se logra con márgenes explícitos
+                    (mr-/mb-) en cada tarjeta, generados en updatePoster(). -->
+                    <div id="posterSlotsGrid" class="relative z-10 my-0.5 flex flex-wrap overflow-hidden pr-0.5 min-w-0">
                         <!-- Generado dinámicamente -->
                     </div>
 
                     <!-- PIE DEL PÓSTER DENTRO DE LÍMITES -->
-                    <div class="relative z-10 pt-1 border-t border-emerald-200/20 flex flex-col items-center text-center gap-1 text-xs">
+                    <!-- "space-y-1" en vez de "gap-1": Tailwind implementa space-y con
+                    margin-top (soportado por html2canvas), mientras que "gap" en flexbox
+                    no está entre las propiedades que html2canvas sabe interpretar. -->
+                    <div class="relative z-10 pt-1 border-t border-emerald-200/20 flex flex-col items-center text-center space-y-1 text-xs">
                         <p class="text-[8.5px] italic font-sans text-emerald-100/80 leading-none">
                             * Sesiones de 50 min. Reserva previa por WhatsApp.
                         </p>
                         
                         <!-- Píldora de Contacto (sin backdrop-blur) -->
                         <div class="w-full bg-emerald-950/80 py-1 px-2.5 rounded-xl border border-emerald-200/30 flex items-center justify-between font-sans">
-                            <div class="flex items-center gap-1.5 font-bold text-[10.5px] text-white">
+                            <div class="flex items-center space-x-1.5 font-bold text-[10.5px] text-white">
                                 <i class="fa-brands fa-whatsapp text-emerald-400 text-xs"></i>
                                 <span class="time-pill">+54 9 11 4920-1122</span>
                             </div>
@@ -383,41 +393,64 @@
             const activeSlots = appState.slots.filter(s => s.active);
 
             if (activeSlots.length === 0) {
-                grid.innerHTML = `<p class="col-span-2 text-center text-xs opacity-50 py-8">No hay días activados.</p>`;
+                grid.innerHTML = `<p class="w-full text-center text-xs opacity-50 py-8">No hay días activados.</p>`;
                 return;
             }
+
+            // Reemplaza el antiguo "grid-cols-2" (ver nota junto a #posterSlotsGrid):
+            // col va alternando 0/1 para emular las 2 columnas del grid original, y se
+            // resetea a 0 cuando aparece una tarjeta de ancho completo (Domingo), igual
+            // que haría "col-span-2" al forzar un salto de línea en un grid real.
+            let col = 0;
 
             activeSlots.forEach(slot => {
                 const isSunday = slot.day.toLowerCase() === 'domingo';
                 const card = document.createElement('div');
-                
+
+                // "space-y-0.5" en vez de "gap-0.5" por el mismo motivo que el resto de
+                // cambios en esta función: gap no está soportado por html2canvas.
                 if (isSunday) {
-                    card.className = "col-span-2 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start gap-0.5 font-sans";
+                    card.className = "w-full mb-1.5 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-0.5 font-sans";
+                    col = 0;
                 } else {
-                    card.className = "col-span-1 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start gap-0.5 font-sans";
+                    const isFirstColumn = col === 0;
+                    card.className = `${isFirstColumn ? 'mr-[3%]' : ''} w-[48.5%] mb-1.5 min-w-0 p-1.5 rounded-lg border border-emerald-200/20 bg-emerald-950/45 flex flex-col justify-start space-y-0.5 font-sans`;
+                    col = isFirstColumn ? 1 : 0;
                 }
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
-                    hoursHtml = slot.hours.map(h => 
-                        `<div class="time-pill py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`
-                    ).join('');
+                    // Igual que arriba: se sustituye "grid-cols-4 gap-1" por flexbox con
+                    // ancho fijo + margen derecho (sin margen en cada 4º elemento, donde
+                    // terminaría la fila del grid original) porque html2canvas tampoco
+                    // soporta "gap" en flexbox.
+                    hoursHtml = slot.hours.map((h, i) => {
+                        const isRowEnd = i % 4 === 3;
+                        return `<div class="time-pill${isRowEnd ? '' : ' mr-[2.5%]'} mb-1 w-[23.1%] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-emerald-300/25 bg-emerald-900/60 text-emerald-100 font-sans tracking-tight text-center leading-none flex items-center justify-center">${h}</div>`;
+                    }).join('');
                 } else {
-                    hoursHtml = `<span class="col-span-4 text-[8px] italic opacity-40 text-center py-0.5">Sin turnos disponibles</span>`;
+                    hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin turnos disponibles</span>`;
                 }
 
-                // Para el Domingo usa 2 filas x 4 columnas proporcionales (idénticas en escala a los demás días)
-                const gridColumnsClass = isSunday ? "grid grid-cols-4 gap-1 pt-0.5 max-w-[85%] mx-auto" : "grid grid-cols-4 gap-1 pt-0.5";
+                // Para el Domingo usa 2 filas x 4 "columnas" proporcionales (idénticas en escala a los demás días)
+                const hoursContainerClass = isSunday ? "flex flex-wrap pt-0.5 max-w-[85%] mx-auto" : "flex flex-wrap pt-0.5";
 
                 card.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-emerald-200/10 pb-0.5 px-0.5 min-w-0 gap-1">
+                    <div class="flex items-center justify-between border-b border-emerald-200/10 pb-0.5 px-0.5 min-w-0">
                         <span class="font-bold text-[10px] font-serif tracking-wide text-white leading-none truncate">${slot.day}</span>
-                        <span class="text-[7.5px] text-emerald-300/70 font-sans leading-none whitespace-nowrap shrink-0">${slot.hours.length} turnos</span>
+                        <span class="text-[7.5px] text-emerald-300/70 font-sans leading-none whitespace-nowrap shrink-0 ml-1">${slot.hours.length} turnos</span>
                     </div>
-                    <div class="${gridColumnsClass} min-w-0">${hoursHtml}</div>
+                    <div class="${hoursContainerClass} min-w-0">${hoursHtml}</div>
                 `;
                 grid.appendChild(card);
             });
+
+            // Quita el margen inferior de la última tarjeta para no dejar un
+            // espacio de sobra al final del bloque (el "gap" original tampoco
+            // añadía espacio después de la última fila).
+            if (grid.lastElementChild) {
+                grid.lastElementChild.classList.remove('mb-1.5');
+            }
         }
 
         // Función de exportación con html2canvas (misma lógica que sharePoster() en index.html)
