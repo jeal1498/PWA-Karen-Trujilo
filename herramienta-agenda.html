@@ -102,10 +102,16 @@
             
             <!-- Horarios Sincronizados de la Semana -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
-                <div class="border-b border-slate-800 pb-2">
-                    <span class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider flex items-center justify-center">
-                        Mi Agenda Semanal
+                <div class="border-b border-slate-800 pb-2 flex items-center justify-center gap-3">
+                    <button onclick="shiftWeek(-1)" class="w-6 h-6 flex items-center justify-center rounded-full text-emerald-400 hover:bg-slate-800 transition-colors" aria-label="Semana anterior">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                        Agenda Semanal
                     </span>
+                    <button onclick="shiftWeek(1)" class="w-6 h-6 flex items-center justify-center rounded-full text-emerald-400 hover:bg-slate-800 transition-colors" aria-label="Semana siguiente">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
                 </div>
 
                 <!-- Lista de los 7 días para edición rápida -->
@@ -129,7 +135,7 @@
             <div class="w-full max-w-sm min-w-0 bg-slate-900 p-2 sm:p-3 rounded-[2.5rem] border border-slate-800 shadow-2xl flex items-center justify-center overflow-hidden">
                 
                 <!-- CANVAS DEL PÓSTER 9:16 REAJUSTADO -->
-                <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl border border-slate-800 poster-bg-custom text-slate-100 font-serif">
+                <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl border border-slate-800 poster-bg-custom text-white font-serif">
                     
                     <!-- Elementos de Fondo (sin blur para compatibilidad) -->
                     <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-600/15 rounded-full pointer-events-none"></div>
@@ -264,10 +270,12 @@
             }, 800);
         }
 
+        let weekOffset = 0;
+
         function getWeekDates() {
             const now = new Date();
             const sunday = new Date(now);
-            sunday.setDate(now.getDate() - now.getDay());
+            sunday.setDate(now.getDate() - now.getDay() + (weekOffset * 7));
 
             const dates = [];
             for (let i = 0; i < 7; i++) {
@@ -276,6 +284,11 @@
                 dates.push(d);
             }
             return dates; // índice 0 = Domingo ... índice 6 = Sábado
+        }
+
+        function shiftWeek(delta) {
+            weekOffset += delta;
+            renderSlotsEditor();
         }
 
         function renderSlotsEditor() {
