@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <!-- html2canvas para la descarga HD -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- html-to-image para exportación fiel (reemplaza a html2canvas) -->
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -191,7 +191,7 @@
                 <!-- CANVAS DEL PÓSTER 9:16 REAJUSTADO -->
                 <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl poster-bg-custom text-slate-100 font-serif">
                     
-                    <!-- Elementos de Fondo (sin blur para compatibilidad con html2canvas) -->
+                    <!-- Elementos de Fondo (sin blur para compatibilidad) -->
                     <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-600/15 rounded-full pointer-events-none"></div>
                     <div class="absolute -bottom-10 -left-10 w-52 h-52 bg-emerald-700/15 rounded-full pointer-events-none"></div>
 
@@ -413,7 +413,7 @@
             });
         }
 
-        // Función de exportación corregida
+        // Función de exportación corregida con html-to-image
         async function downloadPosterImage() {
             showToast("Generando póster ajustado HD (1080x1920)...", "info");
             
@@ -422,7 +422,7 @@
             
             const original = document.getElementById('posterContainer');
             
-            // Crear un clon con dimensiones fijas para exportación exacta
+            // Crear un clon con dimensiones fijas para exportación exacta (360x640 px)
             const clone = original.cloneNode(true);
             clone.style.width = '360px';
             clone.style.height = '640px';
@@ -434,7 +434,7 @@
             clone.style.maxWidth = 'none';
             clone.style.aspectRatio = 'auto'; // anular aspect-ratio del CSS
             
-            // Eliminar clases que html2canvas no soporta (por si acaso)
+            // Eliminar clases que html-to-image no soporta (por si acaso)
             clone.querySelectorAll('*').forEach(el => {
                 el.classList.remove('backdrop-blur-md', 'blur-2xl', 'backdrop-blur');
             });
@@ -442,16 +442,18 @@
             document.body.appendChild(clone);
             
             try {
-                const canvas = await html2canvas(clone, {
-                    scale: 3, // 360px * 3 = 1080px, 640px * 3 = 1920px
-                    useCORS: true,
-                    backgroundColor: null,
-                    logging: false
+                // Usamos html-to-image con dimensiones explícitas para obtener 1080x1920
+                const dataUrl = await htmlToImage.toPng(clone, {
+                    width: 1080,
+                    height: 1920,
+                    pixelRatio: 1,  // Controlamos el tamaño con width/height
+                    quality: 1,
+                    backgroundColor: '#0f160f', // Fondo base por si hay transparencias
                 });
                 
                 const link = document.createElement('a');
                 link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = dataUrl;
                 link.click();
                 showToast("¡Póster descargado correctamente!");
             } catch (error) {
