@@ -115,7 +115,7 @@
                         </div>
                     </div>
 
-                    <!-- CUERPO: 2 COLUMNAS, DOMINGO A ANCHO COMPLETO -->
+                    <!-- CUERPO: 2 COLUMNAS -->
                     <div id="posterSlotsGrid" class="relative z-10 my-1 flex flex-wrap overflow-hidden pr-0.5 min-w-0">
                         <!-- Generado dinámicamente -->
                     </div>
@@ -196,26 +196,7 @@
             }, 300000);
         };
 
-        function getDynamic7DaysWeekString() {
-            const now = new Date();
-            const currentDay = now.getDay();
-            const distanceToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
-            const monday = new Date(now);
-            monday.setDate(now.getDate() + distanceToMonday + (weekOffset * 7));
-
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-
-            const startDay = monday.getDate();
-            const endDay = sunday.getDate();
-
-            const monthOptions = { month: 'long' };
-            const month = sunday.toLocaleDateString('es-ES', monthOptions);
-
-            return `Semana del ${startDay} al ${endDay} de ${month}`;
-        }
-
-        // Sincronizar los 7 días
+        // Sincronizar los 6 días
         function triggerAutoSync(silent = false) {
             if (!silent) {
                 showToast("Sincronizando citas desde Google Calendar...", "info");
@@ -228,8 +209,7 @@
                     { id: 3, day: "Miércoles", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
                     { id: 4, day: "Jueves", hours: ["09:00", "10:00", "10:30", "11:30", "13:00", "14:00", "15:00", "16:30"], active: true },
                     { id: 5, day: "Viernes", hours: ["09:30", "10:30", "11:30", "12:00", "13:00", "14:00", "15:30", "16:00"], active: true },
-                    { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-                    { id: 7, day: "Domingo", hours: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00"], active: true }
+                    { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true }
                 ];
 
                 renderSlotsEditor();
@@ -251,12 +231,12 @@
             monday.setDate(now.getDate() + distanceToMonday + (weekOffset * 7));
 
             const dates = [];
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 6; i++) {
                 const d = new Date(monday);
                 d.setDate(monday.getDate() + i);
                 dates.push(d);
             }
-            return dates; // índice 0 = Lunes ... índice 6 = Domingo
+            return dates; // índice 0 = Lunes ... índice 5 = Sábado
         }
 
         function shiftWeek(delta) {
@@ -269,8 +249,8 @@
             const list = document.getElementById('slotsEditorList');
             list.innerHTML = '';
 
-            const dayAbbrev = { "Domingo": "dom", "Lunes": "lun", "Martes": "mar", "Miércoles": "mié", "Jueves": "jue", "Viernes": "vie", "Sábado": "sáb" };
-            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+            const dayAbbrev = { "Lunes": "lun", "Martes": "mar", "Miércoles": "mié", "Jueves": "jue", "Viernes": "vie", "Sábado": "sáb" };
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
             const weekDates = getWeekDates();
 
             dayOrder.forEach((dayName, i) => {
@@ -318,26 +298,19 @@
                 return;
             }
 
-            // Cada día ocupa una columna (2 por fila); Domingo es la
-            // excepción de ancho completo, centrado.
+            // Cada día ocupa una columna (2 por fila).
             let col = 0;
-            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
             const weekDates = getWeekDates();
 
             activeSlots.forEach(slot => {
-                const isSunday = slot.day.toLowerCase() === 'domingo';
                 const card = document.createElement('div');
                 const dateIndex = dayOrder.indexOf(slot.day);
                 const dayNumber = dateIndex !== -1 ? weekDates[dateIndex].getDate() : '';
 
-                if (isSunday) {
-                    card.className = "w-full mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans";
-                    col = 0;
-                } else {
-                    const isFirstColumn = col === 0;
-                    card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans`;
-                    col = isFirstColumn ? 1 : 0;
-                }
+                const isFirstColumn = col === 0;
+                card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans`;
+                col = isFirstColumn ? 1 : 0;
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
@@ -348,7 +321,7 @@
                     hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin citas disponibles</span>`;
                 }
 
-                const hoursContainerClass = isSunday ? "grid grid-cols-6 gap-x-1 gap-y-1.5 pt-0.5" : "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5";
+                const hoursContainerClass = "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5";
 
                 card.innerHTML = `
                     <div class="flex items-center justify-center border-b border-muted-gold/20 pb-0.5 px-0.5 min-w-0">
