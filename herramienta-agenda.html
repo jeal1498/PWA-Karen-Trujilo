@@ -420,6 +420,31 @@
             });
         }
 
+        // Convierte todas las clases de Tailwind (y demás CSS) en estilos inline,
+        // copiando el estilo computado real del elemento original a su clon.
+        // Esto es necesario porque html-to-image no logra copiar correctamente
+        // la hoja de estilos que el CDN de Tailwind inyecta dinámicamente,
+        // y sin esto el póster se exporta en blanco (solo el fondo se ve).
+        function inlineComputedStyles(sourceRoot, cloneRoot) {
+            const applyStyle = (source, target) => {
+                const computed = window.getComputedStyle(source);
+                let cssText = '';
+                for (let i = 0; i < computed.length; i++) {
+                    const prop = computed[i];
+                    cssText += `${prop}:${computed.getPropertyValue(prop)};`;
+                }
+                target.style.cssText = cssText;
+            };
+
+            applyStyle(sourceRoot, cloneRoot);
+
+            const sourceEls = sourceRoot.querySelectorAll('*');
+            const cloneEls = cloneRoot.querySelectorAll('*');
+            for (let i = 0; i < sourceEls.length; i++) {
+                applyStyle(sourceEls[i], cloneEls[i]);
+            }
+        }
+
         // Función de exportación corregida con html-to-image
         async function downloadPosterImage() {
             showToast("Generando póster ajustado HD (1080x1920)...", "info");
@@ -436,6 +461,11 @@
 
             // Crear un clon con dimensiones fijas para exportación exacta
             const clone = original.cloneNode(true);
+
+            // Congelar todos los estilos de Tailwind como inline ANTES de tocar
+            // width/height/position, para no perder ningún estilo original.
+            inlineComputedStyles(original, clone);
+
             clone.style.width = BASE_W + 'px';
             clone.style.height = BASE_H + 'px';
             // Se posiciona DENTRO del viewport (esquina 0,0) pero invisible con opacity:0,
@@ -452,11 +482,6 @@
             clone.style.minWidth = '0';
             clone.style.aspectRatio = 'auto'; // anular aspect-ratio del CSS
 
-            // Eliminar clases que html-to-image no soporta (por si acaso)
-            clone.querySelectorAll('*').forEach(el => {
-                el.classList.remove('backdrop-blur-md', 'blur-2xl', 'backdrop-blur');
-            });
-
             document.body.appendChild(clone);
 
             try {
@@ -470,6 +495,7 @@
                     quality: 1,
                     backgroundColor: '#0f160f', // Fondo base por si hay transparencias
                     cacheBust: true,
+                    skipFonts: false,
                 });
 
                 const link = document.createElement('a');
