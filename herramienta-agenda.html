@@ -66,12 +66,9 @@
     <!-- Header / Navbar PWA -->
     <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-emerald-950 text-emerald-400 border border-emerald-800/60 p-2.5 rounded-xl shadow-sm">
-                    <i class="fa-solid fa-brain text-xl"></i>
-                </div>
+            <div class="flex items-center gap-3 flex-1 justify-center sm:justify-start">
                 <div>
-                    <h1 class="font-bold text-base sm:text-lg leading-tight text-white">Póster</h1>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight text-white text-center sm:text-left">Póster</h1>
                 </div>
             </div>
 
@@ -82,8 +79,6 @@
                       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span id="syncStatusText" class="hidden sm:inline">Google Calendar Sincronizado</span>
-                    <span id="syncStatusTextMobile" class="sm:hidden">Auto Sync</span>
                 </div>
 
                 <button id="btnInstallPwa" onclick="installPWA()" class="hidden md:flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95">
@@ -240,9 +235,7 @@
 
         // Sincronizar los 7 días
         function triggerAutoSync(silent = false) {
-            const statusText = document.getElementById('syncStatusText');
             if (!silent) {
-                statusText.innerText = "Sincronizando la semana con Google...";
                 showToast("Sincronizando turnos desde Google Calendar...", "info");
             }
 
@@ -256,8 +249,6 @@
                     { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
                     { id: 7, day: "Domingo", hours: ["10:00", "11:00", "12:00", "13:00", "15:00", "16:00", "17:00", "18:00"], active: true }
                 ];
-
-                statusText.innerText = "Google Calendar Sincronizado";
 
                 renderSlotsEditor();
                 updatePoster();
