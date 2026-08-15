@@ -213,36 +213,9 @@
         }
 
         let appState = {
-            slots: []
+            slots: [],
+            busyEvents: [] // eventos ya agendados en Google Calendar para la semana visible
         };
-
-        window.onload = function() {
-            triggerAutoSync();
-
-            setInterval(() => {
-                triggerAutoSync(true);
-            }, 300000);
-        };
-
-        // Sincronizar los 6 días. Por ahora recarga la plantilla base guardada
-        // por Karen (no la sobreescribe); el cruce con Google Calendar se
-        // conecta en el siguiente paso.
-        function triggerAutoSync(silent = false) {
-            if (!silent) {
-                showToast("Sincronizando citas desde Google Calendar...", "info");
-            }
-
-            setTimeout(() => {
-                appState.slots = loadScheduleTemplate();
-
-                renderSlotsEditor();
-                updatePoster();
-
-                if (!silent) {
-                    showToast("¡Citas reajustadas con éxito!");
-                }
-            }, 800);
-        }
 
         let weekOffset = 0;
 
@@ -262,10 +235,72 @@
             return dates; // índice 0 = Lunes ... índice 5 = Sábado
         }
 
+        // Rango Lunes 00:00 - Sábado 23:59 de la semana visible (según weekOffset).
+        function getVisibleWeekRange() {
+            const dates = getWeekDates();
+            const start = new Date(dates[0]);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(dates[dates.length - 1]);
+            end.setHours(23, 59, 59, 999);
+            return { start, end };
+        }
+
+        // Punto de conexión con el script real de Google Calendar. Debe
+        // devolver una promesa que resuelva con la lista de eventos ya
+        // agendados dentro de [start, end]. Mientras no esté conectado el
+        // script, devuelve un arreglo vacío (no bloquea ni inventa datos).
+        async function fetchCalendarEvents(start, end) {
+            if (window.CalendarSync && typeof window.CalendarSync.fetchBusyEvents === 'function') {
+                return window.CalendarSync.fetchBusyEvents(start, end);
+            }
+            return [];
+        }
+
+        window.onload = function() {
+            triggerAutoSync();
+
+            setInterval(() => {
+                triggerAutoSync(true);
+            }, 300000);
+        };
+
+        // Sincroniza los 6 días de la semana que se está viendo (weekOffset),
+        // no siempre la semana actual. Recarga la plantilla base guardada por
+        // Karen y trae los eventos ya ocupados de Calendar para ese rango; el
+        // cruce entre ambos (restar horas ocupadas) se conecta en el siguiente paso.
+        async function triggerAutoSync(silent = false) {
+            if (!silent) {
+                showToast("Sincronizando citas desde Google Calendar...", "info");
+            }
+
+            const { start, end } = getVisibleWeekRange();
+
+            try {
+                const [template, busyEvents] = await Promise.all([
+                    Promise.resolve(loadScheduleTemplate()),
+                    fetchCalendarEvents(start, end)
+                ]);
+
+                appState.slots = template;
+                appState.busyEvents = busyEvents;
+
+                renderSlotsEditor();
+                updatePoster();
+
+                if (!silent) {
+                    showToast("¡Citas reajustadas con éxito!");
+                }
+            } catch (e) {
+                console.error('Fallo la sincronización con Calendar:', e);
+                if (!silent) {
+                    showToast("No se pudo sincronizar con Calendar.", "error");
+                }
+            }
+        }
+
         function shiftWeek(delta) {
             weekOffset += delta;
-            renderSlotsEditor();
-            updatePoster();
+            triggerAutoSync(true);
         }
 
         function renderSlotsEditor() {
