@@ -423,41 +423,55 @@
         // Función de exportación corregida con html-to-image
         async function downloadPosterImage() {
             showToast("Generando póster ajustado HD (1080x1920)...", "info");
-            
+
             // Esperar a que las fuentes estén listas
             await document.fonts.ready;
-            
+
             const original = document.getElementById('posterContainer');
-            
-            // Crear un clon con dimensiones fijas para exportación exacta (360x640 px)
+
+            // Tamaño base del clon: 360x640 (proporción 9:16 exacta).
+            // pixelRatio:3 hará que la imagen final salga en 1080x1920.
+            const BASE_W = 360;
+            const BASE_H = 640;
+
+            // Crear un clon con dimensiones fijas para exportación exacta
             const clone = original.cloneNode(true);
-            clone.style.width = '360px';
-            clone.style.height = '640px';
+            clone.style.width = BASE_W + 'px';
+            clone.style.height = BASE_H + 'px';
+            // Se posiciona DENTRO del viewport (esquina 0,0) pero invisible con opacity:0,
+            // en vez de moverlo a -10000px, para evitar que el navegador se salte el
+            // renderizado/pintado de fuentes y estilos por estar demasiado lejos del viewport.
             clone.style.position = 'fixed';
-            clone.style.top = '-10000px';
-            clone.style.left = '-10000px';
+            clone.style.top = '0';
+            clone.style.left = '0';
+            clone.style.opacity = '0';
+            clone.style.pointerEvents = 'none';
             clone.style.zIndex = '-1000';
             clone.style.transform = 'none';
             clone.style.maxWidth = 'none';
+            clone.style.minWidth = '0';
             clone.style.aspectRatio = 'auto'; // anular aspect-ratio del CSS
-            
+
             // Eliminar clases que html-to-image no soporta (por si acaso)
             clone.querySelectorAll('*').forEach(el => {
                 el.classList.remove('backdrop-blur-md', 'blur-2xl', 'backdrop-blur');
             });
-            
+
             document.body.appendChild(clone);
-            
+
             try {
-                // Usamos html-to-image con dimensiones explícitas para obtener 1080x1920
+                // Esperar a que el navegador realmente pinte el clon antes de capturarlo
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Usamos html-to-image: pixelRatio 3 escala el contenido 360x640 -> 1080x1920
                 const dataUrl = await htmlToImage.toPng(clone, {
-                    width: 1080,
-                    height: 1920,
-                    pixelRatio: 1,  // Controlamos el tamaño con width/height
+                    pixelRatio: 3,
                     quality: 1,
                     backgroundColor: '#0f160f', // Fondo base por si hay transparencias
+                    cacheBust: true,
                 });
-                
+
                 const link = document.createElement('a');
                 link.download = `estado-whatsapp-ajustado-${Date.now()}.png`;
                 link.href = dataUrl;
