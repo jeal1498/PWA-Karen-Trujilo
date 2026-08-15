@@ -309,13 +309,13 @@
                 const dayNumber = dateIndex !== -1 ? weekDates[dateIndex].getDate() : '';
 
                 const isFirstColumn = col === 0;
-                card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/70 flex flex-col justify-start space-y-1 font-sans`;
+                card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/50 flex flex-col justify-start space-y-1 font-sans`;
                 col = isFirstColumn ? 1 : 0;
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
                     hoursHtml = slot.hours.map((h) => {
-                        return `<div class="time-pill w-full min-h-[22px] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-muted-gold/30 bg-white text-eucalyptus-dark font-sans leading-none flex items-center justify-center text-center">${h}</div>`;
+                        return `<div class="time-pill w-full min-h-[22px] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-muted-gold/30 bg-white/60 text-eucalyptus-dark font-sans leading-none flex items-center justify-center text-center">${h}</div>`;
                     }).join('');
                 } else {
                     hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">Sin citas disponibles</span>`;
