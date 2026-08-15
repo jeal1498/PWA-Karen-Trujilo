@@ -180,6 +180,38 @@
             whatsapp: "+52 998 321 1547"
         };
 
+        // Plantilla base editable (horario habitual de Karen). Se persiste en
+        // localStorage para no perderse en cada sincronización; solo se usa el
+        // valor por defecto la primera vez que se abre la herramienta.
+        const SCHEDULE_TEMPLATE_KEY = 'karen_schedule_template';
+
+        const DEFAULT_SCHEDULE_TEMPLATE = [
+            { id: 1, day: "Lunes", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
+            { id: 2, day: "Martes", hours: ["09:30", "10:30", "11:30", "12:30", "13:00", "14:00", "15:00", "16:00"], active: true },
+            { id: 3, day: "Miércoles", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
+            { id: 4, day: "Jueves", hours: ["09:00", "10:00", "10:30", "11:30", "13:00", "14:00", "15:00", "16:30"], active: true },
+            { id: 5, day: "Viernes", hours: ["09:30", "10:30", "11:30", "12:00", "13:00", "14:00", "15:30", "16:00"], active: true },
+            { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true }
+        ];
+
+        function loadScheduleTemplate() {
+            try {
+                const saved = localStorage.getItem(SCHEDULE_TEMPLATE_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) {
+                console.error('No se pudo leer la plantilla guardada, usando la de por defecto.', e);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
+        }
+
+        function saveScheduleTemplate() {
+            try {
+                localStorage.setItem(SCHEDULE_TEMPLATE_KEY, JSON.stringify(appState.slots));
+            } catch (e) {
+                console.error('No se pudo guardar la plantilla de horarios.', e);
+            }
+        }
+
         let appState = {
             slots: []
         };
@@ -192,21 +224,16 @@
             }, 300000);
         };
 
-        // Sincronizar los 6 días
+        // Sincronizar los 6 días. Por ahora recarga la plantilla base guardada
+        // por Karen (no la sobreescribe); el cruce con Google Calendar se
+        // conecta en el siguiente paso.
         function triggerAutoSync(silent = false) {
             if (!silent) {
                 showToast("Sincronizando citas desde Google Calendar...", "info");
             }
 
             setTimeout(() => {
-                appState.slots = [
-                    { id: 1, day: "Lunes", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-                    { id: 2, day: "Martes", hours: ["09:30", "10:30", "11:30", "12:30", "13:00", "14:00", "15:00", "16:00"], active: true },
-                    { id: 3, day: "Miércoles", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-                    { id: 4, day: "Jueves", hours: ["09:00", "10:00", "10:30", "11:30", "13:00", "14:00", "15:00", "16:30"], active: true },
-                    { id: 5, day: "Viernes", hours: ["09:30", "10:30", "11:30", "12:00", "13:00", "14:00", "15:30", "16:00"], active: true },
-                    { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true }
-                ];
+                appState.slots = loadScheduleTemplate();
 
                 renderSlotsEditor();
                 updatePoster();
@@ -277,6 +304,7 @@
             const newHours = prompt(`Editar horarios para ${slot.day}:`, slot.hours.join(', '));
             if (newHours !== null) {
                 slot.hours = newHours.split(',').map(h => h.trim()).filter(h => h.length > 0);
+                saveScheduleTemplate();
                 renderSlotsEditor();
                 updatePoster();
             }
