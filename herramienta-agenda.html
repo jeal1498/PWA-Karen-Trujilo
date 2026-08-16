@@ -591,9 +591,9 @@
             hourList.forEach(hour => {
                 const { num, period } = formatHourParts(hour);
                 html += `<div class="h-8 border-t border-muted-gold/10 dark:border-slate-800/50 relative">
-                    <div class="absolute -top-2 left-0 right-0 flex flex-col items-center leading-none text-slate-warm dark:text-slate-400 font-sans">
-                        <span class="text-[8px] font-bold">${num}</span>
-                        <span class="text-[6.5px] tracking-wide">${period}</span>
+                    <div class="absolute -top-2 left-0 right-0 flex flex-col items-center leading-none font-sans">
+                        <span class="text-[9px] font-bold text-eucalyptus-dark dark:text-white">${num}</span>
+                        <span class="text-[6.5px] tracking-wide text-slate-warm dark:text-slate-400">${period}</span>
                     </div>
                 </div>`;
                 columns.forEach(col => {
@@ -614,6 +614,21 @@
                     html += `<div class="h-8 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}">${cellInner}</div></div>`;
                 });
             });
+
+            // Línea de cierre: marca el fin de la jornada (8 p.m.) sin ser una
+            // hora agendable, igual que en Google Calendar.
+            {
+                const { num, period } = formatHourParts(`${LATEST_HOUR + 1}:00`);
+                html += `<div class="h-3 border-t border-muted-gold/10 dark:border-slate-800/50 relative">
+                    <div class="absolute -top-2 left-0 right-0 flex flex-col items-center leading-none font-sans">
+                        <span class="text-[9px] font-bold text-eucalyptus-dark dark:text-white">${num}</span>
+                        <span class="text-[6.5px] tracking-wide text-slate-warm dark:text-slate-400">${period}</span>
+                    </div>
+                </div>`;
+                columns.forEach(() => {
+                    html += `<div class="h-3 border-t border-muted-gold/10 dark:border-slate-800/50"></div>`;
+                });
+            }
 
             html += `</div>`;
             list.innerHTML = html;
