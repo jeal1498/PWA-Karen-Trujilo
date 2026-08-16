@@ -571,10 +571,13 @@
                         return `<div class="time-pill w-full min-h-[22px] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-muted-gold/30 bg-white/60 text-eucalyptus-dark font-sans leading-none flex items-center justify-center text-center">${h}</div>`;
                     }).join('');
                 } else {
-                    hoursHtml = `<span class="text-[8px] italic opacity-40 text-center py-0.5 w-full">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</span>`;
+                    hoursHtml = `<span class="col-span-3 flex items-center justify-center text-[8px] italic opacity-40 text-center py-0.5 w-full">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</span>`;
                 }
 
-                const hoursContainerClass = "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5";
+                // Alto fijo equivalente a 8 horas (3 filas de píldoras) para que
+                // todas las tarjetas se vean parejas, aunque un día tenga menos
+                // horas disponibles (o ninguna).
+                const hoursContainerClass = "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5 content-start min-h-[78px]";
 
                 card.innerHTML = `
                     <div class="flex items-center justify-center border-b border-muted-gold/20 pb-0.5 px-0.5 min-w-0">
