@@ -510,12 +510,17 @@
             triggerAutoSync(true);
         }
 
-        function formatHourLabel(hourStr) {
+        function formatHourParts(hourStr) {
             const h = parseInt(hourStr.split(':')[0], 10);
-            const period = h < 12 ? 'a.m.' : 'p.m.';
+            const period = h < 12 ? 'AM' : 'PM';
             let hour12 = h % 12;
             if (hour12 === 0) hour12 = 12;
-            return `${hour12} ${period}`;
+            return { num: String(hour12).padStart(2, '0'), period };
+        }
+
+        function formatHourLabel(hourStr) {
+            const { num, period } = formatHourParts(hourStr);
+            return `${num} ${period}`;
         }
 
         // Tocar una celda de hora libre la selecciona (o quita la selección) para
@@ -583,7 +588,11 @@
             // Tocar una celda disponible o cerrada prende/apaga esa hora; una hora ya
             // ocupada por una cita real, o un día festivo, no se puede tocar desde aquí.
             hourList.forEach(hour => {
-                html += `<div class="text-right pr-1 text-[8px] text-slate-warm dark:text-slate-400 font-sans -translate-y-2 leading-none">${formatHourLabel(hour)}</div>`;
+                const { num, period } = formatHourParts(hour);
+                html += `<div class="flex flex-col items-center justify-center text-slate-warm dark:text-slate-400 font-sans leading-none">
+                    <span class="text-[8px] font-bold">${num}</span>
+                    <span class="text-[6.5px] tracking-wide">${period}</span>
+                </div>`;
                 columns.forEach(col => {
                     let status = 'closed';
                     if (col.slot) {
