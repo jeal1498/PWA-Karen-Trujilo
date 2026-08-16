@@ -152,7 +152,7 @@
                 </div>
 
                 <!-- Vista semanal estilo Google Calendar -->
-                <div id="slotsEditorList" class="overflow-x-auto -mx-1 px-1">
+                <div id="slotsEditorList" class="overflow-auto -mx-1 px-1" style="max-height: 60vh;">
                     <!-- Generado dinámicamente -->
                 </div>
             </div>
@@ -490,21 +490,22 @@
             return `${hour12} ${period}`;
         }
 
-        // Tocar la fecha de un día reemplaza a los botones de editar/bloquear:
-        // un solo diálogo deja elegir cuál de las dos acciones hacer.
-        function onDayTap(slotId, y, m, d) {
+        // Tocar una celda de hora prende/apaga esa hora en la plantilla del día.
+        // No aplica si esa hora ya está ocupada por una cita real sincronizada de
+        // Calendar, ni si el día completo está marcado como festivo.
+        function toggleHourActive(slotId, hour) {
             const slot = appState.slots.find(s => s.id === slotId);
             if (!slot) return;
 
-            const dayDate = new Date(y, m, d);
-            const blocked = isDateBlocked(dayDate);
-            const wantsEditHours = confirm(`${slot.day} ${d}/${m + 1}\n\nAceptar = editar horarios\nCancelar = ${blocked ? 'desbloquear' : 'bloquear'} este día`);
-
-            if (wantsEditHours) {
-                editSlotHours(slotId);
+            if (slot.hours.includes(hour)) {
+                slot.hours = slot.hours.filter(h => h !== hour);
             } else {
-                toggleDayBlocked(dayDate);
+                slot.hours.push(hour);
+                slot.hours.sort();
             }
+            saveScheduleTemplate();
+            renderSlotsEditor();
+            updatePoster();
         }
 
         function renderSlotsEditor() {
@@ -525,63 +526,59 @@
                 columns.push({ name: dayName, date: weekDates[i], slot: appState.slots.find(s => s.day === dayName) || null });
             });
 
-            // Rango de horas de la grilla: unión de las horas configuradas en todos los días.
-            const hourSet = new Set();
-            appState.slots.forEach(s => s.hours.forEach(h => hourSet.add(h)));
-            const hourList = hourSet.size ? Array.from(hourSet).sort() : ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
-
-            const availByDay = {};
-            getAvailablePosterSlots().forEach(s => { availByDay[s.day] = new Set(s.hours); });
+            // Grilla de las 24 horas del día, como en Google Calendar; el margen
+            // visible se controla con scroll vertical, no acortando el rango.
+            const hourList = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
 
             let html = `<div class="grid" style="grid-template-columns: 34px repeat(7, 44px);">`;
 
-            // Fila de encabezado: abreviatura + número de día (hoy va en círculo, como en Calendar)
-            html += `<div></div>`;
+            // Fila de encabezado: abreviatura + número de día (hoy va en círculo, como en Calendar).
+            // Queda fija (sticky) arriba al hacer scroll vertical por las horas.
+            html += `<div class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95"></div>`;
             columns.forEach(col => {
                 const isToday = col.date.getFullYear() === todayRef.getFullYear() && col.date.getMonth() === todayRef.getMonth() && col.date.getDate() === todayRef.getDate();
                 const blocked = col.slot ? isDateBlocked(col.date) : false;
-                const tapAttrs = col.slot ? `onclick="onDayTap(${col.slot.id}, ${col.date.getFullYear()}, ${col.date.getMonth()}, ${col.date.getDate()})" role="button" tabindex="0" aria-label="Editar horarios de ${col.name}"` : '';
+                const tapAttrs = col.slot ? `onclick="toggleDayBlocked(new Date(${col.date.getFullYear()}, ${col.date.getMonth()}, ${col.date.getDate()}))" role="button" tabindex="0" aria-label="${blocked ? 'Desbloquear' : 'Bloquear'} ${col.name}"` : '';
                 html += `
-                    <div class="flex flex-col items-center justify-center gap-1 py-2 ${col.slot ? 'cursor-pointer' : ''}" ${tapAttrs}>
+                    <div class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 flex flex-col items-center justify-center gap-1 py-2 ${col.slot ? 'cursor-pointer' : ''}" ${tapAttrs}>
                         <span class="text-[10px] font-sans font-medium lowercase ${isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-warm dark:text-slate-400'}">${dayAbbrev[col.name]}</span>
                         <span class="w-8 h-8 flex items-center justify-center rounded-full text-base font-bold font-serif ${isToday ? 'bg-eucalyptus-dark dark:bg-emerald-500 text-silk-cream' : 'text-eucalyptus-dark dark:text-white'} ${blocked ? 'line-through opacity-40' : ''}">${col.date.getDate()}</span>
                     </div>`;
             });
 
-            // Filas de horas: cada celda = disponible / ocupada / cerrada, según la plantilla
-            // de esa fecha, lo ya agendado en Calendar y los días marcados como festivos.
+            // Filas de horas: cada celda = disponible / ocupada (por Calendar) / cerrada.
+            // Tocar una celda disponible o cerrada prende/apaga esa hora; una hora ya
+            // ocupada por una cita real, o un día festivo, no se puede tocar desde aquí.
             hourList.forEach(hour => {
                 html += `<div class="text-right pr-1 text-[9px] text-slate-warm dark:text-slate-400 font-sans -translate-y-2">${formatHourLabel(hour)}</div>`;
                 columns.forEach(col => {
                     let status = 'closed';
                     if (col.slot) {
                         if (isDateBlocked(col.date)) status = 'blocked';
-                        else if (!col.slot.hours.includes(hour)) status = 'closed';
-                        else if (availByDay[col.name] && availByDay[col.name].has(hour)) status = 'available';
-                        else status = 'busy';
+                        else if (col.slot.hours.includes(hour)) {
+                            status = isHourBusy(col.date, hour, appState.busyEvents) ? 'busy' : 'available';
+                        } else {
+                            status = 'closed';
+                        }
                     }
+                    const editable = col.slot && (status === 'available' || status === 'closed');
                     const cellClass = status === 'available' ? 'bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40'
-                        : status === 'busy' ? 'bg-slate-200 dark:bg-slate-700/50'
+                        : status === 'busy' ? 'bg-slate-300 dark:bg-slate-600/60'
                         : status === 'blocked' ? 'bg-slate-100 dark:bg-slate-800/40'
                         : '';
-                    html += `<div class="h-12 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5"><div class="w-full h-full rounded-md ${cellClass}"></div></div>`;
+                    const tapAttrs = editable ? `onclick="toggleHourActive(${col.slot.id}, '${hour}')" role="button" tabindex="0" aria-label="${status === 'available' ? 'Desactivar' : 'Activar'} ${dayAbbrev[col.name]} ${formatHourLabel(hour)}"` : '';
+                    html += `<div class="h-12 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}"></div></div>`;
                 });
             });
 
             html += `</div>`;
             list.innerHTML = html;
-        }
 
-        function editSlotHours(id) {
-            const slot = appState.slots.find(s => s.id === id);
-            if (!slot) return;
-
-            const newHours = prompt(`Editar horarios para ${slot.day}:`, slot.hours.join(', '));
-            if (newHours !== null) {
-                slot.hours = newHours.split(',').map(h => h.trim()).filter(h => h.length > 0);
-                saveScheduleTemplate();
-                renderSlotsEditor();
-                updatePoster();
+            // Al abrir, mostrar la grilla ya posicionada cerca del horario de trabajo
+            // en vez de arrancar en la medianoche.
+            if (!list.dataset.scrolled) {
+                list.scrollTop = 7 * 48;
+                list.dataset.scrolled = "1";
             }
         }
 
