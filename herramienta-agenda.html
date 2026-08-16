@@ -489,6 +489,7 @@
             const dayAbbrev = { "Lunes": "lun", "Martes": "mar", "Miércoles": "mié", "Jueves": "jue", "Viernes": "vie", "Sábado": "sáb" };
             const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
             const weekDates = getWeekDates();
+            const todayRef = new Date();
 
             dayOrder.forEach((dayName, i) => {
                 const slot = appState.slots.find(s => s.day === dayName);
@@ -497,16 +498,16 @@
                 const dayDate = weekDates[i];
                 const blocked = isDateBlocked(dayDate);
 
+                const isToday = dayDate.getFullYear() === todayRef.getFullYear() && dayDate.getMonth() === todayRef.getMonth() && dayDate.getDate() === todayRef.getDate();
+
                 const item = document.createElement('div');
                 item.className = "flex flex-col items-center flex-shrink-0 w-12";
                 item.innerHTML = `
-                    <div class="w-full bg-eucalyptus-dark dark:bg-slate-900 rounded-t-2xl pt-2 pb-4 flex items-center justify-center">
-                        <span class="text-silk-cream dark:text-white font-bold text-[10px] font-serif tracking-wide lowercase">${dayAbbrev[dayName]}</span>
+                    <div class="flex flex-col items-center gap-1 pt-1 pb-2">
+                        <span class="text-[10px] font-sans font-medium lowercase ${isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-warm dark:text-slate-400'} ${blocked ? 'opacity-50' : ''}">${dayAbbrev[dayName]}</span>
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold font-serif ${isToday ? 'bg-eucalyptus-dark dark:bg-emerald-500 text-silk-cream' : 'text-eucalyptus-dark dark:text-white'} ${blocked ? 'line-through opacity-40' : ''}">${dayDate.getDate()}</span>
                     </div>
-                    <div class="w-full ${blocked ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'} border-t border-muted-gold/20 dark:border-slate-700 rounded-b-2xl -mt-3 pt-4 pb-2 flex items-center justify-center">
-                        <span class="text-eucalyptus-dark dark:text-white font-bold text-lg font-serif tracking-wide ${blocked ? 'line-through opacity-50' : ''}">${dayDate.getDate()}</span>
-                    </div>
-                    <div class="mt-1.5 flex flex-col items-center gap-1">
+                    <div class="mt-1 flex flex-col items-center gap-1">
                         <button onclick="editSlotHours(${slot.id})" class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400 text-xs shadow" aria-label="Editar horarios">
                             <i class="fa-solid fa-pen"></i>
                         </button>
