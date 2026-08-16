@@ -158,7 +158,7 @@
                         <li>Toca una <span class="font-bold text-eucalyptus-dark dark:text-white">hora</span> para activarla o desactivarla.</li>
                         <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40 align-middle"></span> Verde = disponible para agendar.</li>
                         <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-slate-300 dark:bg-slate-600/60 align-middle"></span> Gris = ya ocupada por una cita real en Calendar, no se puede editar aquí.</li>
-                        <li>Máximo 9 horas activas por día. Atención desde las 8 a.m.</li>
+                        <li>Por ahora no hay límite de horas activas por día (pausado temporalmente). Atención desde las 8 a.m. hasta las 8 p.m.</li>
                     </ul>
                 </details>
 
@@ -227,6 +227,7 @@
         const EARLIEST_HOUR = 8;                   // Karen no atiende antes de las 8 a.m.
         const LATEST_HOUR = 20;                    // último bloque de hora que se muestra en la grilla
         const MAX_HOURS_PER_DAY = 9;               // tope de horas activas por día
+        const ENFORCE_MAX_HOURS = false;           // pausado a pedido de Karen (16 ago 2026); cambiar a true para reactivar
         const BLOCKED_DATES_KEY = 'karen_blocked_dates'; // días festivos/bloqueados manualmente
 
         function dateKey(date) {
@@ -527,7 +528,7 @@
             if (slot.hours.includes(hour)) {
                 slot.hours = slot.hours.filter(h => h !== hour);
             } else {
-                if (slot.hours.length >= MAX_HOURS_PER_DAY) {
+                if (ENFORCE_MAX_HOURS && slot.hours.length >= MAX_HOURS_PER_DAY) {
                     showToast(`${slot.day} ya tiene el máximo de ${MAX_HOURS_PER_DAY} horas disponibles`, "error");
                     return;
                 }
@@ -586,11 +587,9 @@
                     let status = 'closed';
                     if (col.slot) {
                         if (isDateBlocked(col.date)) status = 'blocked';
-                        else if (col.slot.hours.includes(hour)) {
-                            status = isHourBusy(col.date, hour, appState.busyEvents) ? 'busy' : 'available';
-                        } else {
-                            status = 'closed';
-                        }
+                        else if (isHourBusy(col.date, hour, appState.busyEvents)) status = 'busy';
+                        else if (col.slot.hours.includes(hour)) status = 'available';
+                        else status = 'closed';
                     }
                     const editable = col.slot && (status === 'available' || status === 'closed');
                     const cellClass = status === 'available' ? 'bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40'
