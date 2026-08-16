@@ -357,10 +357,23 @@
         function getVisibleWeekRange() {
             const dates = getWeekDates();
             const start = new Date(dates[0]);
-            start.setHours(0, 0, 0, 0);
+            start.setHours(EARLIEST_HOUR, 0, 0, 0);
             const end = new Date(dates[dates.length - 1]);
-            end.setHours(23, 59, 59, 999);
+            end.setHours(LATEST_HOUR, 0, 0, 0);
             return { start, end };
+        }
+
+        // Filtro de seguridad: descarta cualquier evento de Calendar que no
+        // toque la jornada laboral (8am-8pm) de su propio día, aunque el
+        // endpoint llegara a devolver algo fuera de ese rango.
+        function overlapsWorkday(ev) {
+            const evStart = new Date(ev.start);
+            const evEnd = new Date(ev.end);
+            const workdayStart = new Date(evStart);
+            workdayStart.setHours(EARLIEST_HOUR, 0, 0, 0);
+            const workdayEnd = new Date(evStart);
+            workdayEnd.setHours(LATEST_HOUR, 0, 0, 0);
+            return evStart < workdayEnd && evEnd > workdayStart;
         }
 
         // Punto de conexión con el script real de Google Calendar. Debe
@@ -429,7 +442,7 @@
                 ]);
 
                 appState.slots = template;
-                appState.busyEvents = busyEvents;
+                appState.busyEvents = busyEvents.filter(overlapsWorkday);
                 appState.lastSyncAt = new Date();
                 appState.lastSyncOk = true;
                 appState.consecutiveFailures = 0;
