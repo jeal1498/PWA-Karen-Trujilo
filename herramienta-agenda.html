@@ -153,14 +153,15 @@
 
                 <details class="text-xs">
                     <summary class="cursor-pointer select-none text-slate-warm dark:text-slate-400 font-sans font-medium">¿Cómo funciona la agenda?</summary>
-                    <ul class="mt-2 space-y-1 text-slate-warm dark:text-slate-400 font-sans list-disc list-inside">
-                        <li>Toca el <span class="font-bold text-eucalyptus-dark dark:text-white">número de un día</span> para bloquearlo o desbloquearlo como festivo.</li>
-                        <li>Toca una <span class="font-bold text-eucalyptus-dark dark:text-white">hora libre</span> para elegirla (o quitarla) del póster.</li>
-                        <li>Casilla en blanco = hora libre (todavía no elegida para el póster).</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-muted-gold align-middle"></span> Dorado con ✓ = elegida a mano, es la que aparece en el póster.</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-rose-100 dark:bg-rose-950/60 border border-rose-300/70 dark:border-rose-800/50 align-middle"></span> Rosa = ya ocupada por una cita real en Calendar, no se puede elegir.</li>
-                        <li>Máximo 8 horas elegidas por día. Jornada visible de 8 a.m. a 8 p.m.</li>
-                    </ul>
+                    <div class="mt-2 space-y-2 text-slate-warm dark:text-slate-400 font-sans">
+                        <p>Toca un <span class="font-bold text-eucalyptus-dark dark:text-white">día</span> para marcarlo como festivo, y toca una <span class="font-bold text-eucalyptus-dark dark:text-white">hora</span> para agregarla o quitarla del póster.</p>
+                        <ul class="space-y-1 list-none">
+                            <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-white border border-muted-gold/30 align-middle"></span> Libre</li>
+                            <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-muted-gold align-middle"></span> Elegida (aparece en el póster)</li>
+                            <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-rose-100 dark:bg-rose-950/60 border border-rose-300/70 dark:border-rose-800/50 align-middle"></span> Ocupada, no se puede tocar</li>
+                        </ul>
+                        <p>Límite: 8 horas por día, de 8 a.m. a 8 p.m.</p>
+                    </div>
                 </details>
 
                 <!-- Vista semanal estilo Google Calendar -->
