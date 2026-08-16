@@ -1,4 +1,9 @@
-# Sincronización con Google Calendar
+# Sincronización con Google Calendar (Apps Script) — en desuso
+
+> ⚠️ Reemplazado por el endpoint de Vercel en `/api/busy-events.js`
+> (ver `api/README.md`), porque el Drive de Karen se quedó sin espacio y
+> Apps Script no puede desplegar sin él. Este `Code.gs` se deja como
+> referencia, pero **no es el método que se usa hoy**.
 
 `Code.gs` es el script que hay que pegar en Google Apps Script para que
 `herramienta-agenda.html` pueda leer los horarios ya ocupados de Karen.
