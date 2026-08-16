@@ -164,7 +164,7 @@
                 </details>
 
                 <!-- Vista semanal estilo Google Calendar -->
-                <div id="slotsEditorList" class="overflow-auto -mx-1 px-1" style="max-height: 60vh;">
+                <div id="slotsEditorList" class="-mx-1 px-1">
                     <!-- Generado dinámicamente -->
                 </div>
             </div>
@@ -174,7 +174,7 @@
     </main>
 
     <!-- Toast de Notificaciones -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-white dark:bg-slate-900 text-eucalyptus-dark dark:text-white px-4 py-3 rounded-2xl shadow-2xl border border-muted-gold/20 dark:border-slate-800 flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 text-eucalyptus-dark dark:text-white px-4 py-3 rounded-2xl shadow-2xl border border-muted-gold/20 dark:border-slate-800 flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toastMessage" class="text-sm font-medium">Notificación</span>
     </div>
@@ -195,12 +195,12 @@
         const SCHEDULE_TEMPLATE_KEY = 'karen_schedule_template';
 
         const DEFAULT_SCHEDULE_TEMPLATE = [
-            { id: 1, day: "Lunes", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-            { id: 2, day: "Martes", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-            { id: 3, day: "Miércoles", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-            { id: 4, day: "Jueves", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-            { id: 5, day: "Viernes", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true },
-            { id: 6, day: "Sábado", hours: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"], active: true }
+            { id: 1, day: "Lunes", hours: [], active: true },
+            { id: 2, day: "Martes", hours: [], active: true },
+            { id: 3, day: "Miércoles", hours: [], active: true },
+            { id: 4, day: "Jueves", hours: [], active: true },
+            { id: 5, day: "Viernes", hours: [], active: true },
+            { id: 6, day: "Sábado", hours: [], active: true }
         ];
 
         function loadScheduleTemplate() {
@@ -563,7 +563,7 @@
             // las 8 p.m.; no se muestran horas de madrugada.
             const hourList = Array.from({ length: LATEST_HOUR - EARLIEST_HOUR + 1 }, (_, i) => `${String(EARLIEST_HOUR + i).padStart(2, '0')}:00`);
 
-            let html = `<div class="grid" style="grid-template-columns: 34px repeat(7, 44px);">`;
+            let html = `<div class="grid" style="grid-template-columns: 26px repeat(7, minmax(0, 1fr));">`;
 
             // Fila de encabezado: abreviatura + número de día (hoy va en círculo, como en Calendar).
             // Queda fija (sticky) arriba al hacer scroll vertical por las horas.
@@ -574,8 +574,8 @@
                 const tapAttrs = col.slot ? `onclick="toggleDayBlocked(new Date(${col.date.getFullYear()}, ${col.date.getMonth()}, ${col.date.getDate()}))" role="button" tabindex="0" aria-label="${blocked ? 'Desbloquear' : 'Bloquear'} ${col.name}"` : '';
                 html += `
                     <div class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 flex flex-col items-center justify-center gap-1 py-2 ${col.slot ? 'cursor-pointer' : ''}" ${tapAttrs}>
-                        <span class="text-[10px] font-sans font-medium lowercase ${isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-warm dark:text-slate-400'}">${dayAbbrev[col.name]}</span>
-                        <span class="w-8 h-8 flex items-center justify-center rounded-full text-base font-bold font-serif ${isToday ? 'bg-eucalyptus-dark dark:bg-emerald-500 text-silk-cream' : 'text-eucalyptus-dark dark:text-white'} ${blocked ? 'line-through opacity-40' : ''}">${col.date.getDate()}</span>
+                        <span class="text-[9px] font-sans font-medium lowercase ${isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-warm dark:text-slate-400'}">${dayAbbrev[col.name]}</span>
+                        <span class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold font-serif ${isToday ? 'bg-eucalyptus-dark dark:bg-emerald-500 text-silk-cream' : 'text-eucalyptus-dark dark:text-white'} ${blocked ? 'line-through opacity-40' : ''}">${col.date.getDate()}</span>
                     </div>`;
             });
 
@@ -583,7 +583,7 @@
             // Tocar una celda disponible o cerrada prende/apaga esa hora; una hora ya
             // ocupada por una cita real, o un día festivo, no se puede tocar desde aquí.
             hourList.forEach(hour => {
-                html += `<div class="text-right pr-1 text-[9px] text-slate-warm dark:text-slate-400 font-sans -translate-y-2">${formatHourLabel(hour)}</div>`;
+                html += `<div class="text-right pr-1 text-[8px] text-slate-warm dark:text-slate-400 font-sans -translate-y-2 leading-none">${formatHourLabel(hour)}</div>`;
                 columns.forEach(col => {
                     let status = 'closed';
                     if (col.slot) {
@@ -599,7 +599,7 @@
                         : '';
                     const cellInner = status === 'selected' ? '<i class="fa-solid fa-check text-[9px] text-silk-cream"></i>' : '';
                     const tapAttrs = editable ? `onclick="toggleHourActive(${col.slot.id}, '${hour}')" role="button" tabindex="0" aria-label="${status === 'selected' ? 'Quitar del póster' : 'Agregar al póster'} ${dayAbbrev[col.name]} ${formatHourLabel(hour)}"` : '';
-                    html += `<div class="h-12 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}">${cellInner}</div></div>`;
+                    html += `<div class="h-8 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}">${cellInner}</div></div>`;
                 });
             });
 
