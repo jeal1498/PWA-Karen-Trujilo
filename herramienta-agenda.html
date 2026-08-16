@@ -155,10 +155,11 @@
                     <summary class="cursor-pointer select-none text-slate-warm dark:text-slate-400 font-sans font-medium">¿Cómo funciona la agenda?</summary>
                     <ul class="mt-2 space-y-1 text-slate-warm dark:text-slate-400 font-sans list-disc list-inside">
                         <li>Toca el <span class="font-bold text-eucalyptus-dark dark:text-white">número de un día</span> para bloquearlo o desbloquearlo como festivo.</li>
-                        <li>Toca una <span class="font-bold text-eucalyptus-dark dark:text-white">hora</span> para activarla o desactivarla.</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40 align-middle"></span> Verde = disponible para agendar.</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-slate-300 dark:bg-slate-600/60 align-middle"></span> Gris = ya ocupada por una cita real en Calendar, no se puede editar aquí.</li>
-                        <li>Por ahora no hay límite de horas activas por día (pausado temporalmente). Atención desde las 8 a.m. hasta las 8 p.m.</li>
+                        <li>Toca una <span class="font-bold text-eucalyptus-dark dark:text-white">hora libre</span> para elegirla (o quitarla) del póster.</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40 align-middle"></span> Verde claro = hora libre (todavía no elegida para el póster).</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500 align-middle"></span> Verde con ✓ = elegida a mano, es la que aparece en el póster.</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-slate-300 dark:bg-slate-600/60 align-middle"></span> Gris = ya ocupada por una cita real en Calendar, no se puede elegir.</li>
+                        <li>Máximo 8 horas elegidas por día. Jornada visible de 8 a.m. a 8 p.m.</li>
                     </ul>
                 </details>
 
@@ -226,8 +227,7 @@
         const MIN_LEAD_MINUTES = 120;              // no mostrar horas con menos de 2h de aviso
         const EARLIEST_HOUR = 8;                   // Karen no atiende antes de las 8 a.m.
         const LATEST_HOUR = 20;                    // último bloque de hora que se muestra en la grilla
-        const MAX_HOURS_PER_DAY = 9;               // tope de horas activas por día
-        const ENFORCE_MAX_HOURS = false;           // pausado a pedido de Karen (16 ago 2026); cambiar a true para reactivar
+        const MAX_SELECTED_HOURS_PER_DAY = 8;      // tope de horas elegidas a mano por día para el póster
         const BLOCKED_DATES_KEY = 'karen_blocked_dates'; // días festivos/bloqueados manualmente
 
         function dateKey(date) {
@@ -518,9 +518,10 @@
             return `${hour12} ${period}`;
         }
 
-        // Tocar una celda de hora prende/apaga esa hora en la plantilla del día.
-        // No aplica si esa hora ya está ocupada por una cita real sincronizada de
-        // Calendar, ni si el día completo está marcado como festivo.
+        // Tocar una celda de hora libre la selecciona (o quita la selección) para
+        // el póster. No aplica sobre horas ya ocupadas por una cita real
+        // sincronizada de Calendar, ni si el día completo está marcado como
+        // festivo. Máximo 8 horas seleccionadas por día.
         function toggleHourActive(slotId, hour) {
             const slot = appState.slots.find(s => s.id === slotId);
             if (!slot) return;
@@ -528,8 +529,8 @@
             if (slot.hours.includes(hour)) {
                 slot.hours = slot.hours.filter(h => h !== hour);
             } else {
-                if (ENFORCE_MAX_HOURS && slot.hours.length >= MAX_HOURS_PER_DAY) {
-                    showToast(`${slot.day} ya tiene el máximo de ${MAX_HOURS_PER_DAY} horas disponibles`, "error");
+                if (slot.hours.length >= MAX_SELECTED_HOURS_PER_DAY) {
+                    showToast(`${slot.day} ya tiene el máximo de ${MAX_SELECTED_HOURS_PER_DAY} horas seleccionadas para el póster`, "error");
                     return;
                 }
                 slot.hours.push(hour);
@@ -588,16 +589,18 @@
                     if (col.slot) {
                         if (isDateBlocked(col.date)) status = 'blocked';
                         else if (isHourBusy(col.date, hour, appState.busyEvents)) status = 'busy';
-                        else if (col.slot.hours.includes(hour)) status = 'available';
-                        else status = 'closed';
+                        else if (col.slot.hours.includes(hour)) status = 'selected';
+                        else status = 'available';
                     }
-                    const editable = col.slot && (status === 'available' || status === 'closed');
-                    const cellClass = status === 'available' ? 'bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40'
+                    const editable = col.slot && (status === 'available' || status === 'selected');
+                    const cellClass = status === 'selected' ? 'bg-emerald-500 dark:bg-emerald-500/90 border border-emerald-600 dark:border-emerald-400 flex items-center justify-center'
+                        : status === 'available' ? 'bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40'
                         : status === 'busy' ? 'bg-slate-300 dark:bg-slate-600/60'
                         : status === 'blocked' ? 'bg-slate-100 dark:bg-slate-800/40'
                         : '';
-                    const tapAttrs = editable ? `onclick="toggleHourActive(${col.slot.id}, '${hour}')" role="button" tabindex="0" aria-label="${status === 'available' ? 'Desactivar' : 'Activar'} ${dayAbbrev[col.name]} ${formatHourLabel(hour)}"` : '';
-                    html += `<div class="h-12 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}"></div></div>`;
+                    const cellInner = status === 'selected' ? '<i class="fa-solid fa-check text-[9px] text-white"></i>' : '';
+                    const tapAttrs = editable ? `onclick="toggleHourActive(${col.slot.id}, '${hour}')" role="button" tabindex="0" aria-label="${status === 'selected' ? 'Quitar del póster' : 'Agregar al póster'} ${dayAbbrev[col.name]} ${formatHourLabel(hour)}"` : '';
+                    html += `<div class="h-12 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}">${cellInner}</div></div>`;
                 });
             });
 
