@@ -156,9 +156,9 @@
                     <ul class="mt-2 space-y-1 text-slate-warm dark:text-slate-400 font-sans list-disc list-inside">
                         <li>Toca el <span class="font-bold text-eucalyptus-dark dark:text-white">número de un día</span> para bloquearlo o desbloquearlo como festivo.</li>
                         <li>Toca una <span class="font-bold text-eucalyptus-dark dark:text-white">hora libre</span> para elegirla (o quitarla) del póster.</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40 align-middle"></span> Verde claro = hora libre (todavía no elegida para el póster).</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500 align-middle"></span> Verde con ✓ = elegida a mano, es la que aparece en el póster.</li>
-                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-slate-300 dark:bg-slate-600/60 align-middle"></span> Gris = ya ocupada por una cita real en Calendar, no se puede elegir.</li>
+                        <li>Casilla en blanco = hora libre (todavía no elegida para el póster).</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-muted-gold align-middle"></span> Dorado con ✓ = elegida a mano, es la que aparece en el póster.</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-rose-100 dark:bg-rose-950/60 border border-rose-300/70 dark:border-rose-800/50 align-middle"></span> Rosa = ya ocupada por una cita real en Calendar, no se puede elegir.</li>
                         <li>Máximo 8 horas elegidas por día. Jornada visible de 8 a.m. a 8 p.m.</li>
                     </ul>
                 </details>
@@ -593,12 +593,11 @@
                         else status = 'available';
                     }
                     const editable = col.slot && (status === 'available' || status === 'selected');
-                    const cellClass = status === 'selected' ? 'bg-emerald-500 dark:bg-emerald-500/90 border border-emerald-600 dark:border-emerald-400 flex items-center justify-center'
-                        : status === 'available' ? 'bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300/60 dark:border-emerald-700/40'
-                        : status === 'busy' ? 'bg-slate-300 dark:bg-slate-600/60'
+                    const cellClass = status === 'selected' ? 'bg-muted-gold border border-eucalyptus-dark/30 dark:border-silk-cream/30 flex items-center justify-center'
+                        : status === 'busy' ? 'bg-rose-100 dark:bg-rose-950/60 border border-rose-300/70 dark:border-rose-800/50'
                         : status === 'blocked' ? 'bg-slate-100 dark:bg-slate-800/40'
                         : '';
-                    const cellInner = status === 'selected' ? '<i class="fa-solid fa-check text-[9px] text-white"></i>' : '';
+                    const cellInner = status === 'selected' ? '<i class="fa-solid fa-check text-[9px] text-silk-cream"></i>' : '';
                     const tapAttrs = editable ? `onclick="toggleHourActive(${col.slot.id}, '${hour}')" role="button" tabindex="0" aria-label="${status === 'selected' ? 'Quitar del póster' : 'Agregar al póster'} ${dayAbbrev[col.name]} ${formatHourLabel(hour)}"` : '';
                     html += `<div class="h-12 border-t border-muted-gold/10 dark:border-slate-800/50 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}">${cellInner}</div></div>`;
                 });
