@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🗓️</text></svg>">
+    <meta name="theme-color" content="#F9F7F2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)">
     <title>Póster - Alineación Perfecta 9:16</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +16,7 @@
 
     <script>
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: 'media',
             theme: {
                 extend: {
                     colors: {
@@ -70,7 +73,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white">
+<body class="bg-silk-cream dark:bg-slate-950 text-eucalyptus-dark dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white">
 
     <!-- Contenido Principal -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -78,7 +81,7 @@
         <!-- VISTA PREVIA DEL PÓSTER 9:16 -->
         <section class="lg:col-span-7 flex flex-col items-center justify-start">
             
-            <div class="w-full max-w-md bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
+            <div class="w-full max-w-md bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-muted-gold/20 dark:border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
                 <!-- CANVAS DEL PÓSTER 9:16 REAJUSTADO -->
                 <div id="posterContainer" class="story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl border border-muted-gold/30 poster-bg-custom text-eucalyptus-dark font-serif">
                     
@@ -131,15 +134,15 @@
         <section class="lg:col-span-5 space-y-5">
             
             <!-- Horarios Sincronizados de la Semana -->
-            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
-                <div class="border-b border-slate-800 pb-2 flex items-center justify-between gap-3">
-                    <button onclick="shiftWeek(-1)" class="w-6 h-6 flex items-center justify-center rounded-full text-emerald-400 hover:bg-slate-800 transition-colors" aria-label="Semana anterior">
+            <div class="bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-muted-gold/20 dark:border-slate-800 overflow-hidden shadow-xl p-4 space-y-3">
+                <div class="border-b border-muted-gold/20 dark:border-slate-800 pb-2 flex items-center justify-between gap-3">
+                    <button onclick="shiftWeek(-1)" class="w-12 h-12 flex items-center justify-center rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-silk-cream dark:hover:bg-slate-800 transition-colors" aria-label="Semana anterior">
                         <i class="fa-solid fa-chevron-left text-xs"></i>
                     </button>
-                    <span class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                    <span class="text-xs sm:text-sm font-bold text-eucalyptus-dark dark:text-white uppercase tracking-wider">
                         Agenda Semanal
                     </span>
-                    <button onclick="shiftWeek(1)" class="w-6 h-6 flex items-center justify-center rounded-full text-emerald-400 hover:bg-slate-800 transition-colors" aria-label="Semana siguiente">
+                    <button onclick="shiftWeek(1)" class="w-12 h-12 flex items-center justify-center rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-silk-cream dark:hover:bg-slate-800 transition-colors" aria-label="Semana siguiente">
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </button>
                 </div>
@@ -149,11 +152,11 @@
                       <span id="syncBadgePing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span id="syncBadgeDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span id="syncStatusText" class="text-[9px] text-slate-400 font-sans"></span>
+                    <span id="syncStatusText" class="text-[9px] text-slate-warm dark:text-slate-400 font-sans"></span>
                 </div>
 
                 <!-- Lista de los 7 días para edición rápida -->
-                <div id="slotsEditorList" class="flex gap-1.5">
+                <div id="slotsEditorList" class="flex gap-1.5 overflow-x-auto">
                     <!-- Generado dinámicamente -->
                 </div>
             </div>
@@ -163,7 +166,7 @@
     </main>
 
     <!-- Toast de Notificaciones -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <div id="toast" class="fixed bottom-6 right-6 bg-white dark:bg-slate-900 text-eucalyptus-dark dark:text-white px-4 py-3 rounded-2xl shadow-2xl border border-muted-gold/20 dark:border-slate-800 flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toastMessage" class="text-sm font-medium">Notificación</span>
     </div>
@@ -499,19 +502,19 @@
                 const blocked = isDateBlocked(dayDate);
 
                 const item = document.createElement('div');
-                item.className = "flex flex-col items-center flex-1 min-w-0";
+                item.className = "flex flex-col items-center flex-shrink-0 w-12";
                 item.innerHTML = `
-                    <div class="w-full bg-slate-900 rounded-t-2xl pt-2 pb-4 flex items-center justify-center">
-                        <span class="text-white font-bold text-[10px] font-serif tracking-wide lowercase">${dayAbbrev[dayName]}</span>
+                    <div class="w-full bg-eucalyptus-dark dark:bg-slate-900 rounded-t-2xl pt-2 pb-4 flex items-center justify-center">
+                        <span class="text-silk-cream dark:text-white font-bold text-[10px] font-serif tracking-wide lowercase">${dayAbbrev[dayName]}</span>
                     </div>
-                    <div class="w-full ${blocked ? 'bg-slate-700' : 'bg-slate-800'} border-t border-slate-700 rounded-b-2xl -mt-3 pt-4 pb-2 flex items-center justify-center">
-                        <span class="text-white font-bold text-lg font-serif tracking-wide ${blocked ? 'line-through opacity-50' : ''}">${dayDate.getDate()}</span>
+                    <div class="w-full ${blocked ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'} border-t border-muted-gold/20 dark:border-slate-700 rounded-b-2xl -mt-3 pt-4 pb-2 flex items-center justify-center">
+                        <span class="text-eucalyptus-dark dark:text-white font-bold text-lg font-serif tracking-wide ${blocked ? 'line-through opacity-50' : ''}">${dayDate.getDate()}</span>
                     </div>
-                    <div class="mt-1.5 flex items-center gap-1">
-                        <button onclick="editSlotHours(${slot.id})" class="w-6 h-6 rounded-full bg-emerald-950 border border-emerald-800/60 flex items-center justify-center text-emerald-400 text-xs shadow" aria-label="Editar horarios">
+                    <div class="mt-1.5 flex flex-col items-center gap-1">
+                        <button onclick="editSlotHours(${slot.id})" class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400 text-xs shadow" aria-label="Editar horarios">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button onclick="toggleDayBlocked(new Date(${dayDate.getFullYear()}, ${dayDate.getMonth()}, ${dayDate.getDate()}))" class="w-6 h-6 rounded-full ${blocked ? 'bg-rose-950 border-rose-800/60 text-rose-400' : 'bg-slate-950 border-slate-700 text-slate-400'} border flex items-center justify-center text-xs shadow" aria-label="${blocked ? 'Desbloquear día' : 'Bloquear día (festivo)'}">
+                        <button onclick="toggleDayBlocked(new Date(${dayDate.getFullYear()}, ${dayDate.getMonth()}, ${dayDate.getDate()}))" class="w-12 h-12 rounded-full ${blocked ? 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-800/60 text-rose-600 dark:text-rose-400' : 'bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400'} border flex items-center justify-center text-xs shadow" aria-label="${blocked ? 'Desbloquear día' : 'Bloquear día (festivo)'}">
                             <i class="fa-solid ${blocked ? 'fa-calendar-xmark' : 'fa-calendar-check'}"></i>
                         </button>
                     </div>
