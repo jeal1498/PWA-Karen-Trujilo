@@ -326,7 +326,9 @@
             consecutiveFailures: 0
         };
 
-        let weekOffset = 0;
+        // Si hoy es domingo, la semana laboral (Lun-Sáb) actual ya terminó;
+        // por default se muestra la semana siguiente.
+        let weekOffset = (new Date().getDay() === 0) ? 1 : 0;
 
         function getWeekDates() {
             const now = new Date();
