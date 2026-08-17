@@ -719,15 +719,13 @@
             stage.id = 'posterCaptureStage';
             stage.style.cssText = `position:fixed; left:-99999px; top:0; width:1080px; height:1920px; background:#F3EEE0; overflow:hidden; color:#2D3A32;`;
 
-            // Logo de fondo
             const logo = document.createElement('img');
             logo.src = 'Logo_Karen_Trujillo.webp';
             logo.style.cssText = `position:absolute; top:0; left:0; width:1080px; height:1920px; object-fit:cover; opacity:0.06;`;
             stage.appendChild(logo);
 
-            // --- ENCABEZADO (subido) ---
             const header = document.createElement('div');
-            header.style.cssText = `position:absolute; top:70px; left:0; width:1080px; text-align:center;`;
+            header.style.cssText = `position:absolute; top:90px; left:0; width:1080px; text-align:center;`;
             header.innerHTML = `
                 <div style="font-family:'Libre Baskerville',serif; font-weight:700; font-size:88px; line-height:1;">Karen Trujillo</div>
                 <div style="font-family:'Nunito Sans',sans-serif; font-weight:600; font-size:33px; color:#5C7C69; margin-top:16px;">Neuropsicóloga</div>
@@ -740,43 +738,34 @@
             `;
             stage.appendChild(header);
 
-            // --- TARJETAS DE DÍAS (posiciones ajustadas) ---
             const positions = [
-                { top: 380, left: 60 },   // Lunes
-                { top: 380, left: 556 },  // Martes
-                { top: 730, left: 60 },   // Miércoles
-                { top: 730, left: 556 },  // Jueves
-                { top: 1080, left: 60 },  // Viernes
-                { top: 1080, left: 556 }  // Sábado
+                { top: 450, left: 60 }, { top: 450, left: 556 },
+                { top: 892, left: 60 }, { top: 892, left: 556 },
+                { top: 1334, left: 60 }, { top: 1334, left: 556 }
             ];
-
             activeSlots.slice(0, 6).forEach((slot, i) => {
                 const pos = positions[i];
                 const card = document.createElement('div');
-                card.style.cssText = `position:absolute; top:${pos.top}px; left:${pos.left}px; width:464px; height:300px; box-sizing:border-box; background:rgba(255,255,255,0.5); border:3px solid rgba(150,113,94,0.25); border-radius:24px; padding:20px 16px 16px; font-family:'Nunito Sans',sans-serif; display:flex; flex-direction:column;`;
+                card.style.cssText = `position:absolute; top:${pos.top}px; left:${pos.left}px; width:464px; height:406px; box-sizing:border-box; background:rgba(255,255,255,0.5); border:3px solid rgba(150,113,94,0.25); border-radius:24px; padding:24px 18px 18px; font-family:'Nunito Sans',sans-serif;`;
 
-                // Horas en grid de 3 columnas
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
-                    hoursHtml = slot.hours.map(h => `
-                        <div style="background:rgba(255,255,255,0.6); border:2px solid rgba(150,113,94,0.3); border-radius:12px; font-size:26px; font-weight:600; text-align:center; min-height:56px; display:flex; align-items:center; justify-content:center;">${h}</div>
-                    `).join('');
+                    hoursHtml = slot.hours.map(h => `<div style="background:rgba(255,255,255,0.6); border:2px solid rgba(150,113,94,0.3); border-radius:12px; font-size:26px; font-weight:600; text-align:center; min-height:64px; display:flex; align-items:center; justify-content:center;">${h}</div>`).join('');
                 } else {
                     hoursHtml = `<div style="grid-column:span 3; display:flex; align-items:center; justify-content:center; font-style:italic; opacity:0.4; font-size:24px; padding:20px 0;">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</div>`;
                 }
 
                 card.innerHTML = `
-                    <div style="text-align:center; border-bottom:2px solid rgba(150,113,94,0.2); padding-bottom:12px; margin-bottom:12px;">
+                    <div style="text-align:center; border-bottom:2px solid rgba(150,113,94,0.2); padding-bottom:16px; margin-bottom:16px;">
                         <span style="font-family:'Libre Baskerville',serif; font-weight:700; font-size:30px; letter-spacing:0.5px;">${slot.day} ${slot.dayNumber}</span>
                     </div>
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; flex:1; align-content:start;">${hoursHtml}</div>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${hoursHtml}</div>
                 `;
                 stage.appendChild(card);
             });
 
-            // --- PIE DE PÁGINA (subido) ---
             const footer = document.createElement('div');
-            footer.style.cssText = `position:absolute; top:1720px; left:60px; width:960px; text-align:center; border-top:3px solid rgba(150,113,94,0.25); padding-top:24px;`;
+            footer.style.cssText = `position:absolute; top:1780px; left:60px; width:960px; text-align:center; border-top:3px solid rgba(150,113,94,0.25); padding-top:24px;`;
             footer.innerHTML = `
                 <div style="font-family:'Nunito Sans',sans-serif; font-style:italic; font-size:25px; color:#4A4E51;">Sesiones de 50 min · Reserva por WhatsApp</div>
                 <div style="font-family:'Nunito Sans',sans-serif; font-weight:700; font-size:27px; margin-top:12px;">Contáctame: 998 321 1547</div>
