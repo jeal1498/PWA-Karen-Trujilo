@@ -695,7 +695,7 @@
                 const hoursContainerClass = "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5 content-start min-h-[78px]";
 
                 card.innerHTML = `
-                    <div class="flex items-center justify-center border-b border-muted-gold/20 pb-0.5 px-0.5 min-w-0">
+                    <div class="flex items-center justify-center border-b border-muted-gold/20 pb-1 px-0.5 min-w-0">
                         <span class="font-bold text-[10px] font-serif tracking-wide text-eucalyptus-dark leading-none truncate">${slot.day} ${dayNumber}</span>
                     </div>
                     <div class="${hoursContainerClass} min-w-0">${hoursHtml}</div>
@@ -717,7 +717,7 @@
             const poster = document.getElementById('posterContainer');
             showToast("Generando captura…", "info");
 
-            html2canvas(poster, {
+            const runCapture = () => html2canvas(poster, {
                 scale: 3,
                 useCORS: true,
                 backgroundColor: null
@@ -731,6 +731,13 @@
             }).catch(() => {
                 showToast("No se pudo generar la captura", "error");
             });
+
+            // Espera a que las fuentes web (Libre Baskerville / Nunito Sans)
+            // terminen de cargar. Si html2canvas captura antes, usa una
+            // fuente de reemplazo con otra altura de línea y el texto queda
+            // desalineado con los bordes de las tarjetas.
+            const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+            fontsReady.then(() => setTimeout(runCapture, 300));
         }
 
         function showToast(message, type = "success") {
