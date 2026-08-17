@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Gestión de Agenda - Karen Trujillo">
+    <title>Karen Trujillo | Gestión de Agenda</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect x=%223%22 y=%225%22 width=%2218%22 height=%2216%22 rx=%222%22 fill=%22none%22 stroke=%22%233A332B%22 stroke-width=%222%22/><line x1=%223%22 y1=%2210%22 x2=%2221%22 y2=%2210%22 stroke=%22%233A332B%22 stroke-width=%222%22/><line x1=%227%22 y1=%223%22 x2=%227%22 y2=%227%22 stroke=%22%23C1694F%22 stroke-width=%222%22/><line x1=%2217%22 y1=%223%22 x2=%2217%22 y2=%227%22 stroke=%22%23C1694F%22 stroke-width=%222%22/></svg>">
+    <meta name="theme-color" content="#F9F7F2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)">
+
+    <!-- Tipografías: Montserrat/Playfair (exclusivo del póster) + Nunito Sans (única fuente del resto del HTML) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (requerido por el bloque "Agenda Semanal") -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        'eucalyptus-dark': '#3A332B',
+                        'eucalyptus-soft': '#8C8478',
+                        'silk-cream': '#F9F7F2',
+                        'muted-gold': '#C1694F',
+                        'slate-warm': '#8C8478'
+                    },
+                    fontFamily: {
+                        sans: ['Nunito Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                        serif: ['Libre Baskerville', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome (iconos de la Agenda Semanal) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- html2canvas (captura del póster) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --eucalyptus-dark: #3A332B;
+            --eucalyptus-soft: #8C8478;
+            --silk-cream: #F9F7F2;
+            --muted-gold: #C1694F;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #E4DFD3;
+            margin: 0; padding: 20px 10px;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--eucalyptus-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #2A2420; }
+        }
+
+        /* ---- Póster (de index.html) ---- */
+        .preview-area { width: 320px; height: 568px; overflow: hidden; position: relative; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); background: #fff; }
+
+        #poster-container {
+            width: 1080px; height: 1920px; background-color: var(--silk-cream);
+            display: flex; flex-direction: column; padding: 100px 80px; box-sizing: border-box;
+            position: absolute; top: 0; left: 0; transform: scale(0.2962); transform-origin: top left;
+        }
+
+        .poster-bg-logo {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 900px; height: 900px;
+            background-image: url('Logo_Karen_Trujillo.webp');
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            opacity: 0.1; z-index: 1;
+        }
+
+        .poster-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; }
+        .poster-header { margin-bottom: 60px; border-left: 6px solid var(--muted-gold); padding-left: 40px; }
+        .h2-line { font-size: 2rem; letter-spacing: 10px; color: var(--muted-gold); text-transform: uppercase; margin-bottom: 15px; font-weight: 400; }
+        .h1-line { font-family: 'Playfair Display', serif; font-size: 6.2rem; color: var(--eucalyptus-dark); line-height: 1.1; font-weight: 700; margin: 0; }
+        #range-text { font-size: 2.3rem; color: var(--eucalyptus-soft); font-weight: 300; text-transform: uppercase; letter-spacing: 2px; margin-top: 25px; }
+
+        .calendar-grid { display: flex; flex-wrap: wrap; column-gap: 40px; row-gap: 40px; width: 100%; flex-grow: 1; align-content: flex-start; }
+        .day-column { display: flex; flex-direction: column; flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px); box-sizing: border-box; background: white; border-radius: 16px; padding: 25px 20px; }
+        .day-header-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+        .day-name { color: var(--eucalyptus-dark); font-size: 2.6rem; font-weight: 700; font-family: 'Playfair Display', serif; margin: 0; }
+        .day-date { color: var(--eucalyptus-dark); font-size: 2.6rem; font-weight: 700; font-family: 'Playfair Display', serif; margin: 0; text-align: right; }
+        .time-slots { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+        .slot { flex: 0 0 calc(50% - 5px); max-width: calc(50% - 5px); box-sizing: border-box; background: transparent; color: var(--eucalyptus-dark); padding: 12px 10px; border-radius: 8px; font-size: 1.6rem; font-weight: 600; text-align: center; border: none; }
+        .slot-ghost { visibility: hidden; }
+        .slot-message { background: transparent; border: none; color: var(--muted-gold); font-style: italic; font-weight: 700; }
+
+        .poster-footer { text-align: center; margin-top: 40px; padding-bottom: 40px; }
+        #notes-display { font-size: 2.4rem; color: var(--eucalyptus-dark); font-style: italic; font-family: 'Playfair Display', serif; line-height: 1.4; max-width: 900px; margin: 0 auto; white-space: pre-wrap; }
+        .footer-sub { font-size: 1.6rem; color: #8C8478; margin-top: 40px; letter-spacing: 2px; text-transform: uppercase; }
+
+        .btn-share { margin-top: 25px; width: 320px; background: var(--eucalyptus-dark); color: white; min-height: 56px; border-radius: 18px; border: none; font-weight: 700; cursor: pointer; letter-spacing: 1px; font-size: 1rem; font-family: 'Nunito Sans', sans-serif; }
+
+        @media (prefers-color-scheme: dark) {
+            .btn-share { background: #C1694F; color: #F9F7F2; }
+        }
+
+        /* ---- Contenedor para alinear la Agenda Semanal con el ancho del póster/botón ---- */
+        .agenda-semanal-wrap { width: 100%; max-width: 550px; margin-top: 30px; box-sizing: border-box; }
+
+        /* Scrollbar interno discreto (Agenda Semanal) */
+        ::-webkit-scrollbar { width: 3px; height: 3px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 9999px; }
+
+        /* ---- Notificaciones (Toast) ---- */
+        #toast-container {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column-reverse; align-items: center;
+            gap: 10px; z-index: 9999; pointer-events: none;
+            width: 100%; max-width: 380px; padding: 0 16px; box-sizing: border-box;
+        }
+
+        .toast-item {
+            pointer-events: auto;
+            position: relative; overflow: hidden;
+            width: 100%; max-width: 340px;
+            display: flex; align-items: flex-start; gap: 10px;
+            background: #FFFFFF; color: var(--eucalyptus-dark);
+            border-radius: 16px; padding: 12px 14px 14px 14px;
+            box-shadow: 0 10px 30px rgba(58, 51, 43, 0.18), 0 2px 6px rgba(58,51,43,0.08);
+            border: 1px solid rgba(58, 51, 43, 0.08);
+            border-left: 4px solid var(--toast-accent, #C1694F);
+            animation: toast-in 0.32s cubic-bezier(.21,1.02,.73,1) forwards;
+        }
+        @media (prefers-color-scheme: dark) {
+            .toast-item { background: #2A2420; color: #F9F7F2; border-color: rgba(255,255,255,0.06); }
+        }
+
+        .toast-item.leaving { animation: toast-out 0.22s ease-in forwards; }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(18px) scale(.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateY(0) scale(1); max-height: 120px; margin-top: 0; }
+            to   { opacity: 0; transform: translateY(10px) scale(.96); max-height: 0; margin-top: -10px; }
+        }
+
+        .toast-icon-wrap {
+            flex: none; width: 22px; height: 22px; margin-top: 1px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 999px; font-size: 12px; color: var(--toast-accent, #C1694F);
+        }
+
+        .toast-msg {
+            flex: 1 1 auto; font-size: 13px; line-height: 1.45; font-weight: 600;
+            padding-top: 2px; word-break: break-word;
+        }
+
+        .toast-close {
+            flex: none; width: 20px; height: 20px; margin-top: 1px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 999px; font-size: 10px; color: var(--eucalyptus-soft);
+            background: transparent; border: none; cursor: pointer;
+            transition: background .15s ease, color .15s ease;
+        }
+        .toast-close:hover { background: rgba(58,51,43,0.08); color: var(--eucalyptus-dark); }
+        @media (prefers-color-scheme: dark) {
+            .toast-close:hover { background: rgba(255,255,255,0.08); color: #F9F7F2; }
+        }
+
+        .toast-progress {
+            position: absolute; left: 0; bottom: 0; height: 3px;
+            background: var(--toast-accent, #C1694F); opacity: .55;
+            width: 100%; transform-origin: left;
+            animation: toast-progress linear forwards;
+            animation-duration: var(--toast-duration, 3000ms);
+        }
+        @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+        .toast-item[data-persist="true"] .toast-progress { display: none; }
+    </style>
+</head>
+<body class="antialiased selection:bg-emerald-600 selection:text-white">
+
+    <!-- ===================== 1. CABECERA: PÓSTER (de index.html) ===================== -->
+    <div class="preview-area">
+        <div id="poster-container">
+            <div class="poster-bg-logo"></div>
+            <div class="poster-content">
+                <div class="poster-header">
+                    <div class="h2-line">Disponibilidad</div>
+                    <div class="h1-line">KAREN<br>TRUJILLO</div>
+                    <div id="range-text"></div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+                <div class="poster-footer">
+                    <div id="notes-display"></div>
+                    <div class="footer-sub">Neuropsicología • Bienestar Integral</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 2. BOTÓN CREAR MI DISPONIBILIDAD (de index.html) ===================== -->
+    <button class="btn-share" onclick="sharePoster()">CREAR MI DISPONIBILIDAD</button>
+
+    <!-- ===================== 3. AGENDA SEMANAL (de herramienta-agenda.html) ===================== -->
+    <div class="agenda-semanal-wrap">
+        <div class="bg-white/80 dark:bg-[#2A2420]/90 rounded-2xl border border-muted-gold/20 dark:border-[#4A4038] overflow-hidden shadow-xl p-4 space-y-3">
+            <div class="border-b border-muted-gold/20 dark:border-[#4A4038] pb-2 flex items-center justify-between gap-3">
+                <button onclick="shiftWeek(-1)" class="w-12 h-12 flex items-center justify-center rounded-full text-muted-gold dark:text-[#C1694F] hover:bg-silk-cream dark:hover:bg-[#3A332B] transition-colors" aria-label="Semana anterior">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+                <span class="text-[13px] font-sans font-bold text-eucalyptus-dark dark:text-[#F9F7F2] uppercase tracking-wider">
+                    Agenda Semanal
+                </span>
+                <button onclick="shiftWeek(1)" class="w-12 h-12 flex items-center justify-center rounded-full text-muted-gold dark:text-[#C1694F] hover:bg-silk-cream dark:hover:bg-[#3A332B] transition-colors" aria-label="Semana siguiente">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-center gap-1.5">
+                <span id="syncBadge" class="relative flex h-2 w-2">
+                  <span id="syncBadgePing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span id="syncBadgeDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span id="syncStatusText" class="text-[13px] text-slate-warm dark:text-[#8C8478] font-sans"></span>
+            </div>
+
+            <details class="text-[13px]">
+                <summary class="cursor-pointer select-none text-slate-warm dark:text-[#8C8478] font-sans font-medium">¿Primera vez aquí? Así funciona</summary>
+                <div class="mt-2 space-y-2 text-slate-warm dark:text-[#8C8478] font-sans">
+                    <p>Marca los días que no atiendes y elige tus horarios disponibles para compartir con tus pacientes.</p>
+                    <ul class="space-y-1 list-none font-sans">
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-white border border-muted-gold/30 align-middle"></span> Libre</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-muted-gold align-middle"></span> Elegida (aparece en el póster)</li>
+                        <li><span class="inline-block w-2.5 h-2.5 rounded-sm bg-rose-100 dark:bg-[#5A2E33] border border-rose-300/70 dark:border-[#7A3E44] align-middle"></span> Ocupada, no se puede tocar</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- Vista semanal estilo Google Calendar -->
+            <div id="slotsEditorList" class="-mx-1 px-1">
+                <!-- Generado dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+    <!-- ===================== LÓGICA (fusión de ambas herramientas) ===================== -->
+    <script>
+        const monthNames = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+        // Nota: THERAPIST_PROFILE ya venía sin uso en herramienta-agenda.html
+        // (el póster tiene el nombre/especialidad escritos directamente). Se
+        // conserva tal cual porque no forma parte de los cambios pedidos.
+        const THERAPIST_PROFILE = {
+            name: "Karen Trujillo",
+            matricula: "Cédula profesional: 11009616",
+            specialty: "Neuropsicóloga",
+            modalidad: "Online & Presencial",
+            whatsapp: "+52 998 321 1547"
+        };
+
+        // Plantilla base editable (horario habitual de Karen). Se persiste en
+        // localStorage para no perderse en cada sincronización; solo se usa el
+        // valor por defecto la primera vez que se abre la herramienta.
+        const SCHEDULE_TEMPLATE_KEY = 'karen_schedule_template';
+
+        const DEFAULT_SCHEDULE_TEMPLATE = [
+            { id: 1, day: "Lunes", hours: [], active: true },
+            { id: 2, day: "Martes", hours: [], active: true },
+            { id: 3, day: "Miércoles", hours: [], active: true },
+            { id: 4, day: "Jueves", hours: [], active: true },
+            { id: 5, day: "Viernes", hours: [], active: true },
+            { id: 6, day: "Sábado", hours: [], active: true }
+        ];
+
+        function loadScheduleTemplate() {
+            try {
+                const saved = localStorage.getItem(SCHEDULE_TEMPLATE_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) {
+                console.error('No se pudo leer la plantilla guardada, usando la de por defecto.', e);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
+        }
+
+        function saveScheduleTemplate() {
+            try {
+                localStorage.setItem(SCHEDULE_TEMPLATE_KEY, JSON.stringify(appState.slots));
+            } catch (e) {
+                console.error('No se pudo guardar la plantilla de horarios.', e);
+            }
+        }
+
+        // ---- Reglas de agenda ----
+        const APPOINTMENT_DURATION_MINUTES = 50; // duración de cada sesión
+        const BUFFER_MINUTES = 10;                // colchón antes/después de cada cita
+        const MIN_LEAD_MINUTES = 120;              // no mostrar horas con menos de 2h de aviso
+        const EARLIEST_HOUR = 8;                   // Karen no atiende antes de las 8 a.m.
+        const LATEST_HOUR = 19;                    // última hora de inicio de cita (7 p.m. a 8 p.m., cierre a las 8 p.m.)
+        const MAX_SELECTED_HOURS_PER_DAY = 8;      // tope de horas elegidas a mano por día para el póster
+        const BLOCKED_DATES_KEY = 'karen_blocked_dates'; // días festivos/bloqueados manualmente
+
+        function dateKey(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function loadBlockedDates() {
+            try {
+                const saved = localStorage.getItem(BLOCKED_DATES_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) {
+                console.error('No se pudieron leer los días bloqueados.', e);
+            }
+            return [];
+        }
+
+        function saveBlockedDates(dates) {
+            try {
+                localStorage.setItem(BLOCKED_DATES_KEY, JSON.stringify(dates));
+            } catch (e) {
+                console.error('No se pudieron guardar los días bloqueados.', e);
+            }
+        }
+
+        function isDateBlocked(date) {
+            return appState.blockedDates.includes(dateKey(date));
+        }
+
+        function toggleDayBlocked(date) {
+            const key = dateKey(date);
+            if (appState.blockedDates.includes(key)) {
+                appState.blockedDates = appState.blockedDates.filter(k => k !== key);
+            } else {
+                appState.blockedDates.push(key);
+            }
+            saveBlockedDates(appState.blockedDates);
+            renderSlotsEditor();
+            updatePoster();
+        }
+
+        // ¿La hora choca con un evento ya agendado en Calendar? Se aplica el
+        // buffer antes/después de cada cita para no dejarlas pegadas.
+        function isHourBusy(dayDate, hourStr, busyEvents) {
+            const [h, m] = hourStr.split(':').map(Number);
+            const slotStart = new Date(dayDate);
+            slotStart.setHours(h, m, 0, 0);
+            const slotEnd = new Date(slotStart.getTime() + APPOINTMENT_DURATION_MINUTES * 60000);
+
+            const bufferedStart = new Date(slotStart.getTime() - BUFFER_MINUTES * 60000);
+            const bufferedEnd = new Date(slotEnd.getTime() + BUFFER_MINUTES * 60000);
+
+            return busyEvents.some(ev => {
+                const evStart = new Date(ev.start);
+                const evEnd = new Date(ev.end);
+                return bufferedStart < evEnd && bufferedEnd > evStart;
+            });
+        }
+
+        const HOUR_LIST = Array.from({ length: LATEST_HOUR - EARLIEST_HOUR + 1 }, (_, i) => `${String(EARLIEST_HOUR + i).padStart(2, '0')}:00`);
+
+        // Cuenta cuántas horas del día ya están ocupadas por citas reales de
+        // Calendar, para sumarlas al tope de 8 horas laborales por día.
+        function countBusyHoursForDate(dayDate) {
+            return HOUR_LIST.filter(h => isHourBusy(dayDate, h, appState.busyEvents)).length;
+        }
+
+        // ¿Falta menos del mínimo de anticipación permitido?
+        function isBeforeMinLeadTime(dayDate, hourStr) {
+            const [h, m] = hourStr.split(':').map(Number);
+            const slotStart = new Date(dayDate);
+            slotStart.setHours(h, m, 0, 0);
+            const minAllowed = new Date(Date.now() + MIN_LEAD_MINUTES * 60000);
+            return slotStart < minAllowed;
+        }
+
+        // Calcula, para el póster, los horarios realmente disponibles de la
+        // semana visible: parte de la plantilla base y descarta días
+        // bloqueados manualmente, horas ya ocupadas en Calendar (con buffer)
+        // y horas por debajo de la anticipación mínima.
+        function getAvailablePosterSlots() {
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const weekDates = getWeekDates();
+
+            return appState.slots
+                .filter(slot => slot.active)
+                .map(slot => {
+                    const dateIndex = dayOrder.indexOf(slot.day);
+                    const dayDate = dateIndex !== -1 ? weekDates[dateIndex] : null;
+
+                    if (!dayDate || isDateBlocked(dayDate)) {
+                        return { ...slot, hours: [], blocked: !!dayDate && isDateBlocked(dayDate) };
+                    }
+
+                    const hours = slot.hours.filter(h =>
+                        !isHourBusy(dayDate, h, appState.busyEvents) &&
+                        !isBeforeMinLeadTime(dayDate, h)
+                    );
+
+                    return { ...slot, hours };
+                });
+        }
+
+        let appState = {
+            slots: [],
+            busyEvents: [], // eventos ya agendados en Google Calendar para la semana visible
+            blockedDates: loadBlockedDates(),
+            lastSyncAt: null,
+            lastSyncOk: true,
+            consecutiveFailures: 0
+        };
+
+        // Si hoy es domingo, la semana laboral (Lun-Sáb) actual ya terminó;
+        // por default se muestra la semana siguiente.
+        let weekOffset = (new Date().getDay() === 0) ? 1 : 0;
+
+        function getWeekDates() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const distanceToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + distanceToMonday + (weekOffset * 7));
+
+            const dates = [];
+            for (let i = 0; i < 6; i++) {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                dates.push(d);
+            }
+            return dates; // índice 0 = Lunes ... índice 5 = Sábado
+        }
+
+        // Rango Lunes 00:00 - Sábado 23:59 de la semana visible (según weekOffset).
+        function getVisibleWeekRange() {
+            const dates = getWeekDates();
+            const start = new Date(dates[0]);
+            start.setHours(EARLIEST_HOUR, 0, 0, 0);
+            const end = new Date(dates[dates.length - 1]);
+            end.setHours(LATEST_HOUR, 0, 0, 0);
+            return { start, end };
+        }
+
+        // Filtro de seguridad: descarta cualquier evento de Calendar que no
+        // toque la jornada laboral (8am-8pm) de su propio día, aunque el
+        // endpoint llegara a devolver algo fuera de ese rango.
+        function overlapsWorkday(ev) {
+            const evStart = new Date(ev.start);
+            const evEnd = new Date(ev.end);
+            const workdayStart = new Date(evStart);
+            workdayStart.setHours(EARLIEST_HOUR, 0, 0, 0);
+            const workdayEnd = new Date(evStart);
+            workdayEnd.setHours(LATEST_HOUR, 0, 0, 0);
+            return evStart < workdayEnd && evEnd > workdayStart;
+        }
+
+        // ---- Conexión con el endpoint de sincronización (api/busy-events.js en Vercel) ----
+        const CALENDAR_SYNC_WEBAPP_URL = 'https://tools-karen-trujilo.vercel.app/api/busy-events';
+
+        window.CalendarSync = {
+            async fetchBusyEvents(start, end) {
+                if (!CALENDAR_SYNC_WEBAPP_URL) return [];
+
+                const url = `${CALENDAR_SYNC_WEBAPP_URL}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`Apps Script respondió ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                return data.busy || [];
+            }
+        };
+
+        async function fetchCalendarEvents(start, end) {
+            if (window.CalendarSync && typeof window.CalendarSync.fetchBusyEvents === 'function') {
+                return window.CalendarSync.fetchBusyEvents(start, end);
+            }
+            return [];
+        }
+
+        window.onload = function() {
+            triggerAutoSync();
+
+            setInterval(() => {
+                triggerAutoSync(true);
+            }, 300000);
+
+            // Refresca el texto "hace X min" aunque no haya sync nueva
+            setInterval(renderSyncStatus, 30000);
+        };
+
+        // Sincroniza los 6 días de la semana que se está viendo (weekOffset).
+        // Recarga la plantilla base guardada por Karen y trae los eventos ya
+        // ocupados de Calendar para ese rango. Si falla, NO se pisa el
+        // último estado válido conocido.
+        async function triggerAutoSync(silent = false) {
+            if (!silent) {
+                showToast("Sincronizando citas...", "info");
+            }
+
+            const { start, end } = getVisibleWeekRange();
+
+            try {
+                const [template, busyEvents] = await Promise.all([
+                    Promise.resolve(loadScheduleTemplate()),
+                    fetchCalendarEvents(start, end)
+                ]);
+
+                appState.slots = template;
+                appState.busyEvents = busyEvents.filter(overlapsWorkday);
+                appState.lastSyncAt = new Date();
+                appState.lastSyncOk = true;
+                appState.consecutiveFailures = 0;
+
+                renderSlotsEditor();
+                updatePoster();
+                renderSyncStatus();
+
+                if (!silent) {
+                    showToast("Citas actualizadas");
+                }
+            } catch (e) {
+                console.error('Falló la sincronización con Calendar:', e);
+                appState.lastSyncOk = false;
+                appState.consecutiveFailures += 1;
+                renderSyncStatus();
+
+                if (!silent || appState.consecutiveFailures >= 3) {
+                    showToast("Sin conexión con Calendar. Usando tus últimos datos guardados.", "error");
+                }
+            }
+        }
+
+        function formatRelativeTime(date) {
+            if (!date) return 'sin sincronizar aún';
+            const diffMs = Date.now() - new Date(date).getTime();
+            const diffMin = Math.floor(diffMs / 60000);
+            if (diffMin < 1) return 'justo ahora';
+            if (diffMin < 60) return `hace ${diffMin} min`;
+            const diffH = Math.floor(diffMin / 60);
+            return `hace ${diffH} h`;
+        }
+
+        function renderSyncStatus() {
+            const text = document.getElementById('syncStatusText');
+            const dot = document.getElementById('syncBadgeDot');
+            const ping = document.getElementById('syncBadgePing');
+            if (!text || !dot || !ping) return;
+
+            const failing = appState.consecutiveFailures >= 3;
+            const warning = !appState.lastSyncOk && !failing;
+
+            let color = 'bg-emerald-500';
+            let pingColor = 'bg-emerald-400';
+            let label = `Tu agenda está al día · sincronizado ${formatRelativeTime(appState.lastSyncAt)}`;
+
+            if (failing) {
+                color = 'bg-rose-500';
+                pingColor = 'bg-rose-400';
+                label = `Sin conexión con Calendar (${appState.consecutiveFailures} intentos fallidos) · últimos datos guardados`;
+            } else if (warning) {
+                color = 'bg-amber-500';
+                pingColor = 'bg-amber-400';
+                label = `Falló la última sincronización · últimos datos guardados`;
+            }
+
+            dot.className = `relative inline-flex rounded-full h-2 w-2 ${color}`;
+            ping.className = `animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`;
+            text.innerText = label;
+        }
+
+        function shiftWeek(delta) {
+            weekOffset += delta;
+            triggerAutoSync(true);
+        }
+
+        function formatHourParts(hourStr) {
+            const h = parseInt(hourStr.split(':')[0], 10);
+            const period = h < 12 ? 'AM' : 'PM';
+            let hour12 = h % 12;
+            if (hour12 === 0) hour12 = 12;
+            return { num: String(hour12).padStart(2, '0'), period };
+        }
+
+        function formatHourLabel(hourStr) {
+            const { num, period } = formatHourParts(hourStr);
+            return `${num} ${period}`;
+        }
+
+        // Tocar una celda de hora libre la selecciona (o quita la selección) para
+        // el póster. No aplica sobre horas ya ocupadas por una cita real
+        // sincronizada de Calendar, ni si el día completo está marcado como
+        // festivo. Máximo 8 horas laborales por día: suma las ya ocupadas en
+        // Calendar más las elegidas a mano para el póster.
+        function toggleHourActive(slotId, hour) {
+            const slot = appState.slots.find(s => s.id === slotId);
+            if (!slot) return;
+
+            if (slot.hours.includes(hour)) {
+                slot.hours = slot.hours.filter(h => h !== hour);
+            } else {
+                const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+                const dateIndex = dayOrder.indexOf(slot.day);
+                const dayDate = dateIndex !== -1 ? getWeekDates()[dateIndex] : null;
+                const busyHours = dayDate ? countBusyHoursForDate(dayDate) : 0;
+
+                if (busyHours + slot.hours.length >= MAX_SELECTED_HOURS_PER_DAY) {
+                    showToast(`${slot.day} ya tiene sus ${MAX_SELECTED_HOURS_PER_DAY} horas ocupadas`, "error");
+                    return;
+                }
+                slot.hours.push(hour);
+                slot.hours.sort();
+            }
+            saveScheduleTemplate();
+            renderSlotsEditor();
+            updatePoster();
+        }
+
+        function renderSlotsEditor() {
+            const list = document.getElementById('slotsEditorList');
+
+            const dayAbbrev = { "Domingo": "dom", "Lunes": "lun", "Martes": "mar", "Miércoles": "mié", "Jueves": "jue", "Viernes": "vie", "Sábado": "sáb" };
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const weekDates = getWeekDates();
+            const todayRef = new Date();
+
+            // Domingo no tiene slot (consultorio cerrado); se muestra solo como
+            // columna de referencia, igual que en Google Calendar.
+            const sundayDate = new Date(weekDates[0]);
+            sundayDate.setDate(sundayDate.getDate() - 1);
+
+            const columns = [{ name: "Domingo", date: sundayDate, slot: null }];
+            dayOrder.forEach((dayName, i) => {
+                columns.push({ name: dayName, date: weekDates[i], slot: appState.slots.find(s => s.day === dayName) || null });
+            });
+
+            // Grilla desde las 8 a.m. hasta las 8 p.m.; no se muestran horas de madrugada.
+            const hourList = HOUR_LIST;
+
+            let html = `<div class="grid" style="grid-template-columns: 26px repeat(7, minmax(0, 1fr));">`;
+
+            // Fila de encabezado: abreviatura + número de día (hoy va en círculo, como en Calendar).
+            html += `<div class="sticky top-0 z-10 bg-white/95 dark:bg-[#2A2420]/95"></div>`;
+            columns.forEach(col => {
+                const isToday = col.date.getFullYear() === todayRef.getFullYear() && col.date.getMonth() === todayRef.getMonth() && col.date.getDate() === todayRef.getDate();
+                const blocked = col.slot ? isDateBlocked(col.date) : false;
+                const tapAttrs = col.slot ? `onclick="toggleDayBlocked(new Date(${col.date.getFullYear()}, ${col.date.getMonth()}, ${col.date.getDate()}))" role="button" tabindex="0" aria-label="${blocked ? 'Desbloquear' : 'Bloquear'} ${col.name}"` : '';
+                html += `
+                    <div class="sticky top-0 z-10 bg-white/95 dark:bg-[#2A2420]/95 flex flex-col items-center justify-center gap-1 py-2 ${col.slot ? 'cursor-pointer' : ''}" ${tapAttrs}>
+                        <span class="text-[10px] font-sans font-medium lowercase ${isToday ? 'text-muted-gold dark:text-[#C1694F]' : 'text-slate-warm dark:text-[#8C8478]'}">${dayAbbrev[col.name]}</span>
+                        <span class="w-6 h-6 flex items-center justify-center rounded-full text-[13px] font-bold font-sans ${isToday ? 'bg-eucalyptus-dark dark:bg-[#C1694F] text-silk-cream' : 'text-eucalyptus-dark dark:text-[#F9F7F2]'} ${blocked ? 'line-through opacity-40' : ''}">${col.date.getDate()}</span>
+                    </div>`;
+            });
+
+            // Filas de horas: cada celda = disponible / ocupada (por Calendar) / cerrada.
+            hourList.forEach(hour => {
+                const { num, period } = formatHourParts(hour);
+                html += `<div class="h-8 border-t border-muted-gold/10 dark:border-[#4A4038]/60 relative">
+                    <div class="absolute -top-2 left-0 right-0 flex flex-col items-center leading-none font-sans">
+                        <span class="text-[10px] font-bold font-sans text-eucalyptus-dark dark:text-[#F9F7F2]">${num}</span>
+                        <span class="text-[8px] font-sans tracking-wide text-slate-warm dark:text-[#8C8478]">${period}</span>
+                    </div>
+                </div>`;
+                columns.forEach(col => {
+                    let status = 'closed';
+                    if (col.slot) {
+                        if (isDateBlocked(col.date)) status = 'blocked';
+                        else if (isHourBusy(col.date, hour, appState.busyEvents)) status = 'busy';
+                        else if (col.slot.hours.includes(hour)) status = 'selected';
+                        else status = 'available';
+                    }
+                    const editable = col.slot && (status === 'available' || status === 'selected');
+                    const cellClass = status === 'selected' ? 'bg-muted-gold border border-eucalyptus-dark/30 dark:border-silk-cream/30 flex items-center justify-center'
+                        : status === 'busy' ? 'bg-rose-100 dark:bg-[#5A2E33] border border-rose-300/70 dark:border-[#7A3E44]'
+                        : status === 'blocked' ? 'bg-slate-100 dark:bg-[#3A332B]/60'
+                        : '';
+                    const cellInner = status === 'selected' ? '<i class="fa-solid fa-check text-[9px] text-silk-cream"></i>' : '';
+                    const tapAttrs = editable ? `onclick="toggleHourActive(${col.slot.id}, '${hour}')" role="button" tabindex="0" aria-label="${status === 'selected' ? 'Quitar del póster' : 'Agregar al póster'} ${dayAbbrev[col.name]} ${formatHourLabel(hour)}"` : '';
+                    html += `<div class="h-8 border-t border-muted-gold/10 dark:border-[#4A4038]/60 p-0.5 ${editable ? 'cursor-pointer' : ''}" ${tapAttrs}><div class="w-full h-full rounded-md ${cellClass}">${cellInner}</div></div>`;
+                });
+            });
+
+            // Línea de cierre: marca el fin de la jornada (8 p.m.).
+            {
+                const { num, period } = formatHourParts(`${LATEST_HOUR + 1}:00`);
+                html += `<div class="h-3 border-t border-muted-gold/10 dark:border-[#4A4038]/60 relative">
+                    <div class="absolute -top-2 left-0 right-0 flex flex-col items-center leading-none font-sans">
+                        <span class="text-[10px] font-bold font-sans text-eucalyptus-dark dark:text-[#F9F7F2]">${num}</span>
+                        <span class="text-[8px] font-sans tracking-wide text-slate-warm dark:text-[#8C8478]">${period}</span>
+                    </div>
+                </div>`;
+                columns.forEach(() => {
+                    html += `<div class="h-3 border-t border-muted-gold/10 dark:border-[#4A4038]/60"></div>`;
+                });
+            }
+
+            html += `</div>`;
+            list.innerHTML = html;
+        }
+
+        // Da formato "9:00 AM" a una hora del tipo "09:00" para las píldoras del póster.
+        function formatPosterHourLabel(hourStr) {
+            const [hh, mm] = hourStr.split(':').map(Number);
+            const period = hh < 12 ? 'AM' : 'PM';
+            let hour12 = hh % 12;
+            if (hour12 === 0) hour12 = 12;
+            return `${hour12}:${String(mm).padStart(2, '0')} ${period}`;
+        }
+
+        // Arma la lista de slots activos con el número de día y el mes
+        // abreviado ya resueltos, lista para pintar en el póster.
+        function getPosterSlotsWithDayNumber() {
+            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const monthAbbrevs = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+            const weekDates = getWeekDates();
+            return getAvailablePosterSlots().map(slot => {
+                const dateIndex = dayOrder.indexOf(slot.day);
+                const date = dateIndex !== -1 ? weekDates[dateIndex] : null;
+                return {
+                    ...slot,
+                    dayNumber: date ? date.getDate() : '',
+                    monthAbbrev: date ? monthAbbrevs[date.getMonth()] : ''
+                };
+            });
+        }
+
+        // ---- Póster (renderizado dentro de #poster-container, estilo de index.html) ----
+        // Se alimenta en tiempo real de appState (la Agenda Semanal de abajo):
+        // cada vez que se marca/desmarca una hora o se bloquea un día, esta
+        // función se vuelve a llamar mediante updatePoster().
+        function renderPoster() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const weekDates = getWeekDates();
+            const start = weekDates[0];
+            const end = weekDates[weekDates.length - 1];
+            document.getElementById('range-text').innerText = `${start.getDate()} de ${monthNames[start.getMonth()]} al ${end.getDate()} de ${monthNames[end.getMonth()]}`;
+
+            // Todas las columnas reservan siempre el espacio de MAX_SELECTED_HOURS_PER_DAY
+            // (8) horarios, tenga o no ese día tantas horas libres. Así todas las
+            // columnas quedan con la misma altura sin depender de cómo html2canvas
+            // resuelva el "stretch" de columnas con distinta cantidad de contenido.
+            const slots = getPosterSlotsWithDayNumber();
+            slots.forEach(slot => {
+                const col = document.createElement('div');
+                col.className = 'day-column';
+                const hours = slot.hours || [];
+                let cellsHtml = '';
+
+                if (slot.blocked || hours.length === 0) {
+                    const message = slot.blocked ? 'No disponible' : 'Lleno';
+                    cellsHtml += `<div class="slot slot-message">${message}</div>`;
+                    cellsHtml += '<div class="slot slot-ghost"></div>'.repeat(MAX_SELECTED_HOURS_PER_DAY - 1);
+                } else {
+                    cellsHtml += hours.map(h => `<div class="slot">${formatPosterHourLabel(h)}</div>`).join('');
+                    cellsHtml += '<div class="slot slot-ghost"></div>'.repeat(Math.max(0, MAX_SELECTED_HOURS_PER_DAY - hours.length));
+                }
+
+                col.innerHTML = `<div class="day-header-row"><div class="day-name">${slot.day.toUpperCase()}</div><div class="day-date">${slot.dayNumber}</div></div><div class="time-slots">${cellsHtml}</div>`;
+                grid.appendChild(col);
+            });
+        }
+
+        // Punto único que conecta la Agenda Semanal con el póster: todos los
+        // sitios que antes actualizaban el póster de herramienta-agenda.html
+        // (toggleHourActive, toggleDayBlocked, shiftWeek, triggerAutoSync)
+        // siguen llamando a updatePoster() sin cambios.
+        function updatePoster() {
+            renderPoster();
+        }
+
+        // Captura el póster y lo comparte directamente (abre el selector nativo
+        // de compartir, donde WhatsApp aparece como opción si está instalado).
+        // Si el navegador no soporta compartir archivos (ej. escritorio), cae
+        // en descargar la imagen como respaldo.
+        async function sharePoster() {
+            const poster = document.getElementById('poster-container');
+            const btn = document.querySelector('.btn-share');
+            btn.innerText = "GENERANDO IMAGEN...";
+            poster.style.transform = "none";
+            const canvas = await html2canvas(poster, { scale: 3, useCORS: true, logging: false });
+            poster.style.transform = "scale(0.2962)";
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    showToast("No se pudo crear la imagen. Intenta de nuevo.", "error");
+                    btn.innerText = "CREAR MI DISPONIBILIDAD";
+                    return;
+                }
+
+                const file = new File([blob], 'Agenda_Karen_Trujillo.png', { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Agenda Karen Trujillo',
+                            text: 'Disponibilidad de citas de Karen Trujillo'
+                        });
+                        btn.innerText = "CREAR MI DISPONIBILIDAD";
+                        return;
+                    } catch (err) {
+                        // El usuario cerró el selector de compartir: no hacer nada más.
+                        if (err.name === 'AbortError') {
+                            btn.innerText = "CREAR MI DISPONIBILIDAD";
+                            return;
+                        }
+                        // Cualquier otro error: cae al respaldo de descarga.
+                    }
+                }
+
+                // Respaldo: descargar la imagen (navegadores de escritorio u otros
+                // que no soportan compartir archivos nativamente).
+                const link = document.createElement('a');
+                link.download = 'Agenda_Karen_Trujillo.png';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                showToast("Imagen descargada. Ya puedes compartirla donde prefieras.", "info");
+                btn.innerText = "CREAR MI DISPONIBILIDAD";
+            }, 'image/png');
+        }
+
+        const TOAST_STYLES = {
+            success: { icon: 'fa-solid fa-circle-check',        accent: '#10B981', persist: false },
+            error:   { icon: 'fa-solid fa-circle-exclamation',  accent: '#F43F5E', persist: false },
+            info:    { icon: 'fa-solid fa-spinner fa-spin',     accent: '#C1694F', persist: false },
+            // Tipo opcional: si en el futuro quieres que "Sincronizando
+            // citas..." no se autocierre a los 3s sino que se quede visible
+            // hasta que llegue el resultado real, cambia esa llamada de
+            // showToast(msg, 'info') a showToast(msg, 'loading').
+            loading: { icon: 'fa-solid fa-spinner fa-spin',     accent: '#C1694F', persist: true  }
+        };
+
+        const TOAST_DURATION = 3000;
+
+        function showToast(message, type = "success") {
+            const style = TOAST_STYLES[type] || TOAST_STYLES.success;
+            const container = document.getElementById('toast-container');
+
+            // Si llega un resultado real (success/error), se retira cualquier
+            // toast de carga persistente que siga visible.
+            if (type !== 'loading') {
+                container.querySelectorAll('.toast-item[data-persist="true"]').forEach(closeToast);
+            }
+
+            const el = document.createElement('div');
+            el.className = 'toast-item';
+            el.style.setProperty('--toast-accent', style.accent);
+            el.style.setProperty('--toast-duration', TOAST_DURATION + 'ms');
+            el.dataset.persist = style.persist ? 'true' : 'false';
+            el.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+            el.innerHTML = `
+                <span class="toast-icon-wrap"><i class="${style.icon}"></i></span>
+                <span class="toast-msg"></span>
+                <button class="toast-close" aria-label="Cerrar notificación"><i class="fa-solid fa-xmark"></i></button>
+                <span class="toast-progress"></span>
+            `;
+            el.querySelector('.toast-msg').textContent = message; // texto intacto, sin innerHTML
+            el.querySelector('.toast-close').onclick = () => closeToast(el);
+
+            container.appendChild(el);
+
+            if (!style.persist) {
+                const progress = el.querySelector('.toast-progress');
+                let remaining = TOAST_DURATION;
+                let start = Date.now();
+                let timer = setTimeout(() => closeToast(el), remaining);
+
+                el.addEventListener('mouseenter', () => {
+                    clearTimeout(timer);
+                    remaining -= Date.now() - start;
+                    progress.style.animationPlayState = 'paused';
+                });
+                el.addEventListener('mouseleave', () => {
+                    start = Date.now();
+                    timer = setTimeout(() => closeToast(el), remaining);
+                    progress.style.animationPlayState = 'running';
+                });
+            }
+
+            return el;
+        }
+
+        function closeToast(el) {
+            if (!el || el.classList.contains('leaving')) return;
+            el.classList.add('leaving');
+            el.addEventListener('animationend', () => el.remove(), { once: true });
+        }
+    </script>
+</body>
+</html>
