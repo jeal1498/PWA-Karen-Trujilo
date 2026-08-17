@@ -754,6 +754,69 @@
             });
         }
 
+        // Formatea el intervalo real de la semana visible para el póster.
+        // Ejemplos: "17 – 22 DE AGOSTO DE 2026" o "31 DE AGOSTO – 5 DE SEPTIEMBRE DE 2026".
+        function formatPosterDateRange() {
+            const dates = getWeekDates();
+            if (!dates || dates.length < 6) return '';
+
+            const start = dates[0];
+            const end = dates[5];
+            const months = [
+                'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+                'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+            ];
+
+            if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+                return `${start.getDate()} – ${end.getDate()} DE ${months[start.getMonth()]} DE ${start.getFullYear()}`;
+            }
+
+            if (start.getFullYear() === end.getFullYear()) {
+                return `${start.getDate()} DE ${months[start.getMonth()]} – ${end.getDate()} DE ${months[end.getMonth()]} DE ${end.getFullYear()}`;
+            }
+
+            return `${start.getDate()} DE ${months[start.getMonth()]} DE ${start.getFullYear()} – ${end.getDate()} DE ${months[end.getMonth()]} DE ${end.getFullYear()}`;
+        }
+
+        function drawPosterDateRange(ctx) {
+            const label = formatPosterDateRange();
+            if (!label) return;
+
+            // El diseño base contiene un texto estático "LUNES A SÁBADO".
+            // Cubrimos únicamente esa franja y la sustituimos por el intervalo real.
+            ctx.save();
+            ctx.fillStyle = POSTER_WHITE;
+            ctx.fillRect(145, 625, 790, 105);
+
+            // Líneas decorativas y puntos laterales.
+            ctx.strokeStyle = POSTER_PURPLE;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(165, 678);
+            ctx.lineTo(300, 678);
+            ctx.moveTo(780, 678);
+            ctx.lineTo(915, 678);
+            ctx.stroke();
+
+            ctx.fillStyle = POSTER_PURPLE;
+            ctx.beginPath();
+            ctx.arc(302, 678, 6, 0, Math.PI * 2);
+            ctx.arc(778, 678, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pastilla central con el intervalo de fechas.
+            ctx.fillStyle = POSTER_PURPLE;
+            roundRectPath(ctx, 300, 645, 480, 66, 33);
+            ctx.fill();
+
+            ctx.fillStyle = POSTER_WHITE;
+            ctx.font = '700 22px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, 540, 678);
+            ctx.restore();
+        }
+
         // ---- Póster 1080×1920 conectado en tiempo real con la Agenda Semanal ----
         // La composición visual permanece fija, pero la tabla de horarios se
         // redibuja desde appState.slots + Calendar cada vez que cambia la agenda.
@@ -904,6 +967,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, POSTER_CANVAS_W, POSTER_CANVAS_H);
                 ctx.drawImage(posterBaseImage, 0, 0, POSTER_CANVAS_W, POSTER_CANVAS_H);
+                drawPosterDateRange(ctx);
                 drawDynamicPosterTable(ctx);
             } catch (e) {
                 console.error('No se pudo actualizar el póster:', e);
