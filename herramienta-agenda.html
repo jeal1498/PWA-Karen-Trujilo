@@ -653,20 +653,21 @@
             activeSlots.slice(0, 6).forEach((slot, i) => {
                 const pos = positions[i];
                 const card = document.createElement('div');
-                card.style.cssText = `position:absolute; top:${pos.top}px; left:${pos.left}px; width:464px; height:406px; box-sizing:border-box; background:rgba(255,255,255,0.5); border:3px solid rgba(150,113,94,0.25); border-radius:24px; padding:10px 18px 18px; font-family:'Nunito Sans',sans-serif;`;
+                card.style.cssText = `position:absolute; top:${pos.top}px; left:${pos.left}px; width:464px; height:406px; box-sizing:border-box; font-family:'Nunito Sans',sans-serif;`;
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
-                    hoursHtml = slot.hours.map(h => `<div style="background:rgba(255,255,255,0.6); border:2px solid rgba(150,113,94,0.3); border-radius:12px; font-size:26px; font-weight:600; text-align:center; min-height:64px; display:flex; align-items:center; justify-content:center;">${h}</div>`).join('');
+                    hoursHtml = slot.hours.map(h => `<div style="background:#FFFFFF; border-radius:16px; box-shadow:0 4px 10px rgba(45,58,50,0.08); font-size:24px; font-weight:600; text-align:center; min-height:62px; display:flex; align-items:center; justify-content:center;">${formatPosterHourLabel(h)}</div>`).join('');
                 } else {
-                    hoursHtml = `<div style="grid-column:span 3; display:flex; align-items:center; justify-content:center; font-style:italic; opacity:0.4; font-size:24px; padding:20px 0;">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</div>`;
+                    hoursHtml = `<div style="grid-column:span 2; text-align:left; font-style:italic; opacity:0.4; font-size:22px; padding:14px 0;">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</div>`;
                 }
 
                 card.innerHTML = `
-                    <div style="text-align:center; border-bottom:2px solid rgba(150,113,94,0.2); padding-bottom:8px; margin-bottom:10px;">
-                        <span style="font-family:'Libre Baskerville',serif; font-weight:700; font-size:30px; letter-spacing:0.5px;">${slot.day} ${slot.dayNumber}</span>
+                    <div style="text-align:left; margin-bottom:14px;">
+                        <div style="font-family:'Libre Baskerville',serif; font-weight:700; font-size:34px; text-transform:uppercase; letter-spacing:0.5px; line-height:1.1;">${slot.day}</div>
+                        <div style="font-family:'Nunito Sans',sans-serif; font-weight:800; font-size:22px; color:#96715E; margin-top:4px;">${slot.dayNumber} ${slot.monthAbbrev}</div>
                     </div>
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${hoursHtml}</div>
+                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">${hoursHtml}</div>
                 `;
                 container.appendChild(card);
             });
@@ -680,14 +681,31 @@
             container.appendChild(footer);
         }
 
-        // Arma la lista de slots activos con el número de día ya resuelto,
-        // lista para pasar a renderPosterContent().
+        // Da formato "9:00 AM" a una hora del tipo "09:00" (sin cero a la
+        // izquierda en la hora, con minutos y periodo AM/PM), para las
+        // píldoras del póster.
+        function formatPosterHourLabel(hourStr) {
+            const [hh, mm] = hourStr.split(':').map(Number);
+            const period = hh < 12 ? 'AM' : 'PM';
+            let hour12 = hh % 12;
+            if (hour12 === 0) hour12 = 12;
+            return `${hour12}:${String(mm).padStart(2, '0')} ${period}`;
+        }
+
+        // Arma la lista de slots activos con el número de día y el mes
+        // abreviado ya resueltos, lista para pasar a renderPosterContent().
         function getPosterSlotsWithDayNumber() {
             const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const monthAbbrevs = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
             const weekDates = getWeekDates();
             return getAvailablePosterSlots().map(slot => {
                 const dateIndex = dayOrder.indexOf(slot.day);
-                return { ...slot, dayNumber: dateIndex !== -1 ? weekDates[dateIndex].getDate() : '' };
+                const date = dateIndex !== -1 ? weekDates[dateIndex] : null;
+                return {
+                    ...slot,
+                    dayNumber: date ? date.getDate() : '',
+                    monthAbbrev: date ? monthAbbrevs[date.getMonth()] : ''
+                };
             });
         }
 
