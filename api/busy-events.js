@@ -68,11 +68,30 @@ module.exports = async function handler(req, res) {
 
       if (ev.rrule) {
         // Evento recurrente: expandir solo las ocurrencias dentro del rango.
+        // OJO: rrule.between() NO excluye las excepciones (EXDATE) ni aplica
+        // las citas reagendadas individualmente (RECURRENCE-ID) — sigue
+        // devolviendo la fecha/hora del patrón original tal cual. Hay que
+        // resolverlas a mano contra ev.exdate / ev.recurrences, que
+        // node-ical indexa por la fecha local (America/Mexico_City) de la
+        // ocurrencia original dentro de la serie.
         const occurrences = ev.rrule.between(rangeStart, rangeEnd, true);
         const durationMs = ev.end.getTime() - ev.start.getTime();
 
         for (const occStart of occurrences) {
-          // Ajuste por excepciones (EXDATE) ya lo maneja rrule.between().
+          const localDateKey = occStart.toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+
+          // Cancelada solo esa semana ("eliminar solo este evento" en Calendar).
+          if (ev.exdate && ev.exdate[localDateKey]) continue;
+
+          // Reagendada solo esa semana ("este evento" al mover la cita):
+          // usar el horario real de la excepción en vez del patrón original.
+          const override = ev.recurrences && ev.recurrences[localDateKey];
+          if (override) {
+            if (override.status === 'CANCELLED') continue;
+            busy.push({ start: override.start.toISOString(), end: override.end.toISOString() });
+            continue;
+          }
+
           const occEnd = new Date(occStart.getTime() + durationMs);
           busy.push({ start: occStart.toISOString(), end: occEnd.toISOString() });
         }
