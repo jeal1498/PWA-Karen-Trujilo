@@ -716,28 +716,21 @@
         // guardar la imagen; no modifica datos. Arma una copia fuera de
         // pantalla con el mismo contenido fijo (sin la escala visual del
         // wrapper) para que html2canvas capture siempre a 1080x1920 exactos.
-        // Captura el póster y lo descarga como PNG. Única función: generar y
-        // guardar la imagen; no modifica datos. Clona el póster que ya está
-        // visible en pantalla (ya renderizado, con fuentes e imagen cargadas)
-        // en vez de reconstruirlo desde cero, para garantizar que la captura
-        // sea exactamente lo mismo que se ve en la vista previa.
         function capturePoster() {
             showToast("Generando captura…", "info");
 
-            const runCapture = () => {
-                const original = document.getElementById('posterContainer');
-                const clone = original.cloneNode(true);
-                clone.id = 'posterCaptureClone';
-                clone.style.position = 'fixed';
-                clone.style.left = '-99999px';
-                clone.style.top = '0';
-                clone.style.transform = 'none'; // sin la escala visual: tamaño real 1080x1920
-                document.body.appendChild(clone);
+            const activeSlots = getPosterSlotsWithDayNumber();
 
-                // Espera dos frames para asegurar que el clon ya esté
-                // pintado por el navegador antes de capturarlo.
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                    html2canvas(clone, {
+            const runCapture = () => {
+                const stage = document.createElement('div');
+                stage.id = 'posterCaptureStage';
+                stage.style.cssText = `position:fixed; left:-99999px; top:0; width:1080px; height:1920px; background:#F3EEE0; overflow:hidden; color:#2D3A32;`;
+                document.body.appendChild(stage);
+                renderPosterContent(stage, activeSlots);
+
+                // Da tiempo a que el logo (imagen de fondo) termine de cargar.
+                setTimeout(() => {
+                    html2canvas(stage, {
                         scale: 1,
                         useCORS: true,
                         backgroundColor: '#F3EEE0',
@@ -753,13 +746,13 @@
                     }).catch(() => {
                         showToast("No se pudo generar la captura", "error");
                     }).finally(() => {
-                        clone.remove();
+                        stage.remove();
                     });
-                }));
+                }, 150);
             };
 
-            // Espera a que las fuentes web terminen de cargar antes de clonar
-            // y capturar el póster.
+            // Espera a que las fuentes web terminen de cargar antes de armar
+            // el clon fijo y capturarlo.
             const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
             fontsReady.then(() => setTimeout(runCapture, 300));
         }
