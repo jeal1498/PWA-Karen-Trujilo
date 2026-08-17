@@ -653,7 +653,7 @@
             activeSlots.slice(0, 6).forEach((slot, i) => {
                 const pos = positions[i];
                 const card = document.createElement('div');
-                card.style.cssText = `position:absolute; top:${pos.top}px; left:${pos.left}px; width:464px; height:406px; box-sizing:border-box; background:rgba(255,255,255,0.5); border:3px solid rgba(150,113,94,0.25); border-radius:24px; padding:0px 18px 18px; font-family:'Nunito Sans',sans-serif;`;
+                card.style.cssText = `position:absolute; top:${pos.top}px; left:${pos.left}px; width:464px; height:406px; box-sizing:border-box; background:rgba(255,255,255,0.5); border:3px solid rgba(150,113,94,0.25); border-radius:24px; padding:10px 18px 18px; font-family:'Nunito Sans',sans-serif;`;
 
                 let hoursHtml = "";
                 if (slot.hours.length > 0) {
@@ -663,7 +663,7 @@
                 }
 
                 card.innerHTML = `
-                    <div style="text-align:center; border-bottom:2px solid rgba(150,113,94,0.2); padding-bottom:4px; margin-bottom:6px;">
+                    <div style="text-align:center; border-bottom:2px solid rgba(150,113,94,0.2); padding-bottom:8px; margin-bottom:10px;">
                         <span style="font-family:'Libre Baskerville',serif; font-weight:700; font-size:30px; letter-spacing:0.5px;">${slot.day} ${slot.dayNumber}</span>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${hoursHtml}</div>
