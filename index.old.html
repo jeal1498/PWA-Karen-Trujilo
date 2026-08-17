@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Gestión de Agenda - Karen Trujillo">
+    <title>Karen Trujillo | Gestión de Agenda</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🗓️</text></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --eucalyptus-dark: #2D3A32;
+            --eucalyptus-soft: #5C7C69;
+            --silk-cream: #F9F7F2;
+            --muted-gold: #96715E;
+            --slate-gray: #4A4E51;
+            --white-glass: rgba(255, 255, 255, 0.95);
+            --shadow-premium: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #EBEAE6;
+            margin: 0; padding: 20px 10px;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--eucalyptus-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .admin-panel {
+            width: 100%; max-width: 550px;
+            background: var(--white-glass);
+            border-radius: 24px; padding: 25px 15px;
+            box-sizing: border-box;
+            margin-bottom: 30px; box-shadow: var(--shadow-premium);
+        }
+
+        .panel-header { text-align: center; margin-bottom: 25px; }
+        .panel-header h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin: 0; }
+        .panel-header p { font-size: 0.75rem; color: var(--muted-gold); font-weight: 700; text-transform: uppercase; margin-top: 5px; }
+        
+        .section-box {
+            background: #fff;
+            border-radius: 16px; padding: 15px; margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .step-label { 
+            display: flex; align-items: center; gap: 10px; font-size: 0.8rem; 
+            font-weight: 700; text-transform: uppercase; color: var(--eucalyptus-soft);
+            margin-bottom: 15px;
+        }
+        .step-label span { background: var(--eucalyptus-dark); color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.7rem; }
+
+        .range-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+        .btn-range {
+            flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--muted-gold);
+            background: white; color: var(--eucalyptus-dark); font-weight: 700; 
+            font-size: 0.75rem; cursor: pointer; text-transform: uppercase;
+        }
+        .btn-range.active { background: var(--muted-gold); color: white; border-color: var(--muted-gold); }
+
+        .date-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        input[type="date"], input[type="time"] { border: 1px solid #ccc; min-height: 44px; padding: 8px; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 0.9rem; }
+
+        .btn-google { width: 100%; background: var(--eucalyptus-dark); color: white; border: none; min-height: 48px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+        
+        .btn-reset { width: 100%; background: transparent; color: #b71c1c; border: 1px solid #b71c1c; min-height: 44px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 15px; font-size: 0.75rem; text-transform: uppercase; }
+
+        .editor-container { max-height: 300px; overflow-y: auto; margin-top: 10px; border-top: 1px solid #eee; }
+        .day-edit-row { background: #fdfdfd; padding: 10px; border-radius: 8px; margin: 8px 0; border: 1px solid #eee; }
+        .day-title { font-size: 0.7rem; font-weight: 700; color: var(--slate-gray); text-transform: uppercase; margin-bottom: 5px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+        .chip { background: #eee; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; position: relative; }
+        .chip input[type="time"] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .chip:hover { background: #e0e0e0; }
+        .chip b { color: #b71c1c; cursor: pointer; padding: 2px 5px; font-size: 1rem; z-index: 2; }
+        
+        textarea { width: 100%; border: 1px solid #ccc; border-radius: 10px; padding: 12px; margin-top: 10px; font-family: inherit; font-size: 1rem; box-sizing: border-box; }
+
+        .preview-area { width: 320px; height: 568px; overflow: hidden; position: relative; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); background: #fff; }
+
+        #poster-container {
+            width: 1080px; height: 1920px; background-color: var(--silk-cream);
+            display: flex; flex-direction: column; padding: 100px 80px; box-sizing: border-box;
+            position: absolute; top: 0; left: 0; transform: scale(0.2962); transform-origin: top left;
+        }
+
+        .poster-bg-logo {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 900px; height: 900px; 
+            background-image: url('Logo_Karen_Trujillo.webp');
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            opacity: 0.1; z-index: 1;
+        }
+
+        .poster-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; }
+        .poster-header { margin-bottom: 60px; border-left: 6px solid var(--muted-gold); padding-left: 40px; }
+        .h2-line { font-size: 2rem; letter-spacing: 10px; color: var(--muted-gold); text-transform: uppercase; margin-bottom: 15px; font-weight: 400; }
+        .h1-line { font-family: 'Playfair Display', serif; font-size: 6.2rem; color: var(--eucalyptus-dark); line-height: 1.1; font-weight: 700; margin: 0; }
+        #range-text { font-size: 2.3rem; color: var(--eucalyptus-soft); font-weight: 300; text-transform: uppercase; letter-spacing: 2px; margin-top: 25px; }
+
+        .calendar-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; row-gap: 40px; width: 100%; flex-grow: 1; align-content: start; }
+        .day-column { display: flex; flex-direction: column; }
+        .day-name { color: var(--eucalyptus-dark); font-size: 2.6rem; font-weight: 700; font-family: 'Playfair Display', serif; margin-bottom: 2px; }
+        .day-date { font-size: 1.5rem; color: var(--muted-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; }
+        .time-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .slot { background: white; color: var(--eucalyptus-dark); padding: 12px 10px; border-radius: 8px; font-size: 1.6rem; font-weight: 600; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
+
+        .poster-footer { text-align: center; margin-top: 40px; padding-bottom: 40px; }
+        #notes-display { font-size: 2.4rem; color: var(--eucalyptus-dark); font-style: italic; font-family: 'Playfair Display', serif; line-height: 1.4; max-width: 900px; margin: 0 auto; white-space: pre-wrap; }
+        .footer-sub { font-size: 1.6rem; color: #888; margin-top: 40px; letter-spacing: 2px; text-transform: uppercase; }
+
+        .btn-share { margin-top: 25px; width: 320px; background: var(--eucalyptus-dark); color: white; min-height: 56px; border-radius: 18px; border: none; font-weight: 700; cursor: pointer; letter-spacing: 1px; font-size: 1rem; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 24px; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .modal-btns { display: grid; gap: 10px; margin-top: 20px; }
+        .modal-btn { padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; }
+        .btn-yes { background: var(--eucalyptus-dark); color: white; }
+        .btn-no { background: var(--muted-gold); color: white; }
+        .btn-cancel { background: #f0f0f0; color: #666; }
+    </style>
+</head>
+<body>
+
+    <main class="admin-panel">
+        <header class="panel-header">
+            <h1>Karen Trujillo</h1>
+            <p>(Sistema de Gestión de Agenda)</p>
+        </header>
+        
+        <section class="section-box">
+            <h2 class="step-label"><span>1</span> Rango de Fechas</h2>
+            <div class="range-toggle">
+                <button class="btn-range" onclick="setQuickRange('week')">Esta Semana</button>
+                <button class="btn-range active" onclick="setQuickRange('custom')">Personalizado</button>
+            </div>
+            <div class="date-inputs">
+                <input type="date" id="start-date" onchange="autoSetEndDate(); autoSave(); initEditor();">
+                <input type="date" id="end-date" onchange="autoSave(); initEditor();">
+            </div>
+        </section>
+
+        <section class="section-box">
+            <h2 class="step-label"><span>2</span> Sincronización</h2>
+            <button class="btn-google" onclick="syncGoogle()">🔄 Sincronizar Google Calendar</button>
+        </section>
+
+        <section class="section-box">
+            <h2 class="step-label"><span>3</span> Edición Manual</h2>
+            <div id="manual-editor" class="editor-container"></div>
+            <textarea id="notes-input" placeholder="Escribe aquí las notas..." oninput="autoSave()"></textarea>
+            <button class="btn-reset" onclick="resetAgenda()">🗑️ Resetear Todo</button>
+        </section>
+    </main>
+
+    <div class="preview-area">
+        <div id="poster-container">
+            <div class="poster-bg-logo"></div>
+            <div class="poster-content">
+                <div class="poster-header">
+                    <div class="h2-line">Disponibilidad</div>
+                    <div class="h1-line">KAREN<br>TRUJILLO</div>
+                    <div id="range-text"></div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+                <div class="poster-footer">
+                    <div id="notes-display"></div>
+                    <div class="footer-sub">Neuropsicología • Bienestar Integral</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-share" onclick="sharePoster()">📤 GENERAR Y COMPARTIR</button>
+
+    <div class="modal-overlay" id="shift-modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0">¿Deseas recorrer las siguientes horas?</h3>
+            <p style="font-size: 0.85rem; color: #666; line-height: 1.4;"><b>SÍ:</b> Mueve todas las citas posteriores.<br><b>NO:</b> Ajusta solo la siguiente a la hora en punto.</p>
+            <div class="modal-btns">
+                <button class="modal-btn btn-yes" id="confirm-shift-yes">SÍ, RECORRER TODO</button>
+                <button class="modal-btn btn-no" id="confirm-shift-no">NO, SOLO AJUSTAR SIGUIENTE</button>
+                <button class="modal-btn btn-cancel" id="confirm-shift-cancel">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL DE GOOGLE APPS SCRIPT INTEGRADA
+        const API = "https://script.google.com/macros/s/AKfycbzZBw3OkxTUgpJK0IMgu8T-ZBbeWS0KvRT30Lo-4GOh3QMsq7TSRxceZi3YlsnAIBG3/exec";
+
+        // Horario base por día de la semana (0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab)
+        // Cada sesión: 50 min de atención + 10 min de descanso
+        const DEFAULT_SCHEDULE = {
+            1: ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "6:00 PM"],  // Lunes
+            2: ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "6:00 PM"],  // Martes
+            3: ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM"],  // Miércoles
+            4: ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM"],  // Jueves
+            5: ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM"],                         // Viernes
+            6: ["10:00 AM", "11:00 AM", "12:00 PM", "4:00 PM", "5:00 PM", "6:00 PM"],  // Sábado
+        };
+        
+        const dayNames = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+        const monthNames = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        
+        let agenda = JSON.parse(localStorage.getItem('karen_agenda')) || {};
+
+        window.onload = () => {
+            document.getElementById('start-date').value = localStorage.getItem('karen_start') || '';
+            document.getElementById('end-date').value = localStorage.getItem('karen_end') || '';
+            document.getElementById('notes-input').value = localStorage.getItem('karen_notes') || '';
+            initEditor();
+            renderPoster();
+        };
+
+        function resetAgenda() {
+            if(confirm("¿Estás seguro de borrar todos los datos?")) {
+                localStorage.clear();
+                agenda = {};
+                document.querySelectorAll('input[type="date"]').forEach(i => i.value = '');
+                document.getElementById('notes-input').value = '';
+                initEditor();
+                renderPoster();
+            }
+        }
+
+        function autoSetEndDate() {
+            const startVal = document.getElementById('start-date').value;
+            if(!startVal) return;
+            const start = new Date(startVal + "T00:00:00");
+            const dow = start.getDay(); // 0=Dom, 6=Sab
+            const daysUntilSat = dow === 6 ? 0 : (6 - dow);
+            const sat = new Date(start);
+            sat.setDate(start.getDate() + daysUntilSat);
+            document.getElementById('end-date').value = sat.toISOString().split('T')[0];
+        }
+
+        function setQuickRange(type) {
+            const start = document.getElementById('start-date');
+            const end = document.getElementById('end-date');
+            if(type === 'week') {
+                const now = new Date();
+                const dow = now.getDay();
+                const daysToMon = dow === 0 ? -6 : 1 - dow;
+                const mon = new Date(now);
+                mon.setDate(now.getDate() + daysToMon);
+                const sat = new Date(mon);
+                sat.setDate(mon.getDate() + 5);
+                start.value = mon.toISOString().split('T')[0];
+                end.value = sat.toISOString().split('T')[0];
+            }
+            autoSave();
+            initEditor();
+        }
+
+        function autoSave() {
+            localStorage.setItem('karen_start', document.getElementById('start-date').value);
+            localStorage.setItem('karen_end', document.getElementById('end-date').value);
+            localStorage.setItem('karen_notes', document.getElementById('notes-input').value);
+            localStorage.setItem('karen_agenda', JSON.stringify(agenda));
+            renderPoster();
+        }
+
+        async function syncGoogle() {
+            const s = document.getElementById('start-date').value;
+            const e = document.getElementById('end-date').value;
+            if(!s || !e) return alert("Selecciona fechas primero");
+            const btn = document.querySelector('.btn-google');
+            btn.innerText = "⏳ Sincronizando...";
+            try {
+                const res = await fetch(`${API}?start=${s}&end=${e}`);
+                const data = await res.json();
+                agenda = {}; 
+                data.forEach(item => {
+                    const time = new Date(item.start);
+                    let h = time.getHours();
+                    const m = time.getMinutes();
+                    // Redondear a hora entera: >=30 min sube al siguiente, <30 trunca
+                    if(m >= 30) h = (h + 1) % 24;
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    let hDisplay = h % 12 || 12;
+                    const tStr = `${hDisplay}:00 ${ampm}`;
+                    if(!agenda[item.dateKey]) agenda[item.dateKey] = [];
+                    agenda[item.dateKey].push(tStr);
+                });
+                initEditor();
+                btn.innerText = "✅ Sincronizado";
+                setTimeout(() => btn.innerText = "🔄 Sincronizar Google Calendar", 2000);
+            } catch (err) { alert("Error de conexión con Google"); btn.innerText = "🔄 Reintentar"; }
+        }
+
+        function initEditor() {
+            let s = document.getElementById('start-date').value;
+            let e = document.getElementById('end-date').value;
+            const editor = document.getElementById('manual-editor');
+            if(!s || !e) { editor.innerHTML = ''; return; }
+
+            // Auto-corregir fechas invertidas
+            if(s > e) {
+                [s, e] = [e, s];
+                document.getElementById('start-date').value = s;
+                document.getElementById('end-date').value = e;
+                editor.innerHTML = '<p style="color:#b71c1c;font-size:0.8rem;padding:8px;text-align:center;">⚠️ Fechas corregidas automáticamente</p>';
+            } else {
+                editor.innerHTML = '';
+            }
+
+            let curr = new Date(s + "T00:00:00");
+            const last = new Date(e + "T00:00:00");
+            while(curr <= last) {
+                const dow = curr.getDay();
+                if(dow !== 0) {
+                    const key = curr.toISOString().split('T')[0];
+                    // Pre-poblar con horario base si el día no tiene datos aún
+                    if(agenda[key] === undefined) {
+                        agenda[key] = [...(DEFAULT_SCHEDULE[dow] || [])];
+                    }
+                    const row = document.createElement('div');
+                    row.className = 'day-edit-row';
+                    const hours = agenda[key];
+                    row.innerHTML = `
+                        <div class="day-title" style="display:flex;justify-content:space-between;align-items:center;">
+                            <span>${dayNames[dow]} ${curr.getDate()}</span>
+                            <button onclick="addHour('${key}')" style="background:var(--eucalyptus-dark);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+                        </div>
+                        <div class="chips">
+                            ${hours.map((h, i) => `
+                                <div class="chip">
+                                    ${h}
+                                    <input type="time" onchange="handleTimeChange('${key}', ${i}, this.value)">
+                                    <b onclick="event.stopPropagation(); removeHour('${key}', ${i})">×</b>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    editor.appendChild(row);
+                }
+                curr.setDate(curr.getDate() + 1);
+            }
+            autoSave();
+        }
+
+        function addHour(key) {
+            const newTime = prompt("Ingresa la hora (ej: 3:00 PM o 15:00):");
+            if(!newTime) return;
+            let normalized = newTime.trim().toUpperCase();
+            if(!normalized.includes('AM') && !normalized.includes('PM')) {
+                const [h, m] = normalized.split(':');
+                const hNum = parseInt(h);
+                const ampm = hNum >= 12 ? 'PM' : 'AM';
+                const h12 = hNum % 12 || 12;
+                normalized = `${h12}:${m || '00'} ${ampm}`;
+            }
+            if(!agenda[key]) agenda[key] = [];
+            agenda[key].push(normalized);
+            cleanAndSave(key);
+        }
+
+        const parseToMins = (str) => {
+            const [time, modifier] = str.split(' ');
+            let [hours, minutes] = time.split(':');
+            let h = parseInt(hours);
+            if (modifier === 'PM' && h < 12) h += 12;
+            if (modifier === 'AM' && h === 12) h = 0;
+            return h * 60 + parseInt(minutes);
+        };
+
+        const formatFromMins = (totalMin) => {
+            let h = Math.floor(totalMin / 60) % 24;
+            let m = totalMin % 60;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h}:${m === 0 ? '00' : (m < 10 ? '0'+m : m)} ${ampm}`;
+        };
+
+        const input24ToMins = (val) => {
+            const [h, m] = val.split(':');
+            return parseInt(h) * 60 + parseInt(m);
+        };
+
+        function handleTimeChange(key, index, newVal24) {
+            const newMins = input24ToMins(newVal24);
+            const oldMins = parseToMins(agenda[key][index]);
+            const diff = newMins - oldMins;
+
+            const modal = document.getElementById('shift-modal');
+            modal.style.display = 'flex';
+
+            document.getElementById('confirm-shift-yes').onclick = () => {
+                for (let i = index; i < agenda[key].length; i++) {
+                    let currentMins = parseToMins(agenda[key][i]);
+                    agenda[key][i] = formatFromMins(currentMins + diff);
+                }
+                cleanAndSave(key);
+            };
+
+            document.getElementById('confirm-shift-no').onclick = () => {
+                agenda[key][index] = formatFromMins(newMins);
+                // Siguiente cita = hora editada + 60 min (50 sesión + 10 break)
+                if (index + 1 < agenda[key].length) {
+                    agenda[key][index + 1] = formatFromMins(newMins + 60);
+                }
+                cleanAndSave(key);
+            };
+
+            document.getElementById('confirm-shift-cancel').onclick = () => {
+                initEditor();
+                modal.style.display = 'none';
+            };
+        }
+
+        function cleanAndSave(key) {
+            let uniqueHours = [...new Set(agenda[key])];
+            uniqueHours.sort((a, b) => parseToMins(a) - parseToMins(b));
+            agenda[key] = uniqueHours;
+            
+            document.getElementById('shift-modal').style.display = 'none';
+            initEditor();
+            autoSave();
+        }
+
+        function removeHour(key, index) { 
+            agenda[key].splice(index, 1); 
+            initEditor(); 
+            autoSave();
+        }
+
+        function renderPoster() {
+            const s = document.getElementById('start-date').value;
+            const e = document.getElementById('end-date').value;
+            const grid = document.getElementById('calendar-grid');
+            if(!s || !e) return;
+            grid.innerHTML = '';
+            const d1 = new Date(s + "T00:00:00");
+            const d2 = new Date(e + "T00:00:00");
+            document.getElementById('range-text').innerText = `${d1.getDate()} de ${monthNames[d1.getMonth()]} al ${d2.getDate()} de ${monthNames[d2.getMonth()]}`;
+            document.getElementById('notes-display').innerText = document.getElementById('notes-input').value;
+            
+            let curr = new Date(s + "T00:00:00");
+            const last = new Date(e + "T00:00:00");
+            while(curr <= last) {
+                if(curr.getDay() !== 0) {
+                    const key = curr.toISOString().split('T')[0];
+                    const col = document.createElement('div');
+                    col.className = 'day-column';
+                    const hours = agenda[key] || [];
+                    col.innerHTML = `<div class="day-name">${dayNames[curr.getDay()]}</div><div class="day-date">${curr.getDate()} ${monthNames[curr.getMonth()].substring(0,3)}</div><div class="time-slots">${hours.map(h => `<div class="slot">${h}</div>`).join('') || '<div style="color:#96715E; font-size:1.6rem; font-weight:700">Lleno</div>'}</div>`;
+                    grid.appendChild(col);
+                }
+                curr.setDate(curr.getDate() + 1);
+            }
+        }
+
+        async function sharePoster() {
+            const poster = document.getElementById('poster-container');
+            const btn = document.querySelector('.btn-share');
+            btn.innerText = "⌛ PROCESANDO IMAGEN...";
+            poster.style.transform = "none";
+            const canvas = await html2canvas(poster, { scale: 1, useCORS: true, logging: false });
+            poster.style.transform = "scale(0.2962)";
+            const link = document.createElement('a');
+            link.download = 'Agenda_Karen_Trujillo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            btn.innerText = "📤 GENERAR Y COMPARTIR";
+        }
+    </script>
+</body>
+</html>
