@@ -43,23 +43,10 @@
             max-width: 100vw;
         }
 
-        /* Proporción exacta 9:16 para Estados de WhatsApp e Historias de Instagram */
-        .story-aspect {
-            aspect-ratio: 9 / 16;
-            width: 100%;
-            max-width: 400px;
-            min-width: 0;
-        }
-
-        /* Color de fondo sólido */
-        .poster-bg-custom {
-            background: #F3EEE0;
-        }
-
-        /* Formato numérico consistente */
-        .time-pill {
-            font-variant-numeric: tabular-nums;
-        }
+        /* El póster (#posterContainer) es 100% fijo en píxeles (1080x1920).
+           #posterScaleWrapper solo lo escala visualmente con transform
+           (calculado en JS); su alto se fija también en JS, sin usar
+           aspect-ratio ni ninguna otra unidad relativa. */
 
         /* Scrollbar interno discreto */
         ::-webkit-scrollbar {
@@ -82,49 +69,17 @@
         
         <!-- VISTA PREVIA DEL PÓSTER 9:16 -->
         <section class="lg:col-span-7 flex flex-col items-center justify-start">
-            
-            <div id="posterContainer" class="w-full max-w-md story-aspect rounded-2xl p-4 sm:p-4 flex flex-col justify-between transition-all duration-300 relative overflow-hidden shadow-2xl border border-muted-gold/30 poster-bg-custom text-eucalyptus-dark font-serif">
-                    
-                    <!-- Logo como marca de agua de fondo completo -->
-                    <img src="Logo_Karen_Trujillo.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.06] pointer-events-none select-none" />
 
-                    <!-- ENCABEZADO OPTIMIZADO -->
-                    <div class="relative z-10 text-center space-y-0.5 pt-0">
-                        <div class="space-y-0 pt-1 relative">
-                            <h3 class="text-2xl sm:text-3xl font-bold tracking-wide text-eucalyptus-dark leading-tight relative inline-block pt-1">
-                                Karen Trujillo
-                            </h3>
-                            <p class="text-[11px] font-sans text-eucalyptus-soft font-medium leading-none pt-1">Neuropsicóloga</p>
-                        </div>
-
-                        <div class="flex items-center gap-2 my-2 px-2">
-                            <div class="flex-1 h-px bg-muted-gold/40"></div>
-                            <i class="fa-regular fa-calendar text-muted-gold/70 text-[10px]"></i>
-                            <div class="flex-1 h-px bg-muted-gold/40"></div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-xs sm:text-sm font-bold tracking-wider font-sans uppercase text-eucalyptus-dark leading-none">CITAS DISPONIBLES</h2>
-                        </div>
-                    </div>
-
-                    <!-- CUERPO: 2 COLUMNAS -->
-                    <div id="posterSlotsGrid" class="relative z-10 my-1 flex flex-wrap overflow-hidden pr-0.5 min-w-0">
-                        <!-- Generado dinámicamente -->
-                    </div>
-
-                    <!-- PIE DEL PÓSTER DENTRO DE LÍMITES -->
-                    <div class="relative z-10 pt-1.5 border-t border-muted-gold/25 flex flex-col items-center text-center space-y-1 text-xs">
-                        <p class="text-[8.5px] italic font-sans text-slate-warm leading-none">
-                            Sesiones de 50 min · Reserva por WhatsApp
-                        </p>
-                        <p class="text-[9px] font-bold font-sans text-eucalyptus-dark time-pill leading-none">
-                            <i class="fa-brands fa-whatsapp text-[#25D366] text-[10px]"></i>
-                            Contáctame: 998 321 1547
-                        </p>
-                    </div>
-
+            <!-- Este wrapper solo ESCALA visualmente el póster para que quepa en
+                 la pantalla (transform: scale). El póster en sí (#posterContainer)
+                 tiene tamaño y posiciones 100% fijas en píxeles, sin nada
+                 adaptativo/dinámico: es la misma estructura que se usa para la
+                 captura final. -->
+            <div id="posterScaleWrapper" class="w-full max-w-md" style="overflow:hidden; position:relative;">
+                <div id="posterContainer" style="width:1080px; height:1920px; position:relative; overflow:hidden; transform-origin: top left; border-radius:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); border:3px solid rgba(150,113,94,0.3); background:#F3EEE0; color:#2D3A32;">
+                    <!-- Generado dinámicamente por renderPosterContent() -->
                 </div>
+            </div>
 
             <button onclick="capturePoster()" class="mt-4 w-full max-w-md flex items-center justify-center gap-2 bg-eucalyptus-dark dark:bg-emerald-600 text-silk-cream font-sans font-semibold text-sm py-3 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition">
                 <i class="fa-solid fa-camera"></i>
@@ -654,75 +609,20 @@
             list.innerHTML = html;
         }
 
-        // Renderizado del Póster con proporciones exactas
-        function updatePoster() {
-            const grid = document.getElementById('posterSlotsGrid');
-            grid.innerHTML = '';
-
-            const activeSlots = getAvailablePosterSlots();
-
-            if (activeSlots.length === 0) {
-                grid.innerHTML = `<p class="w-full text-center text-xs opacity-50 py-8">No hay días activados.</p>`;
-                return;
-            }
-
-            // Cada día ocupa una columna (2 por fila).
-            let col = 0;
-            const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-            const weekDates = getWeekDates();
-
-            activeSlots.forEach(slot => {
-                const card = document.createElement('div');
-                const dateIndex = dayOrder.indexOf(slot.day);
-                const dayNumber = dateIndex !== -1 ? weekDates[dateIndex].getDate() : '';
-
-                const isFirstColumn = col === 0;
-                card.className = `${isFirstColumn ? 'mr-[4%]' : ''} w-[48%] mb-2 min-w-0 p-2 rounded-lg border border-muted-gold/25 bg-white/50 flex flex-col justify-start space-y-1 font-sans`;
-                col = isFirstColumn ? 1 : 0;
-
-                let hoursHtml = "";
-                if (slot.hours.length > 0) {
-                    hoursHtml = slot.hours.map((h) => {
-                        return `<div class="time-pill w-full min-h-[22px] py-0.5 px-1 rounded text-[8.5px] font-semibold border border-muted-gold/30 bg-white/60 text-eucalyptus-dark font-sans leading-none flex items-center justify-center text-center">${h}</div>`;
-                    }).join('');
-                } else {
-                    hoursHtml = `<span class="col-span-3 flex items-center justify-center text-[8px] italic opacity-40 text-center py-0.5 w-full">${slot.blocked ? 'Día no disponible' : 'Sin citas disponibles'}</span>`;
-                }
-
-                // Alto fijo equivalente a 8 horas (3 filas de píldoras) para que
-                // todas las tarjetas se vean parejas, aunque un día tenga menos
-                // horas disponibles (o ninguna).
-                const hoursContainerClass = "grid grid-cols-3 gap-x-1 gap-y-1.5 pt-0.5 content-start min-h-[78px]";
-
-                card.innerHTML = `
-                    <div class="flex items-center justify-center border-b border-muted-gold/20 pb-1 px-0.5 min-w-0">
-                        <span class="font-bold text-[10px] font-serif tracking-wide text-eucalyptus-dark leading-none truncate">${slot.day} ${dayNumber}</span>
-                    </div>
-                    <div class="${hoursContainerClass} min-w-0">${hoursHtml}</div>
-                `;
-                grid.appendChild(card);
-            });
-
-            // Quita el margen inferior de la última tarjeta para no dejar un
-            // espacio de sobra al final del bloque (el "gap" original tampoco
-            // añadía espacio después de la última fila).
-            if (grid.lastElementChild) {
-                grid.lastElementChild.classList.remove('mb-1.5');
-            }
-        }
-
-        // Arma una copia del póster fuera de pantalla con tamaño y posiciones
-        // 100% fijas en píxeles (1080x1920, sin flex/aspect-ratio/%), para que
-        // html2canvas la capture exacta, sin ambigüedad de layout adaptativo.
-        function buildCapturePoster(activeSlots) {
-            const stage = document.createElement('div');
-            stage.id = 'posterCaptureStage';
-            stage.style.cssText = `position:fixed; left:-99999px; top:0; width:1080px; height:1920px; background:#F3EEE0; overflow:hidden; color:#2D3A32;`;
+        // Construye el contenido del póster con tamaño y posiciones 100% fijas
+        // en píxeles (lienzo de 1080x1920), sin flex/aspect-ratio/% ni nada
+        // adaptativo. Se usa tal cual tanto para la vista previa en pantalla
+        // (escalada solo visualmente por posterScaleWrapper) como para la
+        // captura final, así ambas son siempre idénticas.
+        function renderPosterContent(container, activeSlots) {
+            container.innerHTML = '';
+            container.style.fontFamily = "'Libre Baskerville', serif";
 
             const logo = document.createElement('img');
             logo.src = 'Logo_Karen_Trujillo.webp';
-            logo.style.cssText = `position:absolute; top:0; left:0; width:1080px; height:1920px; object-fit:cover; opacity:0.06;`;
-            stage.appendChild(logo);
+            logo.alt = '';
+            logo.style.cssText = `position:absolute; top:0; left:0; width:1080px; height:1920px; object-fit:cover; opacity:0.06; pointer-events:none;`;
+            container.appendChild(logo);
 
             const header = document.createElement('div');
             header.style.cssText = `position:absolute; top:90px; left:0; width:1080px; text-align:center;`;
@@ -736,7 +636,14 @@
                 </div>
                 <div style="font-family:'Nunito Sans',sans-serif; font-weight:700; font-size:36px; letter-spacing:2px; text-transform:uppercase; margin-top:30px;">Citas disponibles</div>
             `;
-            stage.appendChild(header);
+            container.appendChild(header);
+
+            if (activeSlots.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = `position:absolute; top:800px; left:60px; width:960px; text-align:center; font-family:'Nunito Sans',sans-serif; font-size:30px; opacity:0.5;`;
+                empty.textContent = 'No hay días activados.';
+                container.appendChild(empty);
+            }
 
             const positions = [
                 { top: 450, left: 60 }, { top: 450, left: 556 },
@@ -761,7 +668,7 @@
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${hoursHtml}</div>
                 `;
-                stage.appendChild(card);
+                container.appendChild(card);
             });
 
             const footer = document.createElement('div');
@@ -770,26 +677,57 @@
                 <div style="font-family:'Nunito Sans',sans-serif; font-style:italic; font-size:25px; color:#4A4E51;">Sesiones de 50 min · Reserva por WhatsApp</div>
                 <div style="font-family:'Nunito Sans',sans-serif; font-weight:700; font-size:27px; margin-top:12px;">Contáctame: 998 321 1547</div>
             `;
-            stage.appendChild(footer);
-
-            document.body.appendChild(stage);
-            return stage;
+            container.appendChild(footer);
         }
 
-        // Captura el póster y lo descarga como PNG. Única función: generar y
-        // guardar la imagen; no modifica datos.
-        function capturePoster() {
-            showToast("Generando captura…", "info");
-
+        // Arma la lista de slots activos con el número de día ya resuelto,
+        // lista para pasar a renderPosterContent().
+        function getPosterSlotsWithDayNumber() {
             const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
             const weekDates = getWeekDates();
-            const activeSlots = getAvailablePosterSlots().map(slot => {
+            return getAvailablePosterSlots().map(slot => {
                 const dateIndex = dayOrder.indexOf(slot.day);
                 return { ...slot, dayNumber: dateIndex !== -1 ? weekDates[dateIndex].getDate() : '' };
             });
+        }
+
+        // Escala visualmente #posterContainer (1080x1920 fijo) para que quepa
+        // en el ancho disponible en pantalla. Es solo una transformación
+        // visual (transform: scale): el contenido interno del póster no se
+        // recalcula ni se adapta, siempre son los mismos 1080x1920 px.
+        function updatePosterScale() {
+            const wrapper = document.getElementById('posterScaleWrapper');
+            const container = document.getElementById('posterContainer');
+            if (!wrapper || !container) return;
+            const scale = wrapper.clientWidth / 1080;
+            container.style.transform = `scale(${scale})`;
+            wrapper.style.height = `${1920 * scale}px`;
+        }
+        window.addEventListener('resize', updatePosterScale);
+
+        // Renderizado del póster visible en pantalla.
+        function updatePoster() {
+            const container = document.getElementById('posterContainer');
+            renderPosterContent(container, getPosterSlotsWithDayNumber());
+            updatePosterScale();
+        }
+
+        // Captura el póster y lo descarga como PNG. Única función: generar y
+        // guardar la imagen; no modifica datos. Arma una copia fuera de
+        // pantalla con el mismo contenido fijo (sin la escala visual del
+        // wrapper) para que html2canvas capture siempre a 1080x1920 exactos.
+        function capturePoster() {
+            showToast("Generando captura…", "info");
+
+            const activeSlots = getPosterSlotsWithDayNumber();
 
             const runCapture = () => {
-                const stage = buildCapturePoster(activeSlots);
+                const stage = document.createElement('div');
+                stage.id = 'posterCaptureStage';
+                stage.style.cssText = `position:fixed; left:-99999px; top:0; width:1080px; height:1920px; background:#F3EEE0; overflow:hidden; color:#2D3A32;`;
+                document.body.appendChild(stage);
+                renderPosterContent(stage, activeSlots);
+
                 // Da tiempo a que el logo (imagen de fondo) termine de cargar.
                 setTimeout(() => {
                     html2canvas(stage, {
