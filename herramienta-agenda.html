@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tipografía consistente con index.html -->
     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- html2canvas: usado solo para la captura del póster -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -123,6 +125,11 @@
                     </div>
 
                 </div>
+
+            <button onclick="capturePoster()" class="mt-4 w-full max-w-md flex items-center justify-center gap-2 bg-eucalyptus-dark dark:bg-emerald-600 text-silk-cream font-sans font-semibold text-sm py-3 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition">
+                <i class="fa-solid fa-camera"></i>
+                Capturar póster
+            </button>
 
         </section>
 
@@ -702,6 +709,28 @@
             if (grid.lastElementChild) {
                 grid.lastElementChild.classList.remove('mb-1.5');
             }
+        }
+
+        // Captura el póster tal como se ve en pantalla y lo descarga como PNG.
+        // Única función: generar y guardar la imagen; no modifica datos.
+        function capturePoster() {
+            const poster = document.getElementById('posterContainer');
+            showToast("Generando captura…", "info");
+
+            html2canvas(poster, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: null
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const fecha = new Date().toISOString().slice(0, 10);
+                link.download = `poster-karen-trujillo-${fecha}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast("Captura descargada", "success");
+            }).catch(() => {
+                showToast("No se pudo generar la captura", "error");
+            });
         }
 
         function showToast(message, type = "success") {
