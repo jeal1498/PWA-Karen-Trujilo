@@ -50,12 +50,19 @@ En [vercel.com](https://vercel.com) → tu proyecto →
 
 | Variable | Valor |
 |---|---|
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | el `client_email` del paso 1 |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | el `private_key` del mismo archivo `.json` (pégalo completo, incluyendo `-----BEGIN PRIVATE KEY-----` y `-----END PRIVATE KEY-----`) |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | el contenido **completo** del archivo `.json` descargado en el paso 1 — ábrelo con un editor de texto, selecciona todo (`Ctrl/Cmd+A`), cópialo y pégalo tal cual, incluyendo las llaves `{ }` de afuera. **No** extraigas campos a mano ni edites el contenido. |
 | `GOOGLE_CALENDAR_ID` | opcional — solo si el correo de Karen cambia; por defecto es `karentrujillopsic@gmail.com` |
 
-Si ya existían `ICS_URL` de la configuración anterior, puedes borrarla —
-ya no se usa.
+> Pegar el archivo completo (en vez de copiar el `client_email` y el
+> `private_key` por separado) evita el error más común de esta
+> configuración: al copiar la clave privada a mano se pierden los saltos
+> de línea o se arrastran comillas de más, y Node no logra leer la clave
+> (`error:1E08010C:DECODER routines::unsupported`). Con el JSON completo,
+> el código lo interpreta con `JSON.parse`, que no tiene ese problema.
+
+Si ya existían `ICS_URL`, `GOOGLE_SERVICE_ACCOUNT_EMAIL` o
+`GOOGLE_SERVICE_ACCOUNT_KEY` de intentos anteriores, puedes borrarlas —
+ya no se usan.
 
 Vuelve a desplegar (Vercel suele redesplegar solo al detectar el cambio
 de variables; si no, **Deployments → ⋯ → Redeploy**).

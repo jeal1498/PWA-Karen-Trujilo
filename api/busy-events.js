@@ -29,9 +29,9 @@
  * 2. Karen comparte su Calendar (solo lectura) con el correo de esa
  *    cuenta de servicio.
  * 3. En Vercel, Environment Variables:
- *      GOOGLE_SERVICE_ACCOUNT_EMAIL
- *      GOOGLE_SERVICE_ACCOUNT_KEY
- *      GOOGLE_CALENDAR_ID   (opcional; por defecto karentrujillopsic@gmail.com)
+ *      GOOGLE_SERVICE_ACCOUNT_JSON  (el contenido COMPLETO del archivo
+ *                                    .json descargado, pegado tal cual)
+ *      GOOGLE_CALENDAR_ID           (opcional; por defecto karentrujillopsic@gmail.com)
  * ────────────────────────────────────────────────────────────────────────
  */
 
@@ -40,20 +40,26 @@ const { JWT } = require('google-auth-library');
 const DEFAULT_CALENDAR_ID = 'karentrujillopsic@gmail.com';
 
 async function getAccessToken() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
-  if (!email || !key) {
-    throw new Error('Faltan las variables de entorno GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_SERVICE_ACCOUNT_KEY en Vercel.');
+  if (!raw) {
+    throw new Error('Falta la variable de entorno GOOGLE_SERVICE_ACCOUNT_JSON en Vercel.');
   }
 
-  // Si la clave se pegó en Vercel con "\n" literales en vez de saltos de
-  // línea reales, los normalizamos.
-  const privateKey = key.replace(/\\n/g, '\n');
+  let credentials;
+  try {
+    credentials = JSON.parse(raw);
+  } catch (e) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON no es un JSON válido. Pega el contenido completo del archivo .json descargado de Google Cloud, sin editarlo.');
+  }
+
+  if (!credentials.client_email || !credentials.private_key) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON no tiene "client_email" o "private_key". Verifica que sea el archivo completo de la cuenta de servicio.');
+  }
 
   const client = new JWT({
-    email,
-    key: privateKey,
+    email: credentials.client_email,
+    key: credentials.private_key,
     scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
   });
 
