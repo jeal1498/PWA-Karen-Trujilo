@@ -518,7 +518,7 @@
             const start = new Date(dates[0]);
             start.setHours(EARLIEST_HOUR, 0, 0, 0);
             const end = new Date(dates[dates.length - 1]);
-            end.setHours(LATEST_HOUR, 0, 0, 0);
+            end.setHours(LATEST_HOUR + 1, 0, 0, 0);
             return { start, end };
         }
 
@@ -531,7 +531,7 @@
             const workdayStart = new Date(evStart);
             workdayStart.setHours(EARLIEST_HOUR, 0, 0, 0);
             const workdayEnd = new Date(evStart);
-            workdayEnd.setHours(LATEST_HOUR, 0, 0, 0);
+            workdayEnd.setHours(LATEST_HOUR + 1, 0, 0, 0);
             return evStart < workdayEnd && evEnd > workdayStart;
         }
 
