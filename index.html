@@ -951,6 +951,23 @@
                             g.y + g.mondayH / 2
                         );
                         ctx.globalAlpha = 1;
+                    } else {
+                        rowHours.forEach((hour, i) => {
+                            const centerX = g.x + i * hourW + hourW / 2;
+                            const [hh, mm] = hour.split(':').map(Number);
+                            const period = hh < 12 ? 'AM' : 'PM';
+                            let hour12 = hh % 12;
+                            if (hour12 === 0) hour12 = 12;
+                            const label = `${hour12}:${String(mm).padStart(2, '0')}`;
+
+                            ctx.fillStyle = POSTER_INK;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.font = '700 23px Arial, sans-serif';
+                            ctx.fillText(label, centerX, g.y + g.mondayH / 2 - 10);
+                            ctx.font = '700 15px Arial, sans-serif';
+                            ctx.fillText(period, centerX, g.y + g.mondayH / 2 + 16);
+                        });
                     }
                     return;
                 }
