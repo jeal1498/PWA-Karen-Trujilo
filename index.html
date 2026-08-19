@@ -910,30 +910,6 @@
             roundRectPath(ctx, g.x, g.y, g.w, g.h, 18);
             ctx.stroke();
 
-            // Separación entre lunes y las filas horarias.
-            ctx.beginPath();
-            ctx.moveTo(g.x, bodyTop);
-            ctx.lineTo(g.x + g.w, bodyTop);
-            ctx.stroke();
-
-            // Ocho columnas para martes–sábado.
-            for (let i = 1; i < g.columns; i++) {
-                const cx = g.x + i * hourW;
-                ctx.beginPath();
-                ctx.moveTo(cx, bodyTop);
-                ctx.lineTo(cx, g.y + g.h);
-                ctx.stroke();
-            }
-
-            // Líneas horizontales de martes a sábado.
-            for (let i = 1; i <= 5; i++) {
-                const ry = bodyTop + i * bodyH;
-                ctx.beginPath();
-                ctx.moveTo(g.x, ry);
-                ctx.lineTo(g.x + g.w, ry);
-                ctx.stroke();
-            }
-
             rows.forEach((row, rowIndex) => {
                 const rowHours = row.blocked ? [] : (row.hours || []).slice(0, 8);
 
