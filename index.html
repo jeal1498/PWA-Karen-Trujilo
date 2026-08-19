@@ -373,7 +373,7 @@
 
         // ---- Reglas de agenda ----
         const APPOINTMENT_DURATION_MINUTES = 50; // duración de cada sesión
-        const BUFFER_MINUTES = 10;                // colchón antes/después de cada cita
+        const BUFFER_MINUTES = 0;                 // colchón antes/después de cada cita (0 = solo bloquea lo que diga Calendar)
         const MIN_LEAD_MINUTES = 120;              // no mostrar horas con menos de 2h de aviso
         const EARLIEST_HOUR = 8;                   // Karen no atiende antes de las 8 a.m.
         const LATEST_HOUR = 19;                    // última hora de inicio de cita (7 p.m. a 8 p.m., cierre a las 8 p.m.)
