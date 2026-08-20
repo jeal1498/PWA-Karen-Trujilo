@@ -132,7 +132,18 @@
         }
 
         /* ---- Contenedor para alinear la Agenda Semanal con el ancho del póster/botón ---- */
-        .agenda-semanal-wrap { width: 100%; max-width: 550px; margin-top: 30px; box-sizing: border-box; }
+        .agenda-semanal-wrap {
+            width: 100%;
+            max-width: 550px;
+            margin-top: 30px;
+            box-sizing: border-box;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+            overscroll-behavior-x: contain;
+            cursor: grab;
+        }
+        .agenda-semanal-wrap.is-swiping { cursor: grabbing; }
 
         /* Scrollbar interno discreto (Agenda Semanal) */
         ::-webkit-scrollbar { width: 3px; height: 3px; }
@@ -536,6 +547,7 @@
 
         window.onload = function() {
             preparePosterBase();
+            initWeekSwipe();
             triggerAutoSync();
 
             setInterval(() => {
@@ -626,9 +638,92 @@
             text.innerText = label;
         }
 
-        function shiftWeek(delta) {
+        let isWeekChanging = false;
+
+        async function shiftWeek(delta) {
+            if (isWeekChanging) return;
+            isWeekChanging = true;
             weekOffset += delta;
-            triggerAutoSync(true);
+            try {
+                await triggerAutoSync(true);
+            } finally {
+                isWeekChanging = false;
+            }
+        }
+
+        // Navegación semanal por deslizamiento horizontal.
+        // Izquierda = semana siguiente; derecha = semana anterior.
+        function initWeekSwipe() {
+            const agenda = document.querySelector('.agenda-semanal-wrap');
+            if (!agenda) return;
+
+            let startX = 0;
+            let startY = 0;
+            let pointerId = null;
+            let tracking = false;
+            let horizontalSwipe = false;
+            let suppressClicksUntil = 0;
+            const SWIPE_THRESHOLD = 60;
+
+            agenda.addEventListener('pointerdown', (event) => {
+                // Solo un dedo o botón principal del mouse.
+                if (event.pointerType === 'mouse' && event.button !== 0) return;
+                if (isWeekChanging) return;
+
+                pointerId = event.pointerId;
+                startX = event.clientX;
+                startY = event.clientY;
+                tracking = true;
+                horizontalSwipe = false;
+                agenda.classList.add('is-swiping');
+
+                try { agenda.setPointerCapture(pointerId); } catch (e) {}
+            });
+
+            agenda.addEventListener('pointermove', (event) => {
+                if (!tracking || event.pointerId !== pointerId) return;
+
+                const dx = event.clientX - startX;
+                const dy = event.clientY - startY;
+                horizontalSwipe = Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12;
+
+                // Evita que un gesto lateral termine activando una celda.
+                if (horizontalSwipe && event.cancelable) event.preventDefault();
+            }, { passive: false });
+
+            const finishSwipe = (event) => {
+                if (!tracking || event.pointerId !== pointerId) return;
+
+                const dx = event.clientX - startX;
+                const dy = event.clientY - startY;
+                const isHorizontal = Math.abs(dx) > Math.abs(dy);
+
+                tracking = false;
+                agenda.classList.remove('is-swiping');
+                try { agenda.releasePointerCapture(pointerId); } catch (e) {}
+                pointerId = null;
+
+                if (isHorizontal && Math.abs(dx) >= SWIPE_THRESHOLD && !isWeekChanging) {
+                    suppressClicksUntil = Date.now() + 400;
+                    // Deslizar a la izquierda avanza; a la derecha retrocede.
+                    shiftWeek(dx < 0 ? 1 : -1);
+                }
+            };
+
+            agenda.addEventListener('pointerup', finishSwipe);
+            agenda.addEventListener('pointercancel', () => {
+                tracking = false;
+                pointerId = null;
+                agenda.classList.remove('is-swiping');
+            });
+
+            agenda.addEventListener('click', (event) => {
+                if (Date.now() < suppressClicksUntil) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                }
+            }, true);
         }
 
         function formatHourParts(hourStr) {
