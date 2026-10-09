@@ -199,6 +199,12 @@
             cursor: pointer;
             padding: 0;
         }
+        .backup-status { font-size: 0.86rem; margin: 0 0 12px; }
+        .backup-status.warn { color: #B26A00; font-weight: 700; }
+        @media (prefers-color-scheme: dark) { .backup-status.warn { color: #F3C27A; } }
+        .backup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .backup-actions .btn-primary { grid-column: 1 / -1; }
+
         input[readonly] { background: color-mix(in srgb, var(--field) 70%, var(--surface)); cursor: default; }
 
         /* ---------- Conceptos ---------- */
@@ -792,6 +798,27 @@
                     <h2>Notas emitidas</h2>
                     <ul class="history-list" id="history"></ul>
                 </div>
+
+                <div class="card">
+                    <h2>Respaldo</h2>
+                    <p class="backup-status" id="backup-status"></p>
+                    <div class="backup-actions">
+                        <button type="button" class="btn btn-primary" id="btn-backup">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Descargar respaldo
+                        </button>
+                        <button type="button" class="btn" id="btn-excel">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                            Exportar a Excel
+                        </button>
+                        <button type="button" class="btn" id="btn-restore">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Restaurar
+                        </button>
+                    </div>
+                    <input type="file" id="restore-file" accept="application/json,.json" hidden>
+                    <p class="hint" style="margin:12px 0 0">Guarda el archivo de respaldo en Google Drive o envíatelo por WhatsApp/correo. Con <strong>Restaurar</strong> recuperas las notas, el folio y los pacientes en este u otro dispositivo.</p>
+                </div>
             </form>
         </section>
 
@@ -818,8 +845,13 @@
             historial: 'kt_notas_historial',
             siguiente: 'kt_notas_folio_siguiente',
             borrador: 'kt_notas_borrador',
-            pacientes: 'kt_notas_pacientes'
+            pacientes: 'kt_notas_pacientes',
+            respaldo: 'kt_notas_ultimo_respaldo'
         };
+
+        const BACKUP_APP = 'karen-trujillo-notas';
+        const BACKUP_VERSION = 1;
+        const BACKUP_REMINDER_DAYS = 7;
 
         const FOLIO_PREFIX = 'NR-';
         const FOLIO_DIGITS = 4;
@@ -1564,6 +1596,7 @@
         }
 
         function renderHistory() {
+            renderBackupStatus();
             const list = $('history');
             if (!historial.length) {
                 list.innerHTML = '<li><p class="empty">Aún no hay notas guardadas.</p></li>';
@@ -1788,6 +1821,185 @@
             setTimeout(() => URL.revokeObjectURL(url), 1500);
         }
 
+        /* ===================== Respaldo ===================== */
+        function backupStamp() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+        }
+
+        function renderBackupStatus() {
+            const el = $('backup-status');
+            const last = storageGet(STORAGE.respaldo, null);
+            const lastDate = last ? new Date(last) : null;
+            const newest = historial.reduce((max, h) => (h.guardado && h.guardado > max ? h.guardado : max), '');
+            const pending = historial.length > 0 && (!lastDate || newest > last);
+            const days = lastDate ? Math.floor((Date.now() - lastDate.getTime()) / 86400000) : null;
+
+            let text;
+            if (!historial.length) text = 'Aún no hay notas que respaldar.';
+            else if (!lastDate) text = `⚠️ Nunca has descargado un respaldo (${historial.length} nota${historial.length === 1 ? '' : 's'}).`;
+            else {
+                const when = days === 0 ? 'hoy' : days === 1 ? 'ayer' : `hace ${days} días`;
+                text = `Último respaldo: ${when}.` + (pending ? ' Hay notas nuevas sin respaldar.' : ' Todo respaldado ✓');
+            }
+            el.textContent = text;
+            el.classList.toggle('warn', pending && (!lastDate || days >= BACKUP_REMINDER_DAYS));
+        }
+
+        function onBackup() {
+            reloadHistorial();
+            const data = {
+                app: BACKUP_APP,
+                version: BACKUP_VERSION,
+                exportado: new Date().toISOString(),
+                folioSiguiente: nextFolioNumber(),
+                historial,
+                pacientes
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            downloadBlob(blob, `Respaldo_Notas_Karen_${backupStamp()}.json`);
+            storageSet(STORAGE.respaldo, data.exportado);
+            renderBackupStatus();
+            toast(`Respaldo descargado (${historial.length} nota${historial.length === 1 ? '' : 's'}).`);
+        }
+
+        function csvCell(value) {
+            const text = String(value == null ? '' : value);
+            return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        }
+
+        function onExportExcel() {
+            reloadHistorial();
+            if (!historial.length) {
+                toast('Aún no hay notas para exportar.', true);
+                return;
+            }
+            const headers = ['Folio', 'Fecha', 'Paciente', 'Teléfono', 'Correo', 'Responsable', 'Conceptos',
+                'Subtotal', 'Descuento', 'Total', 'Estado', 'Pagado', 'Saldo', 'Método de pago', 'Paquete', 'Observaciones'];
+            const rows = historial
+                .slice()
+                .sort((a, b) => folioNumber(a.folio) - folioNumber(b.folio))
+                .map(n => [
+                    n.folio,
+                    formatDateShort(n.fecha),
+                    n.paciente,
+                    n.telefono,
+                    n.correo,
+                    n.responsable,
+                    n.items.map(it => `${parseInt(it.cantidad, 10) || 0} x ${itemConcept(it)} (${parseAmount(it.precio).toFixed(2)})`).join(' | '),
+                    noteSubtotal(n).toFixed(2),
+                    noteDescuento(n).toFixed(2),
+                    noteTotal(n).toFixed(2),
+                    n.estado,
+                    notePagado(n).toFixed(2),
+                    noteSaldo(n).toFixed(2),
+                    n.metodo,
+                    n.paquete && n.paquete.activo ? `Sesión ${n.paquete.sesion}${n.paquete.de ? ' de ' + n.paquete.de : ''}` : '',
+                    n.observaciones
+                ]);
+            const csv = '\ufeff' + [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+            downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `Notas_Karen_${backupStamp()}.csv`);
+            toast('Archivo para Excel descargado.');
+        }
+
+        function uniqueFolio(folio, taken) {
+            if (!taken.has(folio.toUpperCase())) return folio;
+            let i = 1;
+            let candidate;
+            do {
+                candidate = `${folio}-R${i > 1 ? i : ''}`;
+                i++;
+            } while (taken.has(candidate.toUpperCase()));
+            return candidate;
+        }
+
+        function restoreBackup(data) {
+            if (!data || data.app !== BACKUP_APP || !Array.isArray(data.historial)) {
+                throw new Error('El archivo no es un respaldo de notas válido.');
+            }
+            reloadHistorial();
+            const incoming = data.historial.filter(h => h && typeof h === 'object' && h.folio).map(h => normalizeNote(JSON.parse(JSON.stringify(h))));
+            if (!confirm(`Restaurar respaldo del ${formatDateLong((data.exportado || '').slice(0, 10)) || 'archivo seleccionado'}\n` +
+                `• Notas en el respaldo: ${incoming.length}\n• Notas en este dispositivo: ${historial.length}\n\n` +
+                'Se combinarán sin borrar nada. ¿Continuar?')) return null;
+
+            const byUid = new Map(historial.map(h => [h.uid, h]));
+            let added = 0;
+            let updated = 0;
+            let renamed = 0;
+
+            incoming.forEach(rec => {
+                const current = byUid.get(rec.uid);
+                if (current) {
+                    if ((rec.guardado || '') > (current.guardado || '')) {
+                        Object.assign(current, rec);
+                        updated++;
+                    }
+                    return;
+                }
+                // Mismo folio en otra nota distinta: se conserva con un sufijo para no repetir folios.
+                const taken = new Set(historial.map(h => String(h.folio).trim().toUpperCase()));
+                const folio = uniqueFolio(String(rec.folio).trim(), taken);
+                if (folio !== rec.folio) {
+                    rec.folio = folio;
+                    renamed++;
+                }
+                historial.push(rec);
+                byUid.set(rec.uid, rec);
+                added++;
+            });
+
+            historial.sort((a, b) => folioNumber(b.folio) - folioNumber(a.folio) || String(b.folio).localeCompare(String(a.folio)));
+            saveHistory();
+
+            const maxFolio = historial.reduce((max, h) => Math.max(max, folioNumber(h.folio)), 0);
+            const next = Math.max(nextFolioNumber(), parseInt(data.folioSiguiente, 10) || 1, maxFolio + 1);
+            storageSet(STORAGE.siguiente, next);
+
+            if (data.pacientes && typeof data.pacientes === 'object') {
+                Object.entries(data.pacientes).forEach(([key, p]) => {
+                    if (!p || !p.paciente) return;
+                    if (!pacientes[key] || (p.actualizado || '') > (pacientes[key].actualizado || '')) pacientes[key] = p;
+                });
+                storageSet(STORAGE.pacientes, pacientes);
+                renderPacientesList();
+            }
+
+            // Si la nota en edición es nueva y su folio quedó ocupado, pasa al siguiente.
+            if (!isSavedNote(nota) && historial.some(h => sameFolio(h.folio, nota.folio))) {
+                nota.folio = formatFolio(nextFolioNumber());
+                $('folio').value = nota.folio;
+                storageSet(STORAGE.borrador, nota);
+            }
+
+            renderHistory();
+            updateTotals();
+            renderPreview();
+            return { added, updated, renamed };
+        }
+
+        function onRestoreFile(e) {
+            const file = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const result = restoreBackup(JSON.parse(reader.result));
+                    if (!result) return;
+                    const parts = [`${result.added} agregada${result.added === 1 ? '' : 's'}`, `${result.updated} actualizada${result.updated === 1 ? '' : 's'}`];
+                    if (result.renamed) parts.push(`${result.renamed} con folio repetido renombrada${result.renamed === 1 ? '' : 's'} (-R)`);
+                    toast(`Respaldo restaurado: ${parts.join(', ')}.`, false, true);
+                } catch (err) {
+                    console.error(err);
+                    toast(err instanceof SyntaxError ? 'El archivo está dañado o no es un respaldo.' : err.message, true);
+                }
+            };
+            reader.onerror = () => toast('No se pudo leer el archivo.', true);
+            reader.readAsText(file);
+        }
+
         async function withBusy(button, label, task) {
             const original = button.innerHTML;
             button.disabled = true;
@@ -1891,7 +2103,7 @@
         }
 
         function onNew() {
-            const hasData = nota.paciente.trim() || noteTotal(nota) > 0;
+            const hasData = nota.paciente.trim() || nota.observaciones.trim();
             const saved = isSavedNote(nota);
             if (hasData && !saved && !confirm('La nota actual no se ha guardado. ¿Descartarla y empezar una nueva?')) return;
             startNewNote();
@@ -2003,6 +2215,11 @@
                 scheduleDraftSave();
             }
         });
+
+        $('btn-backup').addEventListener('click', onBackup);
+        $('btn-excel').addEventListener('click', onExportExcel);
+        $('btn-restore').addEventListener('click', () => $('restore-file').click());
+        $('restore-file').addEventListener('change', onRestoreFile);
 
         $('btn-pdf').addEventListener('click', onDownload);
         $('btn-share').addEventListener('click', onShare);
