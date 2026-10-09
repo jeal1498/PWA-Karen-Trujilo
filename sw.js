@@ -11,6 +11,7 @@ const RUNTIME_CACHE = `kt-runtime-${VERSION}`;
 const SHELL_URLS = [
   '/',
   '/horarios/',
+  '/horarios-v2/',
   '/notas/',
   '/manifest.json',
   '/Logo_Karen_Trujillo.webp',
