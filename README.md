@@ -10,6 +10,7 @@ Herramienta de gestión de agenda diseñada para uso interno de la **Psic. Karen
 PWA-Karen-Trujilo/
 ├── index.html                  # Hub: menú principal con los dos módulos
 ├── horarios/index.html         # Módulo 1 · Horarios de Atención (póster de disponibilidad)
+├── horarios-v2/index.html      # Módulo 1 · Horarios v2 (nuevo diseño, en paralelo)
 ├── notas/index.html            # Módulo 2 · Generador de Notas de Remisión
 ├── manifest.json               # Manifest PWA (start_url "/", atajos a ambos módulos)
 ├── sw.js                       # Service Worker (offline + caché)
@@ -24,7 +25,19 @@ PWA-Karen-Trujilo/
 |------|-------|
 | `/` | Menú principal: **Horarios de Atención** y **Generar Nota de Remisión** |
 | `/horarios/` | Herramienta de agenda y póster (vista anterior de `index.html`) |
+| `/horarios-v2/` | Horarios con el nuevo diseño (mismo póster y datos) |
 | `/notas/` | Formulario y vista previa de la nota de remisión |
+
+---
+
+## 🗓️ Horarios v2 (`/horarios-v2/`)
+
+Versión nueva en paralelo; la original en `/horarios/` no se modifica. Misma línea visual que Notas (barra superior, tarjetas, botones y modo oscuro):
+
+- **Semana:** flechas para cambiar de semana, "Ir a hoy", y estado de sincronización con Google Calendar con botón para actualizar.
+- **Horarios del póster:** cuadrícula semanal; tocar una hora libre la agrega o quita del póster, tocar el día lo marca como no disponible; también se puede deslizar para cambiar de semana. Leyenda de colores.
+- **Póster:** resumen de horas por día y botones *Compartir disponibilidad*, *Descargar* y *Limpiar horas*.
+- **Vista previa** del póster 1080×1920 (columna fija en escritorio).
 
 ---
 
