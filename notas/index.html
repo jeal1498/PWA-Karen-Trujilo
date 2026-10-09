@@ -736,37 +736,6 @@
                     </div>
                 </div>
 
-                <details class="card" id="emisor-card">
-                    <summary>Datos del consultorio</summary>
-                    <div class="field">
-                        <label for="em-nombre">Nombre</label>
-                        <input id="em-nombre" type="text" autocomplete="off">
-                    </div>
-                    <div class="field">
-                        <label for="em-titulo">Especialidad</label>
-                        <input id="em-titulo" type="text" autocomplete="off">
-                    </div>
-                    <div class="grid-2">
-                        <div class="field">
-                            <label for="em-cedula">Cédula profesional</label>
-                            <input id="em-cedula" type="text" autocomplete="off">
-                        </div>
-                        <div class="field">
-                            <label for="em-telefono">Teléfono</label>
-                            <input id="em-telefono" type="tel" inputmode="tel" autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="field" style="margin-top:12px">
-                        <label for="em-correo">Correo</label>
-                        <input id="em-correo" type="email" inputmode="email" autocomplete="off">
-                    </div>
-                    <div class="field">
-                        <label for="em-direccion">Dirección</label>
-                        <textarea id="em-direccion" rows="2"></textarea>
-                    </div>
-                    <p class="hint">Se guardan en este dispositivo y aparecen en todas las notas.</p>
-                </details>
-
                 <div class="card">
                     <div class="actions">
                         <button type="button" class="btn btn-primary" id="btn-pdf">
@@ -819,7 +788,6 @@
 
         /* ===================== Configuración ===================== */
         const STORAGE = {
-            emisor: 'kt_notas_emisor',
             historial: 'kt_notas_historial',
             siguiente: 'kt_notas_folio_siguiente',
             borrador: 'kt_notas_borrador',
@@ -843,14 +811,16 @@
         ];
         const OTRO = '__otro__';
 
-        const EMISOR_DEFAULT = {
+        // Datos oficiales del consultorio (psicologakarentrujillo.com.mx). Fijos: la app es de uso exclusivo de Karen.
+        const EMISOR = Object.freeze({
             nombre: 'Psic. Karen Trujillo',
-            titulo: 'Neuropsicóloga',
-            cedula: '',
-            telefono: '',
-            correo: '',
-            direccion: ''
-        };
+            titulo: 'Neuropsicóloga Clínica · Especialista en TDAH y Autismo',
+            cedula: '11009616',
+            telefono: '+52 998 321 1547',
+            correo: 'karentrujillopsic@gmail.com',
+            web: 'psicologakarentrujillo.com.mx',
+            direccion: 'SM200 M49 L2, Hacienda de Chinconcuac, Circuito casa 1587B, Cancún, Quintana Roo, C.P. 77539'
+        });
 
         const LIBS = {
             html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
@@ -1002,7 +972,7 @@
         }
 
         /* ===================== Estado ===================== */
-        let emisor = Object.assign({}, EMISOR_DEFAULT, storageGet(STORAGE.emisor, {}));
+        const emisor = EMISOR;
         let historial = storageGet(STORAGE.historial, []);
         if (!Array.isArray(historial)) historial = [];
 
@@ -1198,12 +1168,10 @@
 
         /* ===================== Formulario ===================== */
         const FIELDS = ['folio', 'fecha', 'paciente', 'telefono', 'correo', 'responsable', 'descuentoTipo', 'descuentoValor', 'estado', 'anticipo', 'metodo', 'observaciones'];
-        const EMISOR_FIELDS = ['nombre', 'titulo', 'cedula', 'telefono', 'correo', 'direccion'];
 
         function fillForm() {
             FIELDS.forEach(f => { $(f).value = nota[f] == null ? '' : nota[f]; });
             if (!nota.metodo) $('metodo').value = 'Efectivo';
-            EMISOR_FIELDS.forEach(f => { $('em-' + f).value = emisor[f] || ''; });
             lastAutofilled = pacienteKey(nota.paciente);
             fillPaquete();
             renderItems();
@@ -1314,11 +1282,6 @@
             updateVisibility();
         }
 
-        function readEmisor() {
-            EMISOR_FIELDS.forEach(f => { emisor[f] = $('em-' + f).value; });
-            storageSet(STORAGE.emisor, emisor);
-        }
-
         let saveDraftTimer = null;
         function scheduleDraftSave() {
             clearTimeout(saveDraftTimer);
@@ -1373,6 +1336,7 @@
                             ${emisor.titulo ? `<p class="nota-brand-line">${escapeHtml(emisor.titulo)}</p>` : ''}
                             ${emisor.cedula ? `<p class="nota-brand-line">Cédula profesional: ${escapeHtml(emisor.cedula)}</p>` : ''}
                             ${contacto ? `<p class="nota-brand-line">${escapeHtml(contacto)}</p>` : ''}
+                            ${emisor.web ? `<p class="nota-brand-line">${escapeHtml(emisor.web)}</p>` : ''}
                             ${emisor.direccion ? `<p class="nota-brand-line">${escapeHtml(emisor.direccion)}</p>` : ''}
                         </div>
                     </div>
@@ -1546,7 +1510,6 @@
 
         function persistNote() {
             readForm();
-            readEmisor();
             if (!validate()) return false;
 
             const record = JSON.parse(JSON.stringify(nota));
@@ -1801,11 +1764,6 @@
             if ($('paqueteActivo').checked) $('paqueteDe').focus();
         });
 
-        EMISOR_FIELDS.forEach(f => $('em-' + f).addEventListener('input', () => {
-            readEmisor();
-            renderPreview();
-        }));
-
         $('items').addEventListener('input', e => {
             const el = e.target;
             const field = el.dataset.field;
@@ -1883,7 +1841,6 @@
         fillForm();
         renderPreview();
         renderHistory();
-        if (!emisor.cedula && !emisor.telefono) $('emisor-card').open = true;
     })();
     </script>
     <script src="/pwa.js" defer></script>

@@ -34,7 +34,7 @@ PWA-Karen-Trujilo/
 - **Documento:** vista previa en vivo tamaño carta con logo, importe con letra (MXN) y leyenda de "no es comprobante fiscal".
 - **Acciones:** Descargar PDF (html2canvas + jsPDF, carga diferida), Imprimir (CSS de impresión, permite "Guardar como PDF"), Compartir (Web Share con el PDF adjunto; respaldo: descarga + WhatsApp) y Nueva nota.
 - **Historial:** las notas guardadas quedan en el dispositivo y pueden reabrirse o eliminarse.
-- **Datos del consultorio:** nombre, especialidad, cédula, contacto y dirección; se guardan una sola vez.
+- **Datos del consultorio:** fijos y no editables (constante `EMISOR` en `notas/index.html`), tomados de psicologakarentrujillo.com.mx: cédula 11009616, teléfono, correo, sitio web y dirección del consultorio en Cancún.
 - **Catálogo con precios:** Terapia psicológica $650 · Terapia infantil $650 · Primera sesión $800 · Primera consulta de valoración $1,000 · Valoración TDAH $8,300 · Valoración Autismo $8,500 · Valoración Completa TDAH y Autismo $10,500 · Valoración Personalizada (precio abierto). Se editan en `SERVICIOS` dentro de `notas/index.html`.
 - **Pacientes frecuentes:** al escribir el nombre se sugieren pacientes anteriores y se completan teléfono, correo y tutor.
 - **Descuentos:** por porcentaje o monto fijo; la nota muestra subtotal, descuento y total.
@@ -43,7 +43,6 @@ PWA-Karen-Trujilo/
 
 | Key `localStorage` | Contenido |
 |-----|-----------|
-| `kt_notas_emisor` | Datos del consultorio |
 | `kt_notas_historial` | Notas emitidas |
 | `kt_notas_folio_siguiente` | Siguiente folio |
 | `kt_notas_borrador` | Nota en edición |
