@@ -28,6 +28,17 @@ PWA-Karen-Trujilo/
 
 ---
 
+## 🗓️ Horarios v2 (`/horarios/`)
+
+Misma línea visual que Notas (barra superior, tarjetas, botones y modo oscuro):
+
+- **Semana:** flechas para cambiar de semana, "Ir a hoy", y estado de sincronización con Google Calendar con botón para actualizar.
+- **Horarios del póster:** cuadrícula semanal; tocar una hora libre la agrega o quita del póster, tocar el día lo marca como no disponible; también se puede deslizar para cambiar de semana. Leyenda de colores.
+- **Póster:** resumen de horas por día y botones *Compartir disponibilidad*, *Descargar* y *Limpiar horas*.
+- **Vista previa** del póster 1080×1920 (columna fija en escritorio).
+
+---
+
 ## 🧾 Notas de remisión (`/notas/`)
 
 - **Datos:** folio (consecutivo automático `NR-0001`, editable), fecha, paciente (nombre, teléfono, correo, responsable), uno o varios conceptos (servicio, cantidad, precio), método de pago y observaciones.
