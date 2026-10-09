@@ -7,19 +7,55 @@ Herramienta de gestión de agenda diseñada para uso interno de la **Psic. Karen
 ## 📁 Estructura del proyecto
 
 ```
-Tools-Karen-Trujilo/
-├── index.html                  # Shell de navegación (home + menú)
-├── herramienta-agenda.html     # Herramienta principal de agenda
-└── Logo_Karen_Trujillo.webp    # Logo usado como watermark en el póster
+PWA-Karen-Trujilo/
+├── index.html                  # Hub: menú principal con los dos módulos
+├── horarios/index.html         # Módulo 1 · Horarios de Atención (póster de disponibilidad)
+├── notas/index.html            # Módulo 2 · Generador de Notas de Remisión
+├── manifest.json               # Manifest PWA (start_url "/", atajos a ambos módulos)
+├── sw.js                       # Service Worker (offline + caché)
+├── pwa.js                      # Registro compartido del Service Worker
+├── vercel.json                 # Headers de sw.js / manifest
+├── icons/                      # Íconos PWA (192, 512, maskable, apple-touch)
+├── api/busy-events.js          # Función serverless (Google Calendar)
+└── Logo_Karen_Trujillo.webp
 ```
 
-> Los tres archivos deben estar en la **misma carpeta** para que la app funcione correctamente.
+| Ruta | Vista |
+|------|-------|
+| `/` | Menú principal: **Horarios de Atención** y **Generar Nota de Remisión** |
+| `/horarios/` | Herramienta de agenda y póster (vista anterior de `index.html`) |
+| `/notas/` | Formulario y vista previa de la nota de remisión |
+
+---
+
+## 🧾 Notas de remisión (`/notas/`)
+
+- **Datos:** folio (consecutivo automático `NR-0001`, editable), fecha, paciente (nombre, teléfono, correo, responsable), uno o varios conceptos (servicio, cantidad, precio), método de pago y observaciones.
+- **Documento:** vista previa en vivo tamaño carta con logo, importe con letra (MXN) y leyenda de "no es comprobante fiscal".
+- **Acciones:** Descargar PDF (html2canvas + jsPDF, carga diferida), Imprimir (CSS de impresión, permite "Guardar como PDF"), Compartir (Web Share con el PDF adjunto; respaldo: descarga + WhatsApp) y Nueva nota.
+- **Historial:** las notas guardadas quedan en el dispositivo y pueden reabrirse o eliminarse.
+- **Datos del consultorio:** nombre, especialidad, cédula, contacto y dirección; se guardan una sola vez.
+
+| Key `localStorage` | Contenido |
+|-----|-----------|
+| `kt_notas_emisor` | Datos del consultorio |
+| `kt_notas_historial` | Notas emitidas |
+| `kt_notas_folio_siguiente` | Siguiente folio |
+| `kt_notas_borrador` | Nota en edición |
+
+---
+
+## 📲 PWA
+
+- `manifest.json` con `scope: "/"`, `start_url: "/"` y **atajos** (mantener presionado el ícono) a `/horarios/` y `/notas/`.
+- `sw.js` precarga las tres vistas; navegaciones *network-first* (siempre la versión más reciente con red, caché sin red); estáticos y CDNs *stale-while-revalidate*; `/api/*` nunca se cachea.
+- Al publicar cambios grandes, sube `VERSION` en `sw.js` para renovar la caché.
 
 ---
 
 ## ⚙️ Funcionamiento general
 
-La app es un **SPA sin framework ni build step** — corre directo en el browser, sin instalación. `index.html` actúa como shell y carga `herramienta-agenda.html` dentro de un `<iframe>`.
+La app es **HTML estático sin framework ni build step**. `index.html` es el hub y cada módulo vive en su propia carpeta (`/horarios/`, `/notas/`).
 
 ### Flujo de uso
 
@@ -75,7 +111,7 @@ Conectada vía **Google Apps Script**. Al sincronizar:
 - Los horarios importados se **redondean a la hora entera** (≥30 min sube al siguiente, <30 min trunca).
 - Los duplicados se eliminan automáticamente.
 
-La URL del script está hardcodeada en `herramienta-agenda.html`:
+La URL del script está hardcodeada en `horarios/index.html` (vía `/api/busy-events`):
 ```js
 const API = "https://script.google.com/macros/s/AKfycb.../exec";
 ```

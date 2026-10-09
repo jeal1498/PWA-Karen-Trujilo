@@ -1,0 +1,36 @@
+{
+  "id": "/",
+  "name": "Karen Trujillo · Herramientas",
+  "short_name": "Karen Tools",
+  "description": "Portal de herramientas de la Psic. Karen Trujillo: horarios de atención y notas de remisión.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2ECF2",
+  "theme_color": "#301E5B",
+  "categories": ["medical", "productivity", "business"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Horarios de Atención",
+      "short_name": "Horarios",
+      "description": "Crear el póster de disponibilidad semanal",
+      "url": "/horarios/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Generar Nota de Remisión",
+      "short_name": "Notas",
+      "description": "Emitir una nota de remisión para un paciente",
+      "url": "/notas/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

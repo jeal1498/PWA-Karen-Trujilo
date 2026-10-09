@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Generador de notas de remisión - Karen Trujillo">
+    <title>Karen Trujillo | Nota de Remisión</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Karen Tools">
+    <meta name="theme-color" content="#F2ECF2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#301E5B" media="(prefers-color-scheme: dark)">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #301E5B;
+            --purple: #583C83;
+            --purple-soft: #715F92;
+            --lavender: #B09CC8;
+            --lilac: #CDB0D6;
+            --light: #DFD4E1;
+            --cream: #FAF8F8;
+            --surface: #F2ECF2;
+            --card: #FFFFFF;
+            --field: #FFFFFF;
+            --text: #301E5B;
+            --text-muted: #715F92;
+            --border: rgba(138, 117, 167, 0.30);
+            --danger: #B3261E;
+            --shadow: 0 10px 30px rgba(48, 30, 91, 0.10);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --surface: #1E1240;
+                --card: #301E5B;
+                --field: #24164A;
+                --text: #FAF8F8;
+                --text-muted: #CDB0D6;
+                --border: rgba(205, 176, 214, 0.28);
+                --danger: #F2B8B5;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        [hidden] { display: none !important; }
+
+        html, body { margin: 0; overflow-x: hidden; }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* ---------- Barra superior ---------- */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: var(--text);
+            background: var(--card);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            flex: 0 0 auto;
+        }
+
+        .topbar h1 {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 1.1rem;
+            margin: 0;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---------- Layout ---------- */
+        .layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 20px;
+        }
+
+        @media (min-width: 1000px) {
+            .layout { grid-template-columns: minmax(380px, 460px) minmax(0, 1fr); align-items: start; }
+            .preview-col { position: sticky; top: 76px; }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 0 0 14px;
+            font-weight: 800;
+        }
+
+        details.card > summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 800;
+        }
+        details.card > summary::-webkit-details-marker { display: none; }
+        details.card > summary::after { content: '▾'; font-size: 1rem; transition: transform 0.2s; }
+        details.card[open] > summary { margin-bottom: 14px; }
+        details.card[open] > summary::after { transform: rotate(180deg); }
+
+        /* ---------- Formularios ---------- */
+        .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+        .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; min-width: 0; }
+        .grid-2 .field { margin-bottom: 0; }
+        .grid-2 + .field, .grid-2 + .grid-2 { margin-top: 12px; }
+
+        label { font-size: 0.82rem; font-weight: 700; }
+        label .req { color: var(--danger); }
+
+        input, select, textarea {
+            font: inherit;
+            font-size: 16px; /* evita zoom en iOS */
+            color: var(--text);
+            background: var(--field);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 11px 12px;
+            width: 100%;
+            min-width: 0;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--purple-soft);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--lavender) 40%, transparent);
+        }
+
+        input[aria-invalid="true"] { border-color: var(--danger); }
+
+        textarea { resize: vertical; min-height: 72px; }
+
+        .hint { font-size: 0.76rem; color: var(--text-muted); }
+
+        /* ---------- Conceptos ---------- */
+        .item {
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .item-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+
+        .item-grid { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 10px; }
+
+        .item-subtotal { text-align: right; font-weight: 700; margin-top: 8px; font-size: 0.9rem; }
+
+        .icon-btn {
+            border: none;
+            background: transparent;
+            color: var(--danger);
+            font: inherit;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 8px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 4px;
+        }
+        .total-row strong { font-size: 1.3rem; }
+
+        /* ---------- Botones ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font: inherit;
+            font-weight: 800;
+            font-size: 0.92rem;
+            letter-spacing: 0.02em;
+            border-radius: 14px;
+            padding: 13px 16px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            text-decoration: none;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.55; cursor: progress; }
+        .btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple), var(--ink));
+            color: var(--cream);
+            border-color: transparent;
+        }
+
+        .btn-block { width: 100%; }
+
+        .btn-dashed { border-style: dashed; width: 100%; }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .actions .btn-primary { grid-column: 1 / -1; }
+
+        /* ---------- Historial ---------- */
+        .history-list { list-style: none; margin: 0; padding: 0; }
+        .history-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .history-list li:last-child { border-bottom: none; }
+        .history-info { flex: 1; min-width: 0; }
+        .history-info strong { display: block; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-info span { font-size: 0.78rem; color: var(--text-muted); }
+        .history-amount { font-weight: 800; font-size: 0.9rem; white-space: nowrap; }
+        .history-actions { display: flex; gap: 4px; }
+        .history-actions button {
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            border-radius: 10px;
+            padding: 6px 9px;
+            font: inherit;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .history-actions button.del { color: var(--danger); }
+        .empty { color: var(--text-muted); font-size: 0.88rem; margin: 0; }
+
+        /* ---------- Vista previa ---------- */
+        .form-col, .preview-col { min-width: 0; }
+
+        .preview-label {
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 800;
+            margin: 0 0 10px;
+        }
+
+        .preview-frame {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .preview-scaler { transform-origin: top left; width: 794px; }
+
+        /* ---------- Documento: Nota de remisión (papel carta/A4 a 96 dpi) ---------- */
+        .nota {
+            width: 794px;
+            min-height: 1000px;
+            background: #FFFFFF;
+            color: #2A1E45;
+            padding: 56px 60px 48px;
+            font-family: 'Nunito Sans', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nota::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 10px;
+            background: linear-gradient(90deg, #301E5B, #715F92, #B09CC8);
+        }
+
+        .nota-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+            padding-bottom: 22px;
+            border-bottom: 2px solid #DFD4E1;
+        }
+
+        .nota-brand { display: flex; align-items: center; gap: 16px; }
+        .nota-brand img { width: 92px; height: 92px; object-fit: contain; }
+        .nota-brand-name {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #301E5B;
+            margin: 0 0 4px;
+        }
+        .nota-brand-line { margin: 0; font-size: 12.5px; color: #5B4D78; }
+
+        .nota-meta { text-align: right; flex: 0 0 auto; }
+        .nota-title {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 15px;
+            letter-spacing: 0.14em;
+            color: #301E5B;
+            margin: 0 0 10px;
+            font-weight: 700;
+        }
+        .nota-folio {
+            display: inline-block;
+            background: #F2ECF2;
+            border: 1px solid #DFD4E1;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-weight: 800;
+            font-size: 15px;
+            color: #583C83;
+            margin-bottom: 8px;
+        }
+        .nota-date { margin: 0; font-size: 13px; color: #5B4D78; }
+
+        .nota-section { margin-top: 24px; }
+        .nota-section-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #715F92;
+            margin: 0 0 8px;
+        }
+
+        .nota-client {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 24px;
+            background: #FAF8F8;
+            border: 1px solid #EDE6EF;
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .nota-client .full { grid-column: 1 / -1; }
+        .nota-client dt { font-size: 11px; color: #715F92; font-weight: 700; }
+        .nota-client dd { margin: 0 0 4px; font-weight: 600; word-break: break-word; }
+
+        .nota-table { width: 100%; border-collapse: collapse; }
+        .nota-table th {
+            background: #301E5B;
+            color: #FAF8F8;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 10px 12px;
+        }
+        .nota-table th:first-child { border-radius: 8px 0 0 0; }
+        .nota-table th:last-child { border-radius: 0 8px 0 0; }
+        .nota-table td { padding: 11px 12px; border-bottom: 1px solid #EDE6EF; vertical-align: top; }
+        .nota-table .num { text-align: right; white-space: nowrap; }
+        .nota-table .qty { text-align: center; width: 70px; }
+
+        .nota-totals {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+            margin-top: 16px;
+        }
+        .nota-words { flex: 1; font-size: 12.5px; color: #5B4D78; }
+        .nota-words strong { display: block; color: #2A1E45; font-size: 13px; margin-top: 2px; }
+        .nota-total-box {
+            min-width: 230px;
+            background: #F2ECF2;
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+        .nota-total-box div { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
+        .nota-total-box .grand {
+            margin-top: 6px;
+            padding-top: 8px;
+            border-top: 1px solid #DFD4E1;
+            font-size: 18px;
+            font-weight: 800;
+            color: #301E5B;
+        }
+
+        .nota-notes {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 13px;
+            background: #FAF8F8;
+            border-left: 3px solid #B09CC8;
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            margin: 0;
+        }
+
+        .nota-spacer { flex: 1; min-height: 40px; }
+
+        .nota-sign {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        .nota-sign-line {
+            width: 280px;
+            border-top: 1px solid #2A1E45;
+            padding-top: 6px;
+            text-align: center;
+            font-size: 12.5px;
+        }
+        .nota-sign-line small { display: block; color: #715F92; }
+        .nota-pay { font-size: 12.5px; color: #5B4D78; }
+        .nota-pay strong { color: #2A1E45; }
+
+        .nota-foot {
+            margin-top: 26px;
+            padding-top: 12px;
+            border-top: 1px solid #EDE6EF;
+            font-size: 11px;
+            color: #8A7BA3;
+            text-align: center;
+        }
+
+        /* ---------- Toast ---------- */
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            transform: translate(-50%, calc(100% + 40px));
+            visibility: hidden;
+            background: #301E5B;
+            color: #FAF8F8;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            transition: transform 0.25s ease, visibility 0s linear 0.25s;
+            z-index: 100;
+            max-width: calc(100vw - 32px);
+            text-align: center;
+        }
+        #toast.show { transform: translate(-50%, 0); visibility: visible; transition: transform 0.25s ease, visibility 0s; }
+        #toast.error { background: #B3261E; }
+
+        /* Contenedor fuera de pantalla para renderizar el PDF a tamaño real */
+        #render-stage { position: fixed; left: -10000px; top: 0; pointer-events: none; }
+
+        /* ---------- Impresión: solo la nota ---------- */
+        @page { size: letter; margin: 0; }
+
+        @media print {
+            html, body { background: #FFFFFF !important; }
+            .topbar, .form-col, .preview-label, #toast, #render-stage { display: none !important; }
+            .layout { display: block; padding: 0; max-width: none; }
+            .preview-col { position: static; }
+            .preview-frame { box-shadow: none; border-radius: 0; overflow: visible; height: auto !important; }
+            .preview-scaler { transform: none !important; width: auto; }
+            .nota { width: 100%; min-height: 100vh; padding: 48px 56px 40px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="back-btn" href="/" aria-label="Volver al menú principal" title="Menú principal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <h1>Nota de Remisión</h1>
+    </header>
+
+    <main class="layout">
+        <!-- ===================== FORMULARIO ===================== -->
+        <section class="form-col" aria-label="Datos de la nota">
+            <form id="nota-form" novalidate>
+                <div class="card">
+                    <h2>Datos de la nota</h2>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="folio">Folio <span class="req">*</span></label>
+                            <input id="folio" name="folio" type="text" inputmode="text" autocomplete="off" required>
+                        </div>
+                        <div class="field">
+                            <label for="fecha">Fecha <span class="req">*</span></label>
+                            <input id="fecha" name="fecha" type="date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Paciente</h2>
+                    <div class="field">
+                        <label for="paciente">Nombre completo <span class="req">*</span></label>
+                        <input id="paciente" name="paciente" type="text" autocomplete="off" placeholder="Nombre del paciente" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="telefono">Teléfono</label>
+                            <input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="off" placeholder="10 dígitos">
+                        </div>
+                        <div class="field">
+                            <label for="correo">Correo</label>
+                            <input id="correo" name="correo" type="email" inputmode="email" autocomplete="off" placeholder="correo@ejemplo.com">
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:12px">
+                        <label for="responsable">Responsable / tutor</label>
+                        <input id="responsable" name="responsable" type="text" autocomplete="off" placeholder="Opcional (p. ej. si el paciente es menor)">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Concepto / servicio</h2>
+                    <div id="items"></div>
+                    <button type="button" class="btn btn-dashed" id="add-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Agregar concepto
+                    </button>
+                    <div class="total-row" style="margin-top:14px">
+                        <span>Total</span>
+                        <strong id="form-total">$0.00</strong>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Pago y observaciones</h2>
+                    <div class="field">
+                        <label for="metodo">Método de pago</label>
+                        <select id="metodo" name="metodo">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Tarjeta de débito">Tarjeta de débito</option>
+                            <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+                            <option value="Pendiente de pago">Pendiente de pago</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="observaciones">Observaciones</label>
+                        <textarea id="observaciones" name="observaciones" rows="3" placeholder="Opcional"></textarea>
+                    </div>
+                </div>
+
+                <details class="card" id="emisor-card">
+                    <summary>Datos del consultorio</summary>
+                    <div class="field">
+                        <label for="em-nombre">Nombre</label>
+                        <input id="em-nombre" type="text" autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label for="em-titulo">Especialidad</label>
+                        <input id="em-titulo" type="text" autocomplete="off">
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="em-cedula">Cédula profesional</label>
+                            <input id="em-cedula" type="text" autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="em-telefono">Teléfono</label>
+                            <input id="em-telefono" type="tel" inputmode="tel" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:12px">
+                        <label for="em-correo">Correo</label>
+                        <input id="em-correo" type="email" inputmode="email" autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label for="em-direccion">Dirección</label>
+                        <textarea id="em-direccion" rows="2"></textarea>
+                    </div>
+                    <p class="hint">Se guardan en este dispositivo y aparecen en todas las notas.</p>
+                </details>
+
+                <div class="card">
+                    <div class="actions">
+                        <button type="button" class="btn btn-primary" id="btn-pdf">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Descargar PDF
+                        </button>
+                        <button type="button" class="btn" id="btn-share">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                            Compartir
+                        </button>
+                        <button type="button" class="btn" id="btn-print">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            Imprimir
+                        </button>
+                        <button type="button" class="btn" id="btn-save">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Guardar
+                        </button>
+                        <button type="button" class="btn" id="btn-new" style="grid-column: 1 / -1">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                            Nueva nota
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Notas emitidas</h2>
+                    <ul class="history-list" id="history"></ul>
+                </div>
+            </form>
+        </section>
+
+        <!-- ===================== VISTA PREVIA ===================== -->
+        <section class="preview-col" aria-label="Vista previa">
+            <p class="preview-label">Vista previa</p>
+            <div class="preview-frame" id="preview-frame">
+                <div class="preview-scaler" id="preview-scaler">
+                    <article class="nota" id="nota"></article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="render-stage" aria-hidden="true"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        /* ===================== Configuración ===================== */
+        const STORAGE = {
+            emisor: 'kt_notas_emisor',
+            historial: 'kt_notas_historial',
+            siguiente: 'kt_notas_folio_siguiente',
+            borrador: 'kt_notas_borrador'
+        };
+
+        const FOLIO_PREFIX = 'NR-';
+        const FOLIO_DIGITS = 4;
+        const HISTORY_LIMIT = 200;
+
+        const SERVICIOS = [
+            { nombre: 'Sesión de psicoterapia individual', precio: 0 },
+            { nombre: 'Evaluación neuropsicológica', precio: 0 },
+            { nombre: 'Sesión de seguimiento', precio: 0 },
+            { nombre: 'Entrega de resultados / informe', precio: 0 },
+            { nombre: 'Paquete de sesiones', precio: 0 },
+            { nombre: 'Sesión en línea', precio: 0 }
+        ];
+        const OTRO = '__otro__';
+
+        const EMISOR_DEFAULT = {
+            nombre: 'Psic. Karen Trujillo',
+            titulo: 'Neuropsicóloga',
+            cedula: '',
+            telefono: '',
+            correo: '',
+            direccion: ''
+        };
+
+        const LIBS = {
+            html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+            jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+        };
+
+        const LOGO_URL = '/Logo_Karen_Trujillo.webp';
+
+        /* ===================== Utilidades ===================== */
+        const $ = id => document.getElementById(id);
+
+        const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+        const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+        function storageGet(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw === null ? fallback : JSON.parse(raw);
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function storageSet(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function todayISO() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+
+        function formatDateLong(iso) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+            if (!m) return '';
+            return `${parseInt(m[3], 10)} de ${MESES[parseInt(m[2], 10) - 1]} de ${m[1]}`;
+        }
+
+        function formatDateShort(iso) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+            return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+        }
+
+        function round2(n) {
+            return Math.round((Number(n) || 0) * 100) / 100;
+        }
+
+        function parseAmount(value) {
+            const n = parseFloat(String(value).replace(/[^0-9.]/g, ''));
+            return Number.isFinite(n) && n >= 0 ? n : 0;
+        }
+
+        function formatFolio(n) {
+            return FOLIO_PREFIX + String(n).padStart(FOLIO_DIGITS, '0');
+        }
+
+        function folioNumber(folio) {
+            const m = /(\d+)\s*$/.exec(folio || '');
+            return m ? parseInt(m[1], 10) : 0;
+        }
+
+        function safeFileName(text) {
+            return String(text || '')
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-zA-Z0-9-_]+/g, '_')
+                .replace(/^_+|_+$/g, '')
+                .slice(0, 60);
+        }
+
+        let toastTimer = null;
+        function toast(message, isError) {
+            const el = $('toast');
+            el.textContent = message;
+            el.classList.toggle('error', !!isError);
+            el.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+        }
+
+        /* ===================== Importe con letra (MXN) ===================== */
+        const UNIDADES = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+        const ESPECIALES = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
+        const VEINTES = ['VEINTE', 'VEINTIÚN', 'VEINTIDÓS', 'VEINTITRÉS', 'VEINTICUATRO', 'VEINTICINCO', 'VEINTISÉIS', 'VEINTISIETE', 'VEINTIOCHO', 'VEINTINUEVE'];
+        const DECENAS = ['', '', '', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+        const CENTENAS = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
+
+        function decenasALetra(n) {
+            if (n < 10) return UNIDADES[n];
+            if (n < 20) return ESPECIALES[n - 10];
+            if (n < 30) return VEINTES[n - 20];
+            const d = Math.floor(n / 10);
+            const u = n % 10;
+            return DECENAS[d] + (u ? ' Y ' + UNIDADES[u] : '');
+        }
+
+        function centenasALetra(n) {
+            if (n === 100) return 'CIEN';
+            const c = Math.floor(n / 100);
+            const resto = n % 100;
+            return [CENTENAS[c], decenasALetra(resto)].filter(Boolean).join(' ');
+        }
+
+        function milesALetra(n) {
+            const miles = Math.floor(n / 1000);
+            const resto = n % 1000;
+            let texto = '';
+            if (miles === 1) texto = 'MIL';
+            else if (miles > 1) texto = centenasALetra(miles) + ' MIL';
+            const r = centenasALetra(resto);
+            return [texto, r].filter(Boolean).join(' ');
+        }
+
+        function enteroALetra(n) {
+            if (n === 0) return 'CERO';
+            const millones = Math.floor(n / 1000000);
+            const resto = n % 1000000;
+            let texto = '';
+            if (millones === 1) texto = 'UN MILLÓN';
+            else if (millones > 1) texto = milesALetra(millones) + ' MILLONES';
+            const r = milesALetra(resto);
+            return [texto, r].filter(Boolean).join(' ');
+        }
+
+        function importeConLetra(total) {
+            const cents = Math.round(round2(total) * 100);
+            const entero = Math.floor(cents / 100);
+            const centavos = String(cents % 100).padStart(2, '0');
+            let letras = enteroALetra(entero);
+            // "UN MILLÓN DE PESOS", "DOS MILLONES DE PESOS"
+            if (entero > 0 && entero % 1000000 === 0) letras += ' DE';
+            const moneda = entero === 1 ? 'PESO' : 'PESOS';
+            return `${letras} ${moneda} ${centavos}/100 M.N.`;
+        }
+
+        /* ===================== Estado ===================== */
+        let emisor = Object.assign({}, EMISOR_DEFAULT, storageGet(STORAGE.emisor, {}));
+        let historial = storageGet(STORAGE.historial, []);
+        if (!Array.isArray(historial)) historial = [];
+
+        function nextFolioNumber() {
+            const stored = parseInt(storageGet(STORAGE.siguiente, 1), 10) || 1;
+            const maxHist = historial.reduce((max, n) => Math.max(max, folioNumber(n.folio)), 0);
+            return Math.max(stored, maxHist + 1);
+        }
+
+        function newItem(nombre, precio) {
+            return {
+                servicio: nombre || SERVICIOS[0].nombre,
+                personalizado: '',
+                cantidad: 1,
+                precio: precio || 0
+            };
+        }
+
+        function emptyNote() {
+            return {
+                folio: formatFolio(nextFolioNumber()),
+                fecha: todayISO(),
+                paciente: '',
+                telefono: '',
+                correo: '',
+                responsable: '',
+                items: [newItem()],
+                metodo: 'Efectivo',
+                observaciones: ''
+            };
+        }
+
+        let nota = storageGet(STORAGE.borrador, null);
+        if (!nota || !Array.isArray(nota.items) || !nota.items.length) nota = emptyNote();
+
+        function itemConcept(item) {
+            return item.servicio === OTRO ? (item.personalizado || '').trim() : item.servicio;
+        }
+
+        function itemSubtotal(item) {
+            return round2((parseInt(item.cantidad, 10) || 0) * parseAmount(item.precio));
+        }
+
+        function noteTotal(n) {
+            return round2(n.items.reduce((sum, it) => sum + itemSubtotal(it), 0));
+        }
+
+        /* ===================== Formulario ===================== */
+        const FIELDS = ['folio', 'fecha', 'paciente', 'telefono', 'correo', 'responsable', 'metodo', 'observaciones'];
+        const EMISOR_FIELDS = ['nombre', 'titulo', 'cedula', 'telefono', 'correo', 'direccion'];
+
+        function fillForm() {
+            FIELDS.forEach(f => { $(f).value = nota[f] || ''; });
+            if (!nota.metodo) $('metodo').value = 'Efectivo';
+            EMISOR_FIELDS.forEach(f => { $('em-' + f).value = emisor[f] || ''; });
+            renderItems();
+        }
+
+        function servicioOptions(selected) {
+            const known = SERVICIOS.some(s => s.nombre === selected);
+            const opts = SERVICIOS.map(s =>
+                `<option value="${escapeHtml(s.nombre)}"${s.nombre === selected ? ' selected' : ''}>${escapeHtml(s.nombre)}</option>`
+            );
+            opts.push(`<option value="${OTRO}"${selected === OTRO || !known ? ' selected' : ''}>Otro…</option>`);
+            return opts.join('');
+        }
+
+        function renderItems() {
+            const container = $('items');
+            container.innerHTML = nota.items.map((item, i) => {
+                const isOther = item.servicio === OTRO || !SERVICIOS.some(s => s.nombre === item.servicio);
+                if (isOther && item.servicio !== OTRO) {
+                    item.personalizado = item.personalizado || item.servicio;
+                    item.servicio = OTRO;
+                }
+                return `
+                <div class="item" data-index="${i}">
+                    <div class="item-head">
+                        <span>Concepto ${i + 1}</span>
+                        ${nota.items.length > 1 ? `<button type="button" class="icon-btn" data-action="remove" data-index="${i}">Quitar</button>` : ''}
+                    </div>
+                    <div class="field">
+                        <label for="srv-${i}">Servicio</label>
+                        <select id="srv-${i}" data-field="servicio" data-index="${i}">${servicioOptions(item.servicio)}</select>
+                    </div>
+                    <div class="field" ${item.servicio === OTRO ? '' : 'hidden'}>
+                        <label for="custom-${i}">Descripción del servicio</label>
+                        <input id="custom-${i}" type="text" autocomplete="off" data-field="personalizado" data-index="${i}" value="${escapeHtml(item.personalizado)}" placeholder="Describe el servicio">
+                    </div>
+                    <div class="item-grid">
+                        <div class="field">
+                            <label for="qty-${i}">Cant.</label>
+                            <input id="qty-${i}" type="number" inputmode="numeric" min="1" step="1" data-field="cantidad" data-index="${i}" value="${escapeHtml(item.cantidad)}">
+                        </div>
+                        <div class="field">
+                            <label for="price-${i}">Precio unitario (MXN)</label>
+                            <input id="price-${i}" type="number" inputmode="decimal" min="0" step="0.01" data-field="precio" data-index="${i}" value="${item.precio ? escapeHtml(item.precio) : ''}" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="item-subtotal" id="subtotal-${i}">${money.format(itemSubtotal(item))}</div>
+                </div>`;
+            }).join('');
+            updateTotals();
+        }
+
+        function updateTotals() {
+            nota.items.forEach((item, i) => {
+                const el = $('subtotal-' + i);
+                if (el) el.textContent = money.format(itemSubtotal(item));
+            });
+            $('form-total').textContent = money.format(noteTotal(nota));
+        }
+
+        function readForm() {
+            FIELDS.forEach(f => { nota[f] = $(f).value; });
+            nota.folio = nota.folio.trim();
+        }
+
+        function readEmisor() {
+            EMISOR_FIELDS.forEach(f => { emisor[f] = $('em-' + f).value; });
+            storageSet(STORAGE.emisor, emisor);
+        }
+
+        let saveDraftTimer = null;
+        function scheduleDraftSave() {
+            clearTimeout(saveDraftTimer);
+            saveDraftTimer = setTimeout(() => storageSet(STORAGE.borrador, nota), 300);
+        }
+
+        function onChange() {
+            readForm();
+            updateTotals();
+            renderPreview();
+            scheduleDraftSave();
+        }
+
+        /* ===================== Vista previa del documento ===================== */
+        function notaHTML(n) {
+            const total = noteTotal(n);
+            const rows = n.items
+                .filter(it => itemConcept(it) || itemSubtotal(it) > 0)
+                .map(it => `
+                    <tr>
+                        <td class="qty">${escapeHtml(parseInt(it.cantidad, 10) || 0)}</td>
+                        <td>${escapeHtml(itemConcept(it) || '—')}</td>
+                        <td class="num">${money.format(parseAmount(it.precio))}</td>
+                        <td class="num">${money.format(itemSubtotal(it))}</td>
+                    </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:#8A7BA3">Sin conceptos</td></tr>`;
+
+            const contacto = [emisor.telefono && `Tel. ${emisor.telefono}`, emisor.correo].filter(Boolean).join(' · ');
+
+            const clientRows = [
+                `<div class="full"><dt>Paciente</dt><dd>${escapeHtml(n.paciente || '—')}</dd></div>`,
+                n.responsable ? `<div class="full"><dt>Responsable / tutor</dt><dd>${escapeHtml(n.responsable)}</dd></div>` : '',
+                n.telefono ? `<div><dt>Teléfono</dt><dd>${escapeHtml(n.telefono)}</dd></div>` : '',
+                n.correo ? `<div><dt>Correo</dt><dd>${escapeHtml(n.correo)}</dd></div>` : ''
+            ].join('');
+
+            return `
+                <header class="nota-head">
+                    <div class="nota-brand">
+                        <img src="${LOGO_URL}" alt="" crossorigin="anonymous">
+                        <div>
+                            <p class="nota-brand-name">${escapeHtml(emisor.nombre || '')}</p>
+                            ${emisor.titulo ? `<p class="nota-brand-line">${escapeHtml(emisor.titulo)}</p>` : ''}
+                            ${emisor.cedula ? `<p class="nota-brand-line">Cédula profesional: ${escapeHtml(emisor.cedula)}</p>` : ''}
+                            ${contacto ? `<p class="nota-brand-line">${escapeHtml(contacto)}</p>` : ''}
+                            ${emisor.direccion ? `<p class="nota-brand-line">${escapeHtml(emisor.direccion)}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="nota-meta">
+                        <p class="nota-title">NOTA DE REMISIÓN</p>
+                        <div class="nota-folio">${escapeHtml(n.folio || '—')}</div>
+                        <p class="nota-date">${escapeHtml(formatDateLong(n.fecha))}</p>
+                    </div>
+                </header>
+
+                <section class="nota-section">
+                    <p class="nota-section-title">Datos del paciente</p>
+                    <dl class="nota-client">${clientRows}</dl>
+                </section>
+
+                <section class="nota-section">
+                    <p class="nota-section-title">Servicios</p>
+                    <table class="nota-table">
+                        <thead>
+                            <tr>
+                                <th class="qty">Cant.</th>
+                                <th>Concepto</th>
+                                <th class="num">P. unitario</th>
+                                <th class="num">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+
+                    <div class="nota-totals">
+                        <div class="nota-words">
+                            Importe con letra:
+                            <strong>${escapeHtml(importeConLetra(total))}</strong>
+                        </div>
+                        <div class="nota-total-box">
+                            <div><span>Subtotal</span><span>${money.format(total)}</span></div>
+                            <div class="grand"><span>Total</span><span>${money.format(total)}</span></div>
+                        </div>
+                    </div>
+                </section>
+
+                ${n.observaciones ? `
+                <section class="nota-section">
+                    <p class="nota-section-title">Observaciones</p>
+                    <p class="nota-notes">${escapeHtml(n.observaciones)}</p>
+                </section>` : ''}
+
+                <div class="nota-spacer"></div>
+
+                <div class="nota-sign">
+                    <div class="nota-pay">Método de pago: <strong>${escapeHtml(n.metodo || '—')}</strong></div>
+                    <div class="nota-sign-line">
+                        ${escapeHtml(emisor.nombre || '')}
+                        <small>Firma</small>
+                    </div>
+                </div>
+
+                <footer class="nota-foot">
+                    Este documento es una nota de remisión y no constituye un comprobante fiscal (CFDI).
+                </footer>`;
+        }
+
+        function renderPreview() {
+            $('nota').innerHTML = notaHTML(nota);
+            fitPreview();
+        }
+
+        function fitPreview() {
+            const frame = $('preview-frame');
+            const scaler = $('preview-scaler');
+            const doc = $('nota');
+            const scale = Math.min(1, frame.clientWidth / 794);
+            scaler.style.transform = `scale(${scale})`;
+            frame.style.height = Math.ceil(doc.offsetHeight * scale) + 'px';
+        }
+
+        /* ===================== Historial ===================== */
+        function saveHistory() {
+            if (historial.length > HISTORY_LIMIT) historial = historial.slice(0, HISTORY_LIMIT);
+            storageSet(STORAGE.historial, historial);
+        }
+
+        function renderHistory() {
+            const list = $('history');
+            if (!historial.length) {
+                list.innerHTML = '<li><p class="empty">Aún no hay notas guardadas.</p></li>';
+                return;
+            }
+            list.innerHTML = historial.map((n, i) => `
+                <li>
+                    <div class="history-info">
+                        <strong>${escapeHtml(n.folio)} · ${escapeHtml(n.paciente || 'Sin nombre')}</strong>
+                        <span>${escapeHtml(formatDateShort(n.fecha))}</span>
+                    </div>
+                    <span class="history-amount">${money.format(noteTotal(n))}</span>
+                    <div class="history-actions">
+                        <button type="button" data-history="open" data-index="${i}" aria-label="Abrir ${escapeHtml(n.folio)}">Abrir</button>
+                        <button type="button" class="del" data-history="delete" data-index="${i}" aria-label="Eliminar ${escapeHtml(n.folio)}">✕</button>
+                    </div>
+                </li>`).join('');
+        }
+
+        function validate() {
+            let ok = true;
+            const mark = (id, invalid) => {
+                $(id).setAttribute('aria-invalid', invalid ? 'true' : 'false');
+                if (invalid) ok = false;
+            };
+            mark('folio', !nota.folio);
+            mark('fecha', !/^\d{4}-\d{2}-\d{2}$/.test(nota.fecha));
+            mark('paciente', !nota.paciente.trim());
+
+            nota.items.forEach((it, i) => {
+                const custom = $('custom-' + i);
+                if (custom) custom.setAttribute('aria-invalid', it.servicio === OTRO && !it.personalizado.trim() ? 'true' : 'false');
+                if (it.servicio === OTRO && !it.personalizado.trim()) ok = false;
+                const qty = $('qty-' + i);
+                const qtyBad = !(parseInt(it.cantidad, 10) >= 1);
+                if (qty) qty.setAttribute('aria-invalid', qtyBad ? 'true' : 'false');
+                if (qtyBad) ok = false;
+            });
+
+            if (!ok) {
+                toast('Completa los campos marcados en rojo.', true);
+                const first = document.querySelector('[aria-invalid="true"]');
+                if (first) first.focus();
+                return false;
+            }
+            if (noteTotal(nota) <= 0) {
+                toast('Agrega un monto mayor a $0.00.', true);
+                const price = $('price-0');
+                if (price) price.focus();
+                return false;
+            }
+            return true;
+        }
+
+        function persistNote() {
+            readForm();
+            readEmisor();
+            if (!validate()) return false;
+
+            const record = JSON.parse(JSON.stringify(nota));
+            record.total = noteTotal(record);
+            record.guardado = new Date().toISOString();
+
+            const idx = historial.findIndex(n => n.folio === record.folio);
+            if (idx >= 0) historial[idx] = record;
+            else historial.unshift(record);
+            historial.sort((a, b) => folioNumber(b.folio) - folioNumber(a.folio));
+            saveHistory();
+
+            const next = Math.max(nextFolioNumber(), folioNumber(record.folio) + 1);
+            storageSet(STORAGE.siguiente, next);
+            storageSet(STORAGE.borrador, nota);
+            renderHistory();
+            return true;
+        }
+
+        function startNewNote() {
+            nota = emptyNote();
+            storageSet(STORAGE.borrador, nota);
+            fillForm();
+            renderPreview();
+            document.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
+            $('paciente').focus();
+        }
+
+        /* ===================== PDF ===================== */
+        const loadedScripts = {};
+        function loadScript(src) {
+            if (!loadedScripts[src]) {
+                loadedScripts[src] = new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.async = true;
+                    s.onload = resolve;
+                    s.onerror = () => {
+                        delete loadedScripts[src];
+                        reject(new Error('No se pudo cargar ' + src));
+                    };
+                    document.head.appendChild(s);
+                });
+            }
+            return loadedScripts[src];
+        }
+
+        async function buildPdfBlob() {
+            await Promise.all([loadScript(LIBS.html2canvas), loadScript(LIBS.jspdf)]);
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+            // Renderiza una copia a tamaño real (sin escalado) fuera de pantalla.
+            const stage = $('render-stage');
+            stage.innerHTML = '';
+            const clone = document.createElement('article');
+            clone.className = 'nota';
+            clone.style.minHeight = Math.round(794 * 11 / 8.5) + 'px'; // proporción carta
+            clone.innerHTML = notaHTML(nota);
+            stage.appendChild(clone);
+
+            const img = clone.querySelector('img');
+            if (img && !img.complete) {
+                await new Promise(resolve => { img.onload = img.onerror = resolve; });
+            }
+
+            try {
+                const canvas = await window.html2canvas(clone, {
+                    scale: 2,
+                    backgroundColor: '#FFFFFF',
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: 794
+                });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter', compress: true });
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const imgH = canvas.height * pageW / canvas.width;
+                const data = canvas.toDataURL('image/jpeg', 0.92);
+
+                // Si la nota es más larga que una hoja, se reparte en varias páginas.
+                let offset = 0;
+                pdf.addImage(data, 'JPEG', 0, 0, pageW, imgH);
+                while (imgH - offset > pageH + 1) {
+                    offset += pageH;
+                    pdf.addPage();
+                    pdf.addImage(data, 'JPEG', 0, -offset, pageW, imgH);
+                }
+
+                pdf.setProperties({
+                    title: `Nota de remisión ${nota.folio}`,
+                    subject: `Nota de remisión ${nota.folio} - ${nota.paciente}`,
+                    author: emisor.nombre || 'Karen Trujillo',
+                    creator: 'Karen Trujillo Tools'
+                });
+
+                return pdf.output('blob');
+            } finally {
+                stage.innerHTML = '';
+            }
+        }
+
+        function pdfFileName() {
+            const paciente = safeFileName(nota.paciente);
+            return `Nota_${safeFileName(nota.folio)}${paciente ? '_' + paciente : ''}.pdf`;
+        }
+
+        function downloadBlob(blob, name) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+        }
+
+        async function withBusy(button, label, task) {
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.textContent = label;
+            try {
+                await task();
+            } finally {
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        }
+
+        async function onDownload() {
+            if (!persistNote()) return;
+            await withBusy($('btn-pdf'), 'Generando PDF…', async () => {
+                try {
+                    const blob = await buildPdfBlob();
+                    downloadBlob(blob, pdfFileName());
+                    toast(`PDF ${nota.folio} descargado.`);
+                } catch (err) {
+                    console.error(err);
+                    toast('No se pudo generar el PDF. Revisa tu conexión.', true);
+                }
+            });
+        }
+
+        function shareText() {
+            return `Nota de remisión ${nota.folio}\n` +
+                `Paciente: ${nota.paciente}\n` +
+                `Fecha: ${formatDateLong(nota.fecha)}\n` +
+                `Total: ${money.format(noteTotal(nota))}\n` +
+                `${emisor.nombre || ''}`;
+        }
+
+        async function onShare() {
+            if (!persistNote()) return;
+            await withBusy($('btn-share'), 'Preparando…', async () => {
+                let blob = null;
+                try {
+                    blob = await buildPdfBlob();
+                } catch (err) {
+                    console.error(err);
+                }
+
+                const title = `Nota de remisión ${nota.folio}`;
+
+                if (blob) {
+                    const file = new File([blob], pdfFileName(), { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({ files: [file], title, text: title });
+                            return;
+                        } catch (err) {
+                            if (err && err.name === 'AbortError') return;
+                        }
+                    }
+                }
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title, text: shareText() });
+                        if (blob) downloadBlob(blob, pdfFileName());
+                        return;
+                    } catch (err) {
+                        if (err && err.name === 'AbortError') return;
+                    }
+                }
+
+                // Respaldo: descarga el PDF y abre WhatsApp con el resumen.
+                if (blob) downloadBlob(blob, pdfFileName());
+                const phone = (nota.telefono || '').replace(/\D/g, '');
+                const waPhone = phone.length === 10 ? '52' + phone : phone;
+                const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(shareText())}`;
+                window.open(waUrl, '_blank', 'noopener');
+                toast(blob ? 'PDF descargado. Adjúntalo en el chat.' : 'No se pudo generar el PDF; se compartió el resumen.', !blob);
+            });
+        }
+
+        function onPrint() {
+            if (!persistNote()) return;
+            renderPreview();
+            const originalTitle = document.title;
+            document.title = pdfFileName().replace(/\.pdf$/, '');
+            const restore = () => {
+                document.title = originalTitle;
+                window.removeEventListener('afterprint', restore);
+            };
+            window.addEventListener('afterprint', restore);
+            const img = $('nota').querySelector('img');
+            const go = () => window.print();
+            if (img && !img.complete) {
+                img.onload = img.onerror = go;
+            } else {
+                go();
+            }
+        }
+
+        function onSave() {
+            if (persistNote()) toast(`Nota ${nota.folio} guardada.`);
+        }
+
+        function onNew() {
+            const hasData = nota.paciente.trim() || noteTotal(nota) > 0;
+            const saved = historial.some(n => n.folio === nota.folio);
+            if (hasData && !saved && !confirm('La nota actual no se ha guardado. ¿Descartarla y empezar una nueva?')) return;
+            startNewNote();
+            toast(`Nueva nota ${nota.folio}`);
+        }
+
+        /* ===================== Eventos ===================== */
+        $('nota-form').addEventListener('submit', e => e.preventDefault());
+
+        FIELDS.forEach(f => $(f).addEventListener('input', onChange));
+        $('metodo').addEventListener('change', onChange);
+
+        EMISOR_FIELDS.forEach(f => $('em-' + f).addEventListener('input', () => {
+            readEmisor();
+            renderPreview();
+        }));
+
+        $('items').addEventListener('input', e => {
+            const el = e.target;
+            const field = el.dataset.field;
+            if (!field) return;
+            const item = nota.items[parseInt(el.dataset.index, 10)];
+            if (!item) return;
+            item[field] = el.value;
+            if (field === 'servicio') {
+                renderItems();
+                if (el.value === OTRO) {
+                    const custom = $('custom-' + el.dataset.index);
+                    if (custom) custom.focus();
+                }
+            }
+            onChange();
+        });
+
+        $('items').addEventListener('click', e => {
+            const btn = e.target.closest('[data-action="remove"]');
+            if (!btn) return;
+            nota.items.splice(parseInt(btn.dataset.index, 10), 1);
+            if (!nota.items.length) nota.items.push(newItem());
+            renderItems();
+            onChange();
+        });
+
+        $('add-item').addEventListener('click', () => {
+            nota.items.push(newItem());
+            renderItems();
+            onChange();
+            const last = $('srv-' + (nota.items.length - 1));
+            if (last) last.focus();
+        });
+
+        $('history').addEventListener('click', e => {
+            const btn = e.target.closest('[data-history]');
+            if (!btn) return;
+            const i = parseInt(btn.dataset.index, 10);
+            const rec = historial[i];
+            if (!rec) return;
+            if (btn.dataset.history === 'open') {
+                nota = JSON.parse(JSON.stringify(rec));
+                delete nota.total;
+                delete nota.guardado;
+                storageSet(STORAGE.borrador, nota);
+                fillForm();
+                renderPreview();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                toast(`Nota ${nota.folio} abierta.`);
+            } else if (btn.dataset.history === 'delete') {
+                if (!confirm(`¿Eliminar la nota ${rec.folio} del historial?`)) return;
+                historial.splice(i, 1);
+                saveHistory();
+                renderHistory();
+            }
+        });
+
+        $('btn-pdf').addEventListener('click', onDownload);
+        $('btn-share').addEventListener('click', onShare);
+        $('btn-print').addEventListener('click', onPrint);
+        $('btn-save').addEventListener('click', onSave);
+        $('btn-new').addEventListener('click', onNew);
+
+        window.addEventListener('resize', fitPreview);
+        if ('ResizeObserver' in window) new ResizeObserver(fitPreview).observe($('preview-frame'));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPreview);
+
+        /* ===================== Inicio ===================== */
+        fillForm();
+        renderPreview();
+        renderHistory();
+        if (!emisor.cedula && !emisor.telefono) $('emisor-card').open = true;
+    })();
+    </script>
+    <script src="/pwa.js" defer></script>
+</body>
+</html>
