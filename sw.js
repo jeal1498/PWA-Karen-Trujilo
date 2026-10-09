@@ -4,7 +4,7 @@
  * - Recursos estáticos y CDNs: stale-while-revalidate.
  * - /api/*: siempre red, nunca se cachea (datos de Calendar en vivo).
  */
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 const SHELL_CACHE = `kt-shell-${VERSION}`;
 const RUNTIME_CACHE = `kt-runtime-${VERSION}`;
 
