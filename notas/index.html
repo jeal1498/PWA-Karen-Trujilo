@@ -17,7 +17,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -357,202 +357,213 @@
 
         .preview-scaler { transform-origin: top left; width: 794px; }
 
-        /* ---------- Documento: Nota de remisión (papel carta/A4 a 96 dpi) ---------- */
+        /* ---------- Documento: Nota de remisión (hoja carta a 96 dpi: 794 × 1027 px) ---------- */
         .nota {
+            --n-ink: #301E5B;
+            --n-purple: #583C83;
+            --n-soft: #715F92;
+            --n-lav: #B09CC8;
+            --n-lav-bg: #EEE6F4;
+            --n-line: #D9CCE6;
+            --n-hand: #3A2A78;
             width: 794px;
-            min-height: 1000px;
-            background: #FFFFFF;
-            color: #2A1E45;
-            padding: 56px 60px 48px;
+            min-height: 1027px;
+            background: #FFFDFB;
+            color: var(--n-ink);
+            padding: 26px;
             font-family: 'Nunito Sans', Arial, sans-serif;
             font-size: 14px;
-            line-height: 1.45;
+            line-height: 1.4;
             position: relative;
             display: flex;
             flex-direction: column;
         }
 
-        .nota::before {
-            content: '';
-            position: absolute;
-            inset: 0 0 auto 0;
-            height: 10px;
-            background: linear-gradient(90deg, #301E5B, #715F92, #B09CC8);
-        }
-
-        .nota-head {
+        .nota-frame {
+            position: relative;
+            flex: 1;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            padding-bottom: 22px;
-            border-bottom: 2px solid #DFD4E1;
+            flex-direction: column;
+            border: 2px solid var(--n-lav);
+            border-radius: 18px;
+            padding: 16px 34px 12px;
         }
 
-        .nota-brand { display: flex; align-items: center; gap: 16px; }
-        .nota-brand img { width: 92px; height: 92px; object-fit: contain; }
-        .nota-brand-name {
+        .orn { position: absolute; pointer-events: none; }
+        .orn-tl { top: -6px; left: -6px; }
+        .orn-tr { top: -6px; right: -6px; transform: scaleX(-1); }
+        .orn-bl { bottom: -6px; left: -6px; transform: scaleY(-1); }
+        .orn-br { bottom: -6px; right: -6px; transform: scale(-1, -1); }
+        .orn-bf1 { top: 52px; left: 130px; transform: rotate(-14deg); }
+        .orn-bf2 { top: 70px; right: 128px; transform: rotate(12deg) scaleX(-1); }
+
+        .nota-header { text-align: center; position: relative; z-index: 1; }
+        .nota-header img { width: 112px; height: 112px; object-fit: contain; display: block; margin: 0 auto; }
+        .nota-header .sub {
+            margin: 2px 0 0;
             font-family: 'Libre Baskerville', Georgia, serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: #301E5B;
-            margin: 0 0 4px;
-        }
-        .nota-brand-line { margin: 0; font-size: 12.5px; color: #5B4D78; }
-
-        .nota-meta { text-align: right; flex: 0 0 auto; }
-        .nota-title {
-            font-family: 'Libre Baskerville', Georgia, serif;
-            font-size: 15px;
-            letter-spacing: 0.14em;
-            color: #301E5B;
-            margin: 0 0 10px;
-            font-weight: 700;
-        }
-        .nota-folio {
-            display: inline-block;
-            background: #F2ECF2;
-            border: 1px solid #DFD4E1;
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-weight: 800;
-            font-size: 15px;
-            color: #583C83;
-            margin-bottom: 8px;
-        }
-        .nota-date { margin: 0; font-size: 13px; color: #5B4D78; }
-
-        .nota-section { margin-top: 24px; }
-        .nota-section-title {
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #715F92;
-            margin: 0 0 8px;
-        }
-
-        .nota-client {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px 24px;
-            background: #FAF8F8;
-            border: 1px solid #EDE6EF;
-            border-radius: 10px;
-            padding: 14px 16px;
-        }
-        .nota-client .full { grid-column: 1 / -1; }
-        .nota-client dt { font-size: 11px; color: #715F92; font-weight: 700; }
-        .nota-client dd { margin: 0 0 4px; font-weight: 600; word-break: break-word; }
-
-        .nota-table { width: 100%; border-collapse: collapse; }
-        .nota-table th {
-            background: #301E5B;
-            color: #FAF8F8;
-            font-size: 11px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            text-align: left;
-            padding: 10px 12px;
-        }
-        .nota-table th:first-child { border-radius: 8px 0 0 0; }
-        .nota-table th:last-child { border-radius: 0 8px 0 0; }
-        .nota-table td { padding: 11px 12px; border-bottom: 1px solid #EDE6EF; vertical-align: top; }
-        .nota-table .num { text-align: right; white-space: nowrap; }
-        .nota-table .qty { text-align: center; width: 70px; }
-
-        .nota-totals {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            margin-top: 16px;
-        }
-        .nota-words { flex: 1; font-size: 12.5px; color: #5B4D78; }
-        .nota-words strong { display: block; color: #2A1E45; font-size: 13px; margin-top: 2px; }
-        .nota-total-box {
-            min-width: 230px;
-            background: #F2ECF2;
-            border-radius: 10px;
-            padding: 12px 16px;
-        }
-        .nota-total-box div { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
-        .nota-total-box .muted { color: #5B4D78; }
-        .nota-total-box .saldo { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #DFD4E1; font-weight: 800; color: #B3261E; }
-        .nota-total-box .grand {
-            margin-top: 6px;
-            padding-top: 8px;
-            border-top: 1px solid #DFD4E1;
-            font-size: 18px;
-            font-weight: 800;
-            color: #301E5B;
-        }
-
-        .nota-notes {
-            white-space: pre-wrap;
-            word-break: break-word;
+            font-style: italic;
             font-size: 13px;
-            background: #FAF8F8;
-            border-left: 3px solid #B09CC8;
-            padding: 10px 14px;
-            border-radius: 0 8px 8px 0;
-            margin: 0;
+            color: var(--n-soft);
         }
+        .nota-header .ced { margin: 2px 0 0; font-size: 11.5px; letter-spacing: 0.06em; color: var(--n-soft); }
+
+        .nota-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0 10px;
+        }
+        .nota-banner h2 {
+            margin: 0;
+            padding: 6px 30px;
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 23px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--n-purple);
+            background: var(--n-lav-bg);
+            border: 2px solid var(--n-lav);
+            border-radius: 14px;
+            box-shadow: inset 0 0 0 3px var(--n-lav-bg), inset 0 0 0 4px #FFFFFF;
+        }
+
+        .hand { font-family: 'Caveat', 'Segoe Script', cursive; color: var(--n-hand); font-size: 22px; line-height: 1.1; }
+
+        .nota-box {
+            border: 1.5px solid var(--n-lav);
+            border-radius: 12px;
+            background: #FFFFFF;
+        }
+
+        .nota-client { position: relative; padding: 6px 18px 8px; }
+        .nf { display: flex; align-items: baseline; gap: 8px; margin: 3px 0; min-width: 0; }
+        .nf-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 13px; color: var(--n-ink); white-space: nowrap; }
+        .nf-value { flex: 1; min-width: 0; border-bottom: 1.5px solid var(--n-line); padding: 0 4px 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nf-row { display: flex; gap: 22px; }
+        .nf-row .nf { flex: 1; }
+
+        .nota-stamp {
+            position: absolute;
+            top: 10px;
+            right: 16px;
+            transform: rotate(-8deg);
+            border: 2.5px solid currentColor;
+            border-radius: 8px;
+            padding: 2px 10px;
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            opacity: 0.85;
+            background: #FFFFFF;
+        }
+        .nota-stamp.pagada { color: #2E7D46; }
+        .nota-stamp.anticipo { color: #B26A00; }
+        .nota-stamp.pendiente { color: #B3261E; }
+        .nota-client .nf.first .nf-value { margin-right: 120px; }
+
+        .nota-table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1.5px solid var(--n-lav);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #FFFFFF;
+        }
+        .nota-table th {
+            background: var(--n-lav-bg);
+            color: var(--n-purple);
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 6px 8px;
+            border-bottom: 1.5px solid var(--n-lav);
+            text-align: center;
+        }
+        .nota-table th .tiny { display: block; font-size: 10px; letter-spacing: 0.06em; }
+        .nota-table td {
+            height: 29px;
+            padding: 1px 10px;
+            border-bottom: 1px solid var(--n-line);
+            vertical-align: middle;
+        }
+        .nota-table th + th, .nota-table td + td { border-left: 1.5px solid var(--n-lav); }
+        .nota-table tr:last-child td { border-bottom: none; }
+        .nota-table .qty { width: 72px; text-align: center; }
+        .nota-table .num { width: 128px; text-align: right; white-space: nowrap; }
+        .nota-table td.num { padding-right: 14px; }
+        .nota-table th.num, .nota-table th.qty { text-align: center; }
+
+        .nota-words { margin: 5px 4px 0; font-size: 12px; color: var(--n-soft); }
+        .nota-words strong { color: var(--n-ink); font-weight: 700; }
 
         .nota-package {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            background: #FAF8F8;
-            border: 1px solid #EDE6EF;
-            border-radius: 10px;
-            padding: 12px 16px;
-        }
-        .nota-package dt { font-size: 11px; color: #715F92; font-weight: 700; }
-        .nota-package dd { margin: 0; font-weight: 700; }
-
-        .nota-status {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            padding: 3px 10px;
-            border-radius: 999px;
             margin-top: 8px;
+            display: grid;
+            grid-template-columns: auto repeat(4, 1fr);
+            align-items: center;
+            gap: 4px 14px;
+            padding: 5px 16px;
+            background: var(--n-lav-bg);
+            border: 1.5px solid var(--n-lav);
+            border-radius: 12px;
         }
-        .nota-status.pagada { background: #E3F1E6; color: #1E6B34; }
-        .nota-status.anticipo { background: #FCEFD9; color: #8A5300; }
-        .nota-status.pendiente { background: #FBE3E1; color: #B3261E; }
+        .nota-package .pk-title { font-family: 'Libre Baskerville', Georgia, serif; font-weight: 700; font-size: 13px; color: var(--n-purple); }
+        .nota-package dt { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--n-soft); }
+        .nota-package dd { margin: 0; }
 
-        .nota-spacer { flex: 1; min-height: 40px; }
+        .nota-bottom { display: flex; gap: 16px; margin-top: 10px; align-items: stretch; }
+        .nota-obs { flex: 1; min-width: 0; padding: 6px 16px 8px; }
+        .nota-obs .nf-label { display: block; font-weight: 700; margin-bottom: 2px; }
+        .nota-obs .lines {
+            min-height: 60px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            background-image: linear-gradient(to bottom, transparent 29px, var(--n-line) 29px, var(--n-line) 30px);
+            background-size: 100% 30px;
+            line-height: 30px;
+        }
+        .nota-obs .lines.hand { line-height: 30px; }
 
-        .nota-sign {
+        .nota-totals { width: 270px; display: flex; flex-direction: column; gap: 5px; }
+        .nt {
+            display: grid;
+            grid-template-columns: 112px 1fr;
+            border: 1.5px solid var(--n-lav);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #FFFFFF;
+        }
+        .nt > span:first-child {
+            background: var(--n-lav-bg);
+            color: var(--n-purple);
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.06em;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 40px;
-            margin-top: 40px;
-        }
-        .nota-sign-line {
-            width: 280px;
-            border-top: 1px solid #2A1E45;
-            padding-top: 6px;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            font-size: 12.5px;
+            border-right: 1.5px solid var(--n-lav);
+            padding: 4px;
         }
-        .nota-sign-line small { display: block; color: #715F92; }
-        .nota-pay { font-size: 12.5px; color: #5B4D78; }
-        .nota-pay strong { color: #2A1E45; }
+        .nt > span:last-child { text-align: right; padding: 1px 14px; }
+        .nt.grand { border-width: 2px; border-color: var(--n-soft); }
+        .nt.grand > span:first-child { background: var(--n-purple); color: #FFFFFF; border-right-color: var(--n-soft); }
+        .nt.grand > span:last-child { font-size: 25px; }
+        .nt.resta > span:last-child { color: #B3261E; }
 
-        .nota-foot {
-            margin-top: 26px;
-            padding-top: 12px;
-            border-top: 1px solid #EDE6EF;
-            font-size: 11px;
-            color: #8A7BA3;
-            text-align: center;
-        }
+        .nota-spacer { flex: 1; min-height: 6px; }
+
+        .nota-foot { text-align: center; position: relative; z-index: 1; }
+        .nota-foot .contact { margin: 1px 0 0; font-size: 11.5px; color: var(--n-soft); }
+        .nota-foot .legal { margin: 2px 0 0; font-size: 10px; color: #8A7BA3; }
 
         /* ---------- Toast ---------- */
         #toast {
@@ -589,7 +600,7 @@
             .preview-col { position: static; }
             .preview-frame { box-shadow: none; border-radius: 0; overflow: visible; height: auto !important; }
             .preview-scaler { transform: none !important; width: auto; }
-            .nota { width: 100%; min-height: 100vh; padding: 48px 56px 40px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .nota { width: 100%; min-height: 100vh; padding: 22px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -1296,6 +1307,74 @@
         }
 
         /* ===================== Vista previa del documento ===================== */
+        /* ----- Ornamentos SVG (lavanda, hojas y mariposas en la paleta de Karen) ----- */
+        const ORN = {
+            corner: `
+                <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+                    <path d="M12 140 C 14 90, 34 50, 70 30 C 92 18, 118 14, 140 12" fill="none" stroke="#8A75A7" stroke-width="2.4" stroke-linecap="round"/>
+                    <path d="M22 96 C 38 84, 52 82, 60 70" fill="none" stroke="#9AA56B" stroke-width="1.8" stroke-linecap="round"/>
+                    <ellipse cx="34" cy="86" rx="9" ry="4" transform="rotate(-35 34 86)" fill="#9AA56B"/>
+                    <ellipse cx="50" cy="78" rx="9" ry="4" transform="rotate(-50 50 78)" fill="#AEB880"/>
+                    <ellipse cx="96" cy="22" rx="10" ry="4.2" transform="rotate(-12 96 22)" fill="#9AA56B"/>
+                    <ellipse cx="80" cy="34" rx="9" ry="4" transform="rotate(25 80 34)" fill="#AEB880"/>
+                    <g fill="#B09CC8">
+                        <ellipse cx="18" cy="122" rx="3.2" ry="5" transform="rotate(-10 18 122)"/>
+                        <ellipse cx="20" cy="112" rx="3.2" ry="5" transform="rotate(-14 20 112)"/>
+                        <ellipse cx="23" cy="102" rx="3.2" ry="5" transform="rotate(-18 23 102)"/>
+                    </g>
+                    <g fill="#715F92">
+                        <ellipse cx="13" cy="117" rx="3" ry="4.6" transform="rotate(-30 13 117)"/>
+                        <ellipse cx="15" cy="107" rx="3" ry="4.6" transform="rotate(-30 15 107)"/>
+                        <ellipse cx="25" cy="117" rx="3" ry="4.6" transform="rotate(20 25 117)"/>
+                        <ellipse cx="28" cy="107" rx="3" ry="4.6" transform="rotate(20 28 107)"/>
+                    </g>
+                    <g fill="#B09CC8">
+                        <ellipse cx="118" cy="16" rx="5" ry="3.2" transform="rotate(-80 118 16)"/>
+                        <ellipse cx="128" cy="14" rx="5" ry="3.2" transform="rotate(-80 128 14)"/>
+                        <ellipse cx="108" cy="18" rx="5" ry="3.2" transform="rotate(-80 108 18)"/>
+                    </g>
+                    <g fill="#715F92">
+                        <ellipse cx="123" cy="9" rx="4.6" ry="3" transform="rotate(-60 123 9)"/>
+                        <ellipse cx="113" cy="10" rx="4.6" ry="3" transform="rotate(-60 113 10)"/>
+                        <ellipse cx="123" cy="22" rx="4.6" ry="3" transform="rotate(60 123 22)"/>
+                        <ellipse cx="113" cy="23" rx="4.6" ry="3" transform="rotate(60 113 23)"/>
+                    </g>
+                    <path d="M58 58 c -6 -6 -14 0 -8 7 l 8 7 l 8 -7 c 6 -7 -2 -13 -8 -7z" fill="#CDB0D6"/>
+                </svg>`,
+            butterfly: `
+                <svg width="54" height="46" viewBox="0 0 60 50" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="bfg" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#B09CC8"/>
+                            <stop offset="1" stop-color="#583C83"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M30 24 C 22 4, 2 2, 4 16 C 6 26, 20 28, 30 24Z" fill="url(#bfg)" stroke="#301E5B" stroke-width="1"/>
+                    <path d="M30 24 C 38 4, 58 2, 56 16 C 54 26, 40 28, 30 24Z" fill="url(#bfg)" stroke="#301E5B" stroke-width="1"/>
+                    <path d="M30 26 C 21 30, 9 40, 16 46 C 23 50, 29 37, 30 26Z" fill="#CDB0D6" stroke="#301E5B" stroke-width="1"/>
+                    <path d="M30 26 C 39 30, 51 40, 44 46 C 37 50, 31 37, 30 26Z" fill="#CDB0D6" stroke="#301E5B" stroke-width="1"/>
+                    <circle cx="12" cy="13" r="2" fill="#FFFFFF" opacity="0.8"/>
+                    <circle cx="48" cy="13" r="2" fill="#FFFFFF" opacity="0.8"/>
+                    <rect x="29" y="14" width="2.2" height="22" rx="1.1" fill="#301E5B"/>
+                    <path d="M30 15 C 28 9, 25 6, 22 5 M30 15 C 32 9, 35 6, 38 5" fill="none" stroke="#301E5B" stroke-width="1"/>
+                </svg>`,
+            flourish: `
+                <svg width="64" height="30" viewBox="0 0 64 30" aria-hidden="true">
+                    <path d="M62 15 C 48 15, 44 4, 33 6 C 24 8, 25 20, 33 19 C 39 18, 37 11, 32 12" fill="none" stroke="#8A75A7" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M62 15 C 48 15, 44 26, 33 24" fill="none" stroke="#8A75A7" stroke-width="2" stroke-linecap="round"/>
+                    <ellipse cx="14" cy="15" rx="9" ry="3.6" fill="#B09CC8"/>
+                    <circle cx="4" cy="15" r="2.6" fill="#715F92"/>
+                </svg>`,
+            footer: `
+                <svg width="260" height="28" viewBox="0 0 300 34" aria-hidden="true">
+                    <path d="M138 17 C 110 17, 104 5, 88 8 C 76 10, 78 24, 88 22 C 95 21, 93 13, 87 14 M138 17 C 110 17, 100 29, 80 26 C 60 23, 40 18, 10 17" fill="none" stroke="#8A75A7" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M162 17 C 190 17, 196 5, 212 8 C 224 10, 222 24, 212 22 C 205 21, 207 13, 213 14 M162 17 C 190 17, 200 29, 220 26 C 240 23, 260 18, 290 17" fill="none" stroke="#8A75A7" stroke-width="2" stroke-linecap="round"/>
+                    <ellipse cx="60" cy="21" rx="8" ry="3.2" transform="rotate(-8 60 21)" fill="#9AA56B"/>
+                    <ellipse cx="240" cy="21" rx="8" ry="3.2" transform="rotate(8 240 21)" fill="#9AA56B"/>
+                    <path d="M150 12 c -5 -6 -14 -1 -8 6 l 8 8 l 8 -8 c 6 -7 -3 -12 -8 -6z" fill="#715F92"/>
+                </svg>`
+        };
+
         function notaHTML(n) {
             const subtotal = noteSubtotal(n);
             const descuento = noteDescuento(n);
@@ -1304,115 +1383,106 @@
             const saldo = noteSaldo(n);
             const paq = paqueteInfo(n);
             const descLabel = n.descuentoTipo === 'porcentaje'
-                ? `Descuento (${escapeHtml(round2(Math.min(parseAmount(n.descuentoValor), 100)))}%)`
-                : 'Descuento';
+                ? `DESCUENTO ${escapeHtml(round2(Math.min(parseAmount(n.descuentoValor), 100)))}%`
+                : 'DESCUENTO';
             const estadoClass = { Pagada: 'pagada', Anticipo: 'anticipo', Pendiente: 'pendiente' }[n.estado] || 'pagada';
-            const estadoLabel = { Pagada: 'Pagada', Anticipo: 'Anticipo', Pendiente: 'Pendiente de pago' }[n.estado] || 'Pagada';
-            const rows = n.items
-                .filter(it => itemConcept(it) || itemSubtotal(it) > 0)
-                .map(it => `
+            const estadoLabel = { Pagada: 'PAGADO', Anticipo: 'ANTICIPO', Pendiente: 'PENDIENTE' }[n.estado] || 'PAGADO';
+
+            const filled = n.items.filter(it => itemConcept(it) || itemSubtotal(it) > 0);
+            const MIN_ROWS = 6;
+            const rows = filled.map(it => `
                     <tr>
-                        <td class="qty">${escapeHtml(parseInt(it.cantidad, 10) || 0)}</td>
-                        <td>${escapeHtml(itemConcept(it) || '—')}</td>
-                        <td class="num">${money.format(parseAmount(it.precio))}</td>
-                        <td class="num">${money.format(itemSubtotal(it))}</td>
-                    </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:#8A7BA3">Sin conceptos</td></tr>`;
+                        <td class="qty hand">${escapeHtml(parseInt(it.cantidad, 10) || 0)}</td>
+                        <td class="hand">${escapeHtml(itemConcept(it) || '—')}</td>
+                        <td class="num hand">${money.format(parseAmount(it.precio))}</td>
+                        <td class="num hand">${money.format(itemSubtotal(it))}</td>
+                    </tr>`).join('') +
+                '<tr><td></td><td></td><td></td><td></td></tr>'.repeat(Math.max(0, MIN_ROWS - filled.length));
 
-            const contacto = [emisor.telefono && `Tel. ${emisor.telefono}`, emisor.correo].filter(Boolean).join(' · ');
+            const extra = [
+                n.responsable ? `<div class="nf"><span class="nf-label">Responsable:</span><span class="nf-value hand">${escapeHtml(n.responsable)}</span></div>` : '',
+                n.telefono ? `<div class="nf"><span class="nf-label">Teléfono:</span><span class="nf-value hand">${escapeHtml(n.telefono)}</span></div>` : ''
+            ].filter(Boolean);
 
-            const clientRows = [
-                `<div class="full"><dt>Paciente</dt><dd>${escapeHtml(n.paciente || '—')}</dd></div>`,
-                n.responsable ? `<div class="full"><dt>Responsable / tutor</dt><dd>${escapeHtml(n.responsable)}</dd></div>` : '',
-                n.telefono ? `<div><dt>Teléfono</dt><dd>${escapeHtml(n.telefono)}</dd></div>` : '',
-                n.correo ? `<div><dt>Correo</dt><dd>${escapeHtml(n.correo)}</dd></div>` : ''
+            const totals = [
+                descuento > 0 ? `<div class="nt"><span>SUBTOTAL</span><span class="hand">${money.format(subtotal)}</span></div>` : '',
+                descuento > 0 ? `<div class="nt"><span>${descLabel}</span><span class="hand">−${money.format(descuento)}</span></div>` : '',
+                `<div class="nt grand"><span>TOTAL</span><span class="hand">${money.format(total)}</span></div>`,
+                n.estado === 'Anticipo' ? `<div class="nt"><span>ANTICIPO</span><span class="hand">${money.format(pagado)}</span></div>` : '',
+                n.estado !== 'Pagada' ? `<div class="nt resta"><span>RESTA</span><span class="hand">${money.format(saldo)}</span></div>` : ''
             ].join('');
 
             return `
-                <header class="nota-head">
-                    <div class="nota-brand">
-                        <img src="${LOGO_URL}" alt="" crossorigin="anonymous">
-                        <div>
-                            <p class="nota-brand-name">${escapeHtml(emisor.nombre || '')}</p>
-                            ${emisor.titulo ? `<p class="nota-brand-line">${escapeHtml(emisor.titulo)}</p>` : ''}
-                            ${emisor.cedula ? `<p class="nota-brand-line">Cédula profesional: ${escapeHtml(emisor.cedula)}</p>` : ''}
-                            ${contacto ? `<p class="nota-brand-line">${escapeHtml(contacto)}</p>` : ''}
-                            ${emisor.web ? `<p class="nota-brand-line">${escapeHtml(emisor.web)}</p>` : ''}
-                            ${emisor.direccion ? `<p class="nota-brand-line">${escapeHtml(emisor.direccion)}</p>` : ''}
+                <div class="nota-frame">
+                    <span class="orn orn-tl">${ORN.corner}</span>
+                    <span class="orn orn-tr">${ORN.corner}</span>
+                    <span class="orn orn-bl">${ORN.corner}</span>
+                    <span class="orn orn-br">${ORN.corner}</span>
+                    <span class="orn orn-bf1">${ORN.butterfly}</span>
+                    <span class="orn orn-bf2">${ORN.butterfly}</span>
+
+                    <header class="nota-header">
+                        <img src="${LOGO_URL}" alt="Karen Trujillo · Neuropsicóloga" crossorigin="anonymous">
+                        <p class="sub">${escapeHtml(emisor.titulo)}</p>
+                        <p class="ced">Cédula profesional ${escapeHtml(emisor.cedula)}</p>
+                    </header>
+
+                    <div class="nota-banner">
+                        ${ORN.flourish}
+                        <h2>NOTA DE REMISIÓN</h2>
+                        <span style="display:inline-block;transform:scaleX(-1)">${ORN.flourish}</span>
+                    </div>
+
+                    <section class="nota-box nota-client has-stamp">
+                        <span class="nota-stamp ${estadoClass}">${estadoLabel}</span>
+                        <div class="nf first"><span class="nf-label">Paciente:</span><span class="nf-value hand">${escapeHtml(n.paciente || '')}&nbsp;</span></div>
+                        <div class="nf-row">
+                            <div class="nf"><span class="nf-label">Fecha:</span><span class="nf-value hand">${escapeHtml(formatDateLong(n.fecha))}&nbsp;</span></div>
+                            <div class="nf"><span class="nf-label">Folio:</span><span class="nf-value hand">${escapeHtml(n.folio || '')}&nbsp;</span></div>
                         </div>
-                    </div>
-                    <div class="nota-meta">
-                        <p class="nota-title">NOTA DE REMISIÓN</p>
-                        <div class="nota-folio">${escapeHtml(n.folio || '—')}</div>
-                        <p class="nota-date">${escapeHtml(formatDateLong(n.fecha))}</p>
-                        <span class="nota-status ${estadoClass}">${estadoLabel}</span>
-                    </div>
-                </header>
+                        ${extra.length ? `<div class="nf-row">${extra.join('')}</div>` : ''}
+                    </section>
 
-                <section class="nota-section">
-                    <p class="nota-section-title">Datos del paciente</p>
-                    <dl class="nota-client">${clientRows}</dl>
-                </section>
-
-                <section class="nota-section">
-                    <p class="nota-section-title">Servicios</p>
                     <table class="nota-table">
                         <thead>
                             <tr>
-                                <th class="qty">Cant.</th>
-                                <th>Concepto</th>
-                                <th class="num">P. unitario</th>
-                                <th class="num">Importe</th>
+                                <th class="qty">CANT.</th>
+                                <th>DESCRIPCIÓN</th>
+                                <th class="num"><span class="tiny">PRECIO</span><span class="tiny">UNITARIO</span></th>
+                                <th class="num">IMPORTE</th>
                             </tr>
                         </thead>
                         <tbody>${rows}</tbody>
                     </table>
+                    <p class="nota-words">Importe con letra: <strong>${escapeHtml(importeConLetra(total))}</strong></p>
 
-                    <div class="nota-totals">
-                        <div class="nota-words">
-                            Importe con letra:
-                            <strong>${escapeHtml(importeConLetra(total))}</strong>
-                        </div>
-                        <div class="nota-total-box">
-                            <div><span>Subtotal</span><span>${money.format(subtotal)}</span></div>
-                            ${descuento > 0 ? `<div><span>${descLabel}</span><span>−${money.format(descuento)}</span></div>` : ''}
-                            <div class="grand"><span>Total</span><span>${money.format(total)}</span></div>
-                            ${n.estado !== 'Pagada' ? `
-                            <div class="muted" style="margin-top:6px"><span>Pagado</span><span>${money.format(pagado)}</span></div>
-                            <div class="saldo"><span>Saldo pendiente</span><span>${money.format(saldo)}</span></div>` : ''}
-                        </div>
-                    </div>
-                </section>
-
-                ${paq ? `
-                <section class="nota-section">
-                    <p class="nota-section-title">Paquete de sesiones</p>
+                    ${paq ? `
                     <dl class="nota-package">
-                        <div><dt>Sesión</dt><dd>${paq.sesion}${paq.de ? ` de ${paq.de}` : ''}</dd></div>
-                        <div><dt>Costo del paquete</dt><dd>${paq.costo > 0 ? money.format(paq.costo) : '—'}</dd></div>
-                        <div><dt>Abonado a la fecha</dt><dd>${money.format(paq.abonado)}</dd></div>
-                        <div><dt>Saldo del paquete</dt><dd>${paq.saldo == null ? '—' : money.format(paq.saldo)}</dd></div>
-                    </dl>
-                </section>` : ''}
+                        <span class="pk-title">Paquete</span>
+                        <div><dt>Sesión</dt><dd class="hand">${paq.sesion}${paq.de ? ` de ${paq.de}` : ''}</dd></div>
+                        <div><dt>Costo</dt><dd class="hand">${paq.costo > 0 ? money.format(paq.costo) : '—'}</dd></div>
+                        <div><dt>Abonado</dt><dd class="hand">${money.format(paq.abonado)}</dd></div>
+                        <div><dt>Saldo</dt><dd class="hand">${paq.saldo == null ? '—' : money.format(paq.saldo)}</dd></div>
+                    </dl>` : ''}
 
-                ${n.observaciones ? `
-                <section class="nota-section">
-                    <p class="nota-section-title">Observaciones</p>
-                    <p class="nota-notes">${escapeHtml(n.observaciones)}</p>
-                </section>` : ''}
-
-                <div class="nota-spacer"></div>
-
-                <div class="nota-sign">
-                    <div class="nota-pay">Método de pago: <strong>${escapeHtml(n.metodo || '—')}</strong></div>
-                    <div class="nota-sign-line">
-                        ${escapeHtml(emisor.nombre || '')}
-                        <small>Firma</small>
+                    <div class="nota-bottom">
+                        <section class="nota-box nota-obs">
+                            <div class="nf"><span class="nf-label">Método de pago:</span><span class="nf-value hand">${escapeHtml(n.metodo || '')}&nbsp;</span></div>
+                            <span class="nf-label" style="margin-top:6px">Observaciones:</span>
+                            <div class="lines hand">${escapeHtml(n.observaciones || '')}</div>
+                        </section>
+                        <div class="nota-totals">${totals}</div>
                     </div>
-                </div>
 
-                <footer class="nota-foot">
-                    Este documento es una nota de remisión y no constituye un comprobante fiscal (CFDI).
-                </footer>`;
+                    <div class="nota-spacer"></div>
+
+                    <footer class="nota-foot">
+                        ${ORN.footer}
+                        <p class="contact">${escapeHtml(emisor.nombre)} · Tel. ${escapeHtml(emisor.telefono)} · ${escapeHtml(emisor.correo)} · ${escapeHtml(emisor.web)}</p>
+                        <p class="contact">${escapeHtml(emisor.direccion)}</p>
+                        <p class="legal">Este documento es una nota de remisión y no constituye un comprobante fiscal (CFDI).</p>
+                    </footer>
+                </div>`;
         }
 
         function renderPreview() {
@@ -1572,7 +1642,7 @@
             stage.innerHTML = '';
             const clone = document.createElement('article');
             clone.className = 'nota';
-            clone.style.minHeight = Math.round(794 * 11 / 8.5) + 'px'; // proporción carta
+            clone.style.minHeight = '1027px'; // proporción carta
             clone.innerHTML = notaHTML(nota);
             stage.appendChild(clone);
 
