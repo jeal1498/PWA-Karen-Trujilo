@@ -188,6 +188,19 @@
 
         .hint { font-size: 0.76rem; color: var(--text-muted); }
 
+        .label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .link-btn {
+            border: none;
+            background: transparent;
+            color: var(--purple-soft);
+            font: inherit;
+            font-size: 0.76rem;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 0;
+        }
+        input[readonly] { background: color-mix(in srgb, var(--field) 70%, var(--surface)); cursor: default; }
+
         /* ---------- Conceptos ---------- */
         .item {
             border: 1px dashed var(--border);
@@ -620,8 +633,11 @@
                     <h2>Datos de la nota</h2>
                     <div class="grid-2">
                         <div class="field">
-                            <label for="folio">Folio <span class="req">*</span></label>
-                            <input id="folio" name="folio" type="text" inputmode="text" autocomplete="off" required>
+                            <div class="label-row">
+                                <label for="folio">Folio <span class="req">*</span></label>
+                                <button type="button" class="link-btn" id="folio-unlock" aria-controls="folio">Editar</button>
+                            </div>
+                            <input id="folio" name="folio" type="text" inputmode="text" autocomplete="off" readonly required>
                         </div>
                         <div class="field">
                             <label for="fecha">Fecha <span class="req">*</span></label>
@@ -807,7 +823,7 @@
 
         const FOLIO_PREFIX = 'NR-';
         const FOLIO_DIGITS = 4;
-        const HISTORY_LIMIT = 200;
+        const HISTORY_LIMIT = 5000;
 
         // precio: null = precio abierto (se captura en cada nota).
         const SERVICIOS = [
@@ -918,13 +934,17 @@
         }
 
         let toastTimer = null;
-        function toast(message, isError) {
+        // Mientras se muestra un aviso importante (p. ej. folio reasignado), los avisos normales esperan.
+        let toastHoldUntil = 0;
+        function toast(message, isError, hold) {
+            if (!isError && !hold && Date.now() < toastHoldUntil) return;
+            if (hold) toastHoldUntil = Date.now() + 4500;
             const el = $('toast');
             el.textContent = message;
             el.classList.toggle('error', !!isError);
             el.classList.add('show');
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+            toastTimer = setTimeout(() => el.classList.remove('show'), hold ? 4500 : 3200);
         }
 
         /* ===================== Importe con letra (MXN) ===================== */
@@ -1014,8 +1034,18 @@
             return { activo: false, id: '', sesion: 1, de: '', costo: '' };
         }
 
+        function newUid() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+            return 'n-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        }
+
+        function sameFolio(a, b) {
+            return String(a || '').trim().toUpperCase() === String(b || '').trim().toUpperCase();
+        }
+
         // Completa campos que no existían en notas guardadas con versiones anteriores.
         function normalizeNote(n) {
+            if (!n.uid) n.uid = newUid();
             n.items = Array.isArray(n.items) && n.items.length ? n.items : [newItem()];
             if (!['ninguno', 'porcentaje', 'monto'].includes(n.descuentoTipo)) n.descuentoTipo = 'ninguno';
             if (n.descuentoValor == null) n.descuentoValor = '';
@@ -1033,6 +1063,7 @@
 
         function emptyNote() {
             return {
+                uid: newUid(),
                 folio: formatFolio(nextFolioNumber()),
                 fecha: todayISO(),
                 paciente: '',
@@ -1050,10 +1081,30 @@
             };
         }
 
-        historial = historial.filter(h => h && typeof h === 'object').map(normalizeNote);
+        // Lee el historial directo del almacenamiento (por si otra pestaña guardó algo).
+        function reloadHistorial() {
+            const raw = storageGet(STORAGE.historial, []);
+            const needsUid = Array.isArray(raw) && raw.some(h => h && typeof h === 'object' && !h.uid);
+            historial = (Array.isArray(raw) ? raw : []).filter(h => h && typeof h === 'object').map(normalizeNote);
+            if (needsUid) storageSet(STORAGE.historial, historial);
+        }
+        reloadHistorial();
 
         let nota = storageGet(STORAGE.borrador, null);
-        nota = nota && typeof nota === 'object' ? normalizeNote(nota) : emptyNote();
+        if (nota && typeof nota === 'object') {
+            // Borrador de una versión anterior: si su folio ya está guardado, es esa misma nota.
+            if (!nota.uid) {
+                const same = historial.find(h => sameFolio(h.folio, nota.folio));
+                if (same) nota.uid = same.uid;
+            }
+            nota = normalizeNote(nota);
+        } else {
+            nota = emptyNote();
+        }
+
+        function isSavedNote(n) {
+            return historial.some(h => h.uid === n.uid);
+        }
 
         function itemConcept(item) {
             return item.servicio === OTRO ? (item.personalizado || '').trim() : item.servicio;
@@ -1184,8 +1235,15 @@
             FIELDS.forEach(f => { $(f).value = nota[f] == null ? '' : nota[f]; });
             if (!nota.metodo) $('metodo').value = 'Efectivo';
             lastAutofilled = pacienteKey(nota.paciente);
+            lockFolio(true);
             fillPaquete();
             renderItems();
+        }
+
+        function lockFolio(locked) {
+            $('folio').readOnly = locked;
+            $('folio-unlock').textContent = locked ? 'Editar' : 'Bloquear';
+            $('folio-unlock').setAttribute('aria-pressed', locked ? 'false' : 'true');
         }
 
         function fillPaquete() {
@@ -1582,14 +1640,38 @@
             readForm();
             if (!validate()) return false;
 
+            // Verificación justo antes de guardar, con el historial más reciente.
+            reloadHistorial();
+            const ownIdx = historial.findIndex(h => h.uid === nota.uid);
+            const clash = historial.find(h => h.uid !== nota.uid && sameFolio(h.folio, nota.folio));
+            if (clash) {
+                if (ownIdx >= 0) {
+                    // Nota ya guardada a la que se le cambió el folio por uno ocupado: no se sobrescribe nada.
+                    $('folio').setAttribute('aria-invalid', 'true');
+                    lockFolio(false);
+                    $('folio').focus();
+                    toast(`El folio ${nota.folio} ya es de otra nota (${clash.paciente || 'sin nombre'}). Usa otro.`, true);
+                    return false;
+                }
+                // Nota nueva con folio ocupado: se le asigna el siguiente libre.
+                const anterior = nota.folio;
+                nota.folio = formatFolio(nextFolioNumber());
+                if (nota.paquete.activo && sameFolio(nota.paquete.id, anterior)
+                    && !historial.some(h => h.paquete && h.paquete.id === nota.paquete.id)) {
+                    nota.paquete.id = nota.folio;
+                }
+                $('folio').value = nota.folio;
+                toast(`El folio ${anterior} ya estaba usado; esta nota quedó como ${nota.folio}.`, false, true);
+            }
+            $('folio').removeAttribute('aria-invalid');
+
             const record = JSON.parse(JSON.stringify(nota));
             record.total = noteTotal(record);
             record.pagado = notePagado(record);
             record.saldo = noteSaldo(record);
             record.guardado = new Date().toISOString();
 
-            const idx = historial.findIndex(n => n.folio === record.folio);
-            if (idx >= 0) historial[idx] = record;
+            if (ownIdx >= 0) historial[ownIdx] = record;
             else historial.unshift(record);
             historial.sort((a, b) => folioNumber(b.folio) - folioNumber(a.folio));
             saveHistory();
@@ -1597,6 +1679,7 @@
             const next = Math.max(nextFolioNumber(), folioNumber(record.folio) + 1);
             storageSet(STORAGE.siguiente, next);
             storageSet(STORAGE.borrador, nota);
+            lockFolio(true);
             rememberPaciente(record);
             renderHistory();
             updateTotals();
@@ -1809,7 +1892,7 @@
 
         function onNew() {
             const hasData = nota.paciente.trim() || noteTotal(nota) > 0;
-            const saved = historial.some(n => n.folio === nota.folio);
+            const saved = isSavedNote(nota);
             if (hasData && !saved && !confirm('La nota actual no se ha guardado. ¿Descartarla y empezar una nueva?')) return;
             startNewNote();
             toast(`Nueva nota ${nota.folio}`);
@@ -1889,10 +1972,35 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 toast(`Nota ${nota.folio} abierta.`);
             } else if (btn.dataset.history === 'delete') {
-                if (!confirm(`¿Eliminar la nota ${rec.folio} del historial?`)) return;
+                if (!confirm(`¿Eliminar la nota ${rec.folio} del historial?\n\nSu folio no se volverá a usar.`)) return;
+                storageSet(STORAGE.siguiente, Math.max(nextFolioNumber(), folioNumber(rec.folio) + 1));
                 historial.splice(i, 1);
                 saveHistory();
                 renderHistory();
+            }
+        });
+
+        $('folio-unlock').addEventListener('click', () => {
+            if ($('folio').readOnly) {
+                if (!confirm('El folio se asigna solo para que nunca se repita.\n¿Quieres cambiarlo manualmente?')) return;
+                lockFolio(false);
+                $('folio').focus();
+                $('folio').select();
+            } else {
+                lockFolio(true);
+            }
+        });
+
+        // Si otra pestaña guarda una nota, se actualiza el historial y, si hace falta, el folio de la nota nueva.
+        window.addEventListener('storage', e => {
+            if (e.key !== STORAGE.historial && e.key !== STORAGE.siguiente) return;
+            reloadHistorial();
+            renderHistory();
+            if (!isSavedNote(nota) && historial.some(h => sameFolio(h.folio, nota.folio))) {
+                nota.folio = formatFolio(nextFolioNumber());
+                $('folio').value = nota.folio;
+                renderPreview();
+                scheduleDraftSave();
             }
         });
 
