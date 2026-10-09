@@ -232,6 +232,40 @@
         }
         .total-row strong { font-size: 1.3rem; }
 
+        .summary { margin-top: 14px; }
+        .summary > div:not(.total-row) {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 0.92rem;
+            padding: 3px 0;
+        }
+        .summary .neg { color: var(--danger); }
+
+        .check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .check input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--purple); }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-left: 6px;
+            vertical-align: middle;
+            background: color-mix(in srgb, var(--lavender) 35%, transparent);
+            color: var(--text);
+        }
+        .badge.warn { background: color-mix(in srgb, #E8A33D 35%, transparent); }
+        .badge.due { background: color-mix(in srgb, var(--danger) 25%, transparent); }
+
         /* ---------- Botones ---------- */
         .btn {
             display: inline-flex;
@@ -443,6 +477,8 @@
             padding: 12px 16px;
         }
         .nota-total-box div { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
+        .nota-total-box .muted { color: #5B4D78; }
+        .nota-total-box .saldo { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #DFD4E1; font-weight: 800; color: #B3261E; }
         .nota-total-box .grand {
             margin-top: 6px;
             padding-top: 8px;
@@ -462,6 +498,32 @@
             border-radius: 0 8px 8px 0;
             margin: 0;
         }
+
+        .nota-package {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #FAF8F8;
+            border: 1px solid #EDE6EF;
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+        .nota-package dt { font-size: 11px; color: #715F92; font-weight: 700; }
+        .nota-package dd { margin: 0; font-weight: 700; }
+
+        .nota-status {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 999px;
+            margin-top: 8px;
+        }
+        .nota-status.pagada { background: #E3F1E6; color: #1E6B34; }
+        .nota-status.anticipo { background: #FCEFD9; color: #8A5300; }
+        .nota-status.pendiente { background: #FBE3E1; color: #B3261E; }
 
         .nota-spacer { flex: 1; min-height: 40px; }
 
@@ -561,7 +623,9 @@
                     <h2>Paciente</h2>
                     <div class="field">
                         <label for="paciente">Nombre completo <span class="req">*</span></label>
-                        <input id="paciente" name="paciente" type="text" autocomplete="off" placeholder="Nombre del paciente" required>
+                        <input id="paciente" name="paciente" type="text" autocomplete="off" list="pacientes-list" placeholder="Nombre del paciente" required>
+                        <datalist id="pacientes-list"></datalist>
+                        <span class="hint">Escribe para buscar pacientes anteriores; sus datos se completan solos.</span>
                     </div>
                     <div class="grid-2">
                         <div class="field">
@@ -586,22 +650,84 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Agregar concepto
                     </button>
-                    <div class="total-row" style="margin-top:14px">
-                        <span>Total</span>
-                        <strong id="form-total">$0.00</strong>
+                    <div class="grid-2" style="margin-top:14px">
+                        <div class="field">
+                            <label for="descuentoTipo">Descuento</label>
+                            <select id="descuentoTipo" name="descuentoTipo">
+                                <option value="ninguno">Sin descuento</option>
+                                <option value="porcentaje">Porcentaje (%)</option>
+                                <option value="monto">Monto fijo ($)</option>
+                            </select>
+                        </div>
+                        <div class="field" id="descuento-valor-field" hidden>
+                            <label for="descuentoValor" id="descuento-valor-label">Valor</label>
+                            <input id="descuentoValor" name="descuentoValor" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="summary">
+                        <div><span>Subtotal</span><span id="form-subtotal">$0.00</span></div>
+                        <div id="form-descuento-row" hidden><span>Descuento</span><span class="neg" id="form-descuento">−$0.00</span></div>
+                        <div class="total-row"><span>Total</span><strong id="form-total">$0.00</strong></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Paquete de sesiones</h2>
+                    <label class="check" for="paqueteActivo">
+                        <input id="paqueteActivo" type="checkbox">
+                        <span>Esta nota forma parte de un paquete</span>
+                    </label>
+                    <div id="paquete-fields" hidden style="margin-top:14px">
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="paqueteSesion">Sesión n.º</label>
+                                <input id="paqueteSesion" type="number" inputmode="numeric" min="1" step="1">
+                            </div>
+                            <div class="field">
+                                <label for="paqueteDe">De (sesiones)</label>
+                                <input id="paqueteDe" type="number" inputmode="numeric" min="1" step="1">
+                            </div>
+                        </div>
+                        <div class="field" style="margin-top:12px">
+                            <label for="paqueteCosto">Costo total del paquete (MXN)</label>
+                            <input id="paqueteCosto" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="summary">
+                            <div><span>Abonado en notas anteriores</span><span id="paq-previo">$0.00</span></div>
+                            <div><span>Abono de esta nota</span><span id="paq-actual">$0.00</span></div>
+                            <div class="total-row"><span>Saldo del paquete</span><strong id="paq-saldo">$0.00</strong></div>
+                        </div>
+                        <p class="hint">Lo abonado se suma de las notas guardadas de este mismo paquete.</p>
                     </div>
                 </div>
 
                 <div class="card">
                     <h2>Pago y observaciones</h2>
-                    <div class="field">
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="estado">Estado de pago</label>
+                            <select id="estado" name="estado">
+                                <option value="Pagada">Pagada</option>
+                                <option value="Anticipo">Anticipo</option>
+                                <option value="Pendiente">Pendiente de pago</option>
+                            </select>
+                        </div>
+                        <div class="field" id="anticipo-field" hidden>
+                            <label for="anticipo">Monto del anticipo</label>
+                            <input id="anticipo" name="anticipo" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="summary" id="pago-summary" hidden style="margin-bottom:12px">
+                        <div><span>Pagado</span><span id="form-pagado">$0.00</span></div>
+                        <div class="total-row"><span>Saldo pendiente</span><strong id="form-saldo">$0.00</strong></div>
+                    </div>
+                    <div class="field" style="margin-top:12px">
                         <label for="metodo">Método de pago</label>
                         <select id="metodo" name="metodo">
                             <option value="Efectivo">Efectivo</option>
                             <option value="Transferencia">Transferencia</option>
                             <option value="Tarjeta de débito">Tarjeta de débito</option>
                             <option value="Tarjeta de crédito">Tarjeta de crédito</option>
-                            <option value="Pendiente de pago">Pendiente de pago</option>
                         </select>
                     </div>
                     <div class="field">
@@ -696,20 +822,24 @@
             emisor: 'kt_notas_emisor',
             historial: 'kt_notas_historial',
             siguiente: 'kt_notas_folio_siguiente',
-            borrador: 'kt_notas_borrador'
+            borrador: 'kt_notas_borrador',
+            pacientes: 'kt_notas_pacientes'
         };
 
         const FOLIO_PREFIX = 'NR-';
         const FOLIO_DIGITS = 4;
         const HISTORY_LIMIT = 200;
 
+        // precio: null = precio abierto (se captura en cada nota).
         const SERVICIOS = [
-            { nombre: 'Sesión de psicoterapia individual', precio: 0 },
-            { nombre: 'Evaluación neuropsicológica', precio: 0 },
-            { nombre: 'Sesión de seguimiento', precio: 0 },
-            { nombre: 'Entrega de resultados / informe', precio: 0 },
-            { nombre: 'Paquete de sesiones', precio: 0 },
-            { nombre: 'Sesión en línea', precio: 0 }
+            { nombre: 'Terapia psicológica', precio: 650 },
+            { nombre: 'Terapia psicológica infantil', precio: 650 },
+            { nombre: 'Primera sesión de terapia', precio: 800 },
+            { nombre: 'Primera consulta de valoración', precio: 1000 },
+            { nombre: 'Valoración TDAH', precio: 8300 },
+            { nombre: 'Valoración Autismo', precio: 8500 },
+            { nombre: 'Valoración Completa TDAH y Autismo', precio: 10500 },
+            { nombre: 'Valoración Personalizada', precio: null }
         ];
         const OTRO = '__otro__';
 
@@ -882,13 +1012,42 @@
             return Math.max(stored, maxHist + 1);
         }
 
-        function newItem(nombre, precio) {
+        let pacientes = storageGet(STORAGE.pacientes, {});
+        if (!pacientes || typeof pacientes !== 'object' || Array.isArray(pacientes)) pacientes = {};
+
+        function findServicio(nombre) {
+            return SERVICIOS.find(s => s.nombre === nombre) || null;
+        }
+
+        function newItem(nombre) {
+            const srv = findServicio(nombre) || SERVICIOS[0];
             return {
-                servicio: nombre || SERVICIOS[0].nombre,
+                servicio: srv.nombre,
                 personalizado: '',
                 cantidad: 1,
-                precio: precio || 0
+                precio: srv.precio == null ? '' : srv.precio
             };
+        }
+
+        function emptyPaquete() {
+            return { activo: false, id: '', sesion: 1, de: '', costo: '' };
+        }
+
+        // Completa campos que no existían en notas guardadas con versiones anteriores.
+        function normalizeNote(n) {
+            n.items = Array.isArray(n.items) && n.items.length ? n.items : [newItem()];
+            if (!['ninguno', 'porcentaje', 'monto'].includes(n.descuentoTipo)) n.descuentoTipo = 'ninguno';
+            if (n.descuentoValor == null) n.descuentoValor = '';
+            if (n.metodo === 'Pendiente de pago') {
+                n.metodo = 'Efectivo';
+                if (!n.estado) n.estado = 'Pendiente';
+            }
+            if (!['Pagada', 'Anticipo', 'Pendiente'].includes(n.estado)) n.estado = 'Pagada';
+            if (n.anticipo == null) n.anticipo = '';
+            n.paquete = Object.assign(emptyPaquete(), n.paquete || {});
+            ['paciente', 'telefono', 'correo', 'responsable', 'observaciones'].forEach(f => { if (n[f] == null) n[f] = ''; });
+            if (!n.metodo) n.metodo = 'Efectivo';
+            return n;
         }
 
         function emptyNote() {
@@ -900,13 +1059,20 @@
                 correo: '',
                 responsable: '',
                 items: [newItem()],
+                descuentoTipo: 'ninguno',
+                descuentoValor: '',
+                estado: 'Pagada',
+                anticipo: '',
                 metodo: 'Efectivo',
+                paquete: emptyPaquete(),
                 observaciones: ''
             };
         }
 
+        historial = historial.filter(h => h && typeof h === 'object').map(normalizeNote);
+
         let nota = storageGet(STORAGE.borrador, null);
-        if (!nota || !Array.isArray(nota.items) || !nota.items.length) nota = emptyNote();
+        nota = nota && typeof nota === 'object' ? normalizeNote(nota) : emptyNote();
 
         function itemConcept(item) {
             return item.servicio === OTRO ? (item.personalizado || '').trim() : item.servicio;
@@ -916,27 +1082,169 @@
             return round2((parseInt(item.cantidad, 10) || 0) * parseAmount(item.precio));
         }
 
+        function noteSubtotal(n) {
+            return round2((n.items || []).reduce((sum, it) => sum + itemSubtotal(it), 0));
+        }
+
+        function noteDescuento(n) {
+            const sub = noteSubtotal(n);
+            const valor = parseAmount(n.descuentoValor);
+            let d = 0;
+            if (n.descuentoTipo === 'porcentaje') d = sub * Math.min(valor, 100) / 100;
+            else if (n.descuentoTipo === 'monto') d = valor;
+            return round2(Math.min(d, sub));
+        }
+
         function noteTotal(n) {
-            return round2(n.items.reduce((sum, it) => sum + itemSubtotal(it), 0));
+            return round2(noteSubtotal(n) - noteDescuento(n));
+        }
+
+        function notePagado(n) {
+            const total = noteTotal(n);
+            if (n.estado === 'Pendiente') return 0;
+            if (n.estado === 'Anticipo') return round2(Math.min(parseAmount(n.anticipo), total));
+            return total;
+        }
+
+        function noteSaldo(n) {
+            return round2(noteTotal(n) - notePagado(n));
+        }
+
+        function paqueteInfo(n) {
+            const p = n.paquete || {};
+            if (!p.activo) return null;
+            const previo = round2(historial
+                .filter(h => h.folio !== n.folio && h.paquete && h.paquete.activo && h.paquete.id === p.id)
+                .reduce((sum, h) => sum + notePagado(h), 0));
+            const actual = notePagado(n);
+            const costo = parseAmount(p.costo);
+            return {
+                sesion: parseInt(p.sesion, 10) || 0,
+                de: parseInt(p.de, 10) || 0,
+                costo,
+                previo,
+                actual,
+                abonado: round2(previo + actual),
+                saldo: costo > 0 ? round2(Math.max(costo - previo - actual, 0)) : null
+            };
+        }
+
+        /* ===================== Pacientes frecuentes ===================== */
+        function pacienteKey(nombre) {
+            return String(nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+
+        function rememberPaciente(n) {
+            const key = pacienteKey(n.paciente);
+            if (!key) return;
+            pacientes[key] = {
+                paciente: n.paciente.trim(),
+                telefono: n.telefono || '',
+                correo: n.correo || '',
+                responsable: n.responsable || '',
+                actualizado: new Date().toISOString()
+            };
+            storageSet(STORAGE.pacientes, pacientes);
+            renderPacientesList();
+        }
+
+        // Si hay notas guardadas de versiones anteriores, se usan para poblar la lista.
+        historial.slice().reverse().forEach(h => {
+            const key = pacienteKey(h.paciente);
+            if (key && !pacientes[key]) {
+                pacientes[key] = { paciente: h.paciente.trim(), telefono: h.telefono || '', correo: h.correo || '', responsable: h.responsable || '', actualizado: h.guardado || '' };
+            }
+        });
+
+        function renderPacientesList() {
+            const list = Object.values(pacientes).sort((a, b) => a.paciente.localeCompare(b.paciente, 'es'));
+            $('pacientes-list').innerHTML = list.map(p => `<option value="${escapeHtml(p.paciente)}"></option>`).join('');
+        }
+
+        function ultimaNotaDe(nombre) {
+            const key = pacienteKey(nombre);
+            return historial
+                .filter(h => pacienteKey(h.paciente) === key)
+                .sort((a, b) => folioNumber(b.folio) - folioNumber(a.folio))[0] || null;
+        }
+
+        let lastAutofilled = '';
+        function autofillPaciente() {
+            const key = pacienteKey($('paciente').value);
+            if (!key || key === lastAutofilled || !pacientes[key]) return;
+            lastAutofilled = key;
+            const p = pacientes[key];
+            if ($('paciente').value !== p.paciente) {
+                $('paciente').value = p.paciente;
+                nota.paciente = p.paciente;
+            }
+            ['telefono', 'correo', 'responsable'].forEach(f => {
+                if (p[f]) { $(f).value = p[f]; nota[f] = p[f]; }
+            });
+
+            // Continúa el paquete si la última nota del paciente tenía uno sin terminar.
+            const ultima = ultimaNotaDe(p.paciente);
+            const up = ultima && ultima.paquete;
+            if (!nota.paquete.activo && up && up.activo && (parseInt(up.de, 10) || 0) > (parseInt(up.sesion, 10) || 0)) {
+                nota.paquete = { activo: true, id: up.id, sesion: (parseInt(up.sesion, 10) || 0) + 1, de: up.de, costo: up.costo };
+                fillPaquete();
+                toast(`Paquete continuado: sesión ${nota.paquete.sesion} de ${nota.paquete.de}.`);
+            } else {
+                toast(`Datos de ${p.paciente} completados.`);
+            }
+            onChange();
         }
 
         /* ===================== Formulario ===================== */
-        const FIELDS = ['folio', 'fecha', 'paciente', 'telefono', 'correo', 'responsable', 'metodo', 'observaciones'];
+        const FIELDS = ['folio', 'fecha', 'paciente', 'telefono', 'correo', 'responsable', 'descuentoTipo', 'descuentoValor', 'estado', 'anticipo', 'metodo', 'observaciones'];
         const EMISOR_FIELDS = ['nombre', 'titulo', 'cedula', 'telefono', 'correo', 'direccion'];
 
         function fillForm() {
-            FIELDS.forEach(f => { $(f).value = nota[f] || ''; });
+            FIELDS.forEach(f => { $(f).value = nota[f] == null ? '' : nota[f]; });
             if (!nota.metodo) $('metodo').value = 'Efectivo';
             EMISOR_FIELDS.forEach(f => { $('em-' + f).value = emisor[f] || ''; });
+            lastAutofilled = pacienteKey(nota.paciente);
+            fillPaquete();
             renderItems();
+        }
+
+        function fillPaquete() {
+            const p = nota.paquete;
+            $('paqueteActivo').checked = !!p.activo;
+            $('paqueteSesion').value = p.sesion || '';
+            $('paqueteDe').value = p.de || '';
+            $('paqueteCosto').value = p.costo || '';
+            updateVisibility();
+        }
+
+        function readPaquete() {
+            const p = nota.paquete;
+            p.activo = $('paqueteActivo').checked;
+            p.sesion = $('paqueteSesion').value;
+            p.de = $('paqueteDe').value;
+            p.costo = $('paqueteCosto').value;
+            if (p.activo && !p.id) p.id = nota.folio || ('PAQ-' + Date.now());
+        }
+
+        function updateVisibility() {
+            const tipo = $('descuentoTipo').value;
+            $('descuento-valor-field').hidden = tipo === 'ninguno';
+            $('descuento-valor-label').textContent = tipo === 'porcentaje' ? 'Porcentaje (%)' : 'Monto (MXN)';
+            $('descuentoValor').max = tipo === 'porcentaje' ? '100' : '';
+            const estado = $('estado').value;
+            $('anticipo-field').hidden = estado !== 'Anticipo';
+            $('pago-summary').hidden = estado === 'Pagada';
+            $('paquete-fields').hidden = !$('paqueteActivo').checked;
         }
 
         function servicioOptions(selected) {
             const known = SERVICIOS.some(s => s.nombre === selected);
-            const opts = SERVICIOS.map(s =>
-                `<option value="${escapeHtml(s.nombre)}"${s.nombre === selected ? ' selected' : ''}>${escapeHtml(s.nombre)}</option>`
-            );
-            opts.push(`<option value="${OTRO}"${selected === OTRO || !known ? ' selected' : ''}>Otro…</option>`);
+            const opts = SERVICIOS.map(s => {
+                const precio = s.precio == null ? 'precio abierto' : money.format(s.precio);
+                return `<option value="${escapeHtml(s.nombre)}"${s.nombre === selected ? ' selected' : ''}>${escapeHtml(s.nombre)} · ${precio}</option>`;
+            });
+            opts.push(`<option value="${OTRO}"${selected === OTRO || !known ? ' selected' : ''}>Otro (escribir)…</option>`);
             return opts.join('');
         }
 
@@ -969,7 +1277,7 @@
                         </div>
                         <div class="field">
                             <label for="price-${i}">Precio unitario (MXN)</label>
-                            <input id="price-${i}" type="number" inputmode="decimal" min="0" step="0.01" data-field="precio" data-index="${i}" value="${item.precio ? escapeHtml(item.precio) : ''}" placeholder="0.00">
+                            <input id="price-${i}" type="number" inputmode="decimal" min="0" step="0.01" data-field="precio" data-index="${i}" value="${item.precio === '' || item.precio == null ? '' : escapeHtml(item.precio)}" placeholder="${(findServicio(item.servicio) || {}).precio === null ? 'Precio abierto' : '0.00'}">
                         </div>
                     </div>
                     <div class="item-subtotal" id="subtotal-${i}">${money.format(itemSubtotal(item))}</div>
@@ -983,12 +1291,27 @@
                 const el = $('subtotal-' + i);
                 if (el) el.textContent = money.format(itemSubtotal(item));
             });
+            const descuento = noteDescuento(nota);
+            $('form-subtotal').textContent = money.format(noteSubtotal(nota));
+            $('form-descuento-row').hidden = descuento <= 0;
+            $('form-descuento').textContent = '−' + money.format(descuento);
             $('form-total').textContent = money.format(noteTotal(nota));
+            $('form-pagado').textContent = money.format(notePagado(nota));
+            $('form-saldo').textContent = money.format(noteSaldo(nota));
+
+            const paq = paqueteInfo(nota);
+            if (paq) {
+                $('paq-previo').textContent = money.format(paq.previo);
+                $('paq-actual').textContent = money.format(paq.actual);
+                $('paq-saldo').textContent = paq.saldo == null ? 'Indica el costo' : money.format(paq.saldo);
+            }
         }
 
         function readForm() {
             FIELDS.forEach(f => { nota[f] = $(f).value; });
             nota.folio = nota.folio.trim();
+            readPaquete();
+            updateVisibility();
         }
 
         function readEmisor() {
@@ -1011,7 +1334,17 @@
 
         /* ===================== Vista previa del documento ===================== */
         function notaHTML(n) {
+            const subtotal = noteSubtotal(n);
+            const descuento = noteDescuento(n);
             const total = noteTotal(n);
+            const pagado = notePagado(n);
+            const saldo = noteSaldo(n);
+            const paq = paqueteInfo(n);
+            const descLabel = n.descuentoTipo === 'porcentaje'
+                ? `Descuento (${escapeHtml(round2(Math.min(parseAmount(n.descuentoValor), 100)))}%)`
+                : 'Descuento';
+            const estadoClass = { Pagada: 'pagada', Anticipo: 'anticipo', Pendiente: 'pendiente' }[n.estado] || 'pagada';
+            const estadoLabel = { Pagada: 'Pagada', Anticipo: 'Anticipo', Pendiente: 'Pendiente de pago' }[n.estado] || 'Pagada';
             const rows = n.items
                 .filter(it => itemConcept(it) || itemSubtotal(it) > 0)
                 .map(it => `
@@ -1047,6 +1380,7 @@
                         <p class="nota-title">NOTA DE REMISIÓN</p>
                         <div class="nota-folio">${escapeHtml(n.folio || '—')}</div>
                         <p class="nota-date">${escapeHtml(formatDateLong(n.fecha))}</p>
+                        <span class="nota-status ${estadoClass}">${estadoLabel}</span>
                     </div>
                 </header>
 
@@ -1075,11 +1409,26 @@
                             <strong>${escapeHtml(importeConLetra(total))}</strong>
                         </div>
                         <div class="nota-total-box">
-                            <div><span>Subtotal</span><span>${money.format(total)}</span></div>
+                            <div><span>Subtotal</span><span>${money.format(subtotal)}</span></div>
+                            ${descuento > 0 ? `<div><span>${descLabel}</span><span>−${money.format(descuento)}</span></div>` : ''}
                             <div class="grand"><span>Total</span><span>${money.format(total)}</span></div>
+                            ${n.estado !== 'Pagada' ? `
+                            <div class="muted" style="margin-top:6px"><span>Pagado</span><span>${money.format(pagado)}</span></div>
+                            <div class="saldo"><span>Saldo pendiente</span><span>${money.format(saldo)}</span></div>` : ''}
                         </div>
                     </div>
                 </section>
+
+                ${paq ? `
+                <section class="nota-section">
+                    <p class="nota-section-title">Paquete de sesiones</p>
+                    <dl class="nota-package">
+                        <div><dt>Sesión</dt><dd>${paq.sesion}${paq.de ? ` de ${paq.de}` : ''}</dd></div>
+                        <div><dt>Costo del paquete</dt><dd>${paq.costo > 0 ? money.format(paq.costo) : '—'}</dd></div>
+                        <div><dt>Abonado a la fecha</dt><dd>${money.format(paq.abonado)}</dd></div>
+                        <div><dt>Saldo del paquete</dt><dd>${paq.saldo == null ? '—' : money.format(paq.saldo)}</dd></div>
+                    </dl>
+                </section>` : ''}
 
                 ${n.observaciones ? `
                 <section class="nota-section">
@@ -1132,7 +1481,7 @@
                 <li>
                     <div class="history-info">
                         <strong>${escapeHtml(n.folio)} · ${escapeHtml(n.paciente || 'Sin nombre')}</strong>
-                        <span>${escapeHtml(formatDateShort(n.fecha))}</span>
+                        <span>${escapeHtml(formatDateShort(n.fecha))}${n.paquete && n.paquete.activo ? ` · Sesión ${escapeHtml(n.paquete.sesion)}${n.paquete.de ? '/' + escapeHtml(n.paquete.de) : ''}` : ''}${n.estado === 'Anticipo' ? '<span class="badge warn">Anticipo</span>' : n.estado === 'Pendiente' ? '<span class="badge due">Pendiente</span>' : ''}${noteSaldo(n) > 0 ? ` · Saldo ${money.format(noteSaldo(n))}` : ''}</span>
                     </div>
                     <span class="history-amount">${money.format(noteTotal(n))}</span>
                     <div class="history-actions">
@@ -1162,6 +1511,24 @@
                 if (qtyBad) ok = false;
             });
 
+            const tipo = nota.descuentoTipo;
+            const dVal = parseAmount(nota.descuentoValor);
+            mark('descuentoValor', tipo !== 'ninguno' && (!(dVal > 0) || (tipo === 'porcentaje' && dVal > 100) || (tipo === 'monto' && dVal > noteSubtotal(nota))));
+
+            const ant = parseAmount(nota.anticipo);
+            mark('anticipo', nota.estado === 'Anticipo' && (!(ant > 0) || ant >= noteTotal(nota)));
+
+            const p = nota.paquete;
+            if (p.activo) {
+                const ses = parseInt(p.sesion, 10);
+                const de = parseInt(p.de, 10);
+                mark('paqueteSesion', !(ses >= 1) || (de >= 1 && ses > de));
+                mark('paqueteDe', !(de >= 1));
+            } else {
+                $('paqueteSesion').removeAttribute('aria-invalid');
+                $('paqueteDe').removeAttribute('aria-invalid');
+            }
+
             if (!ok) {
                 toast('Completa los campos marcados en rojo.', true);
                 const first = document.querySelector('[aria-invalid="true"]');
@@ -1184,6 +1551,8 @@
 
             const record = JSON.parse(JSON.stringify(nota));
             record.total = noteTotal(record);
+            record.pagado = notePagado(record);
+            record.saldo = noteSaldo(record);
             record.guardado = new Date().toISOString();
 
             const idx = historial.findIndex(n => n.folio === record.folio);
@@ -1195,13 +1564,17 @@
             const next = Math.max(nextFolioNumber(), folioNumber(record.folio) + 1);
             storageSet(STORAGE.siguiente, next);
             storageSet(STORAGE.borrador, nota);
+            rememberPaciente(record);
             renderHistory();
+            updateTotals();
+            renderPreview();
             return true;
         }
 
         function startNewNote() {
             nota = emptyNote();
             storageSet(STORAGE.borrador, nota);
+            lastAutofilled = '';
             fillForm();
             renderPreview();
             document.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
@@ -1330,6 +1703,7 @@
                 `Paciente: ${nota.paciente}\n` +
                 `Fecha: ${formatDateLong(nota.fecha)}\n` +
                 `Total: ${money.format(noteTotal(nota))}\n` +
+                (noteSaldo(nota) > 0 ? `Saldo pendiente: ${money.format(noteSaldo(nota))}\n` : '') +
                 `${emisor.nombre || ''}`;
         }
 
@@ -1412,7 +1786,20 @@
         $('nota-form').addEventListener('submit', e => e.preventDefault());
 
         FIELDS.forEach(f => $(f).addEventListener('input', onChange));
-        $('metodo').addEventListener('change', onChange);
+        ['metodo', 'estado', 'descuentoTipo'].forEach(f => $(f).addEventListener('change', onChange));
+
+        $('paciente').addEventListener('input', autofillPaciente);
+        $('paciente').addEventListener('change', autofillPaciente);
+
+        ['paqueteSesion', 'paqueteDe', 'paqueteCosto'].forEach(f => $(f).addEventListener('input', onChange));
+        $('paqueteActivo').addEventListener('change', () => {
+            if ($('paqueteActivo').checked && !nota.paquete.id) {
+                nota.paquete.id = nota.folio || ('PAQ-' + Date.now());
+                if (!$('paqueteSesion').value) $('paqueteSesion').value = 1;
+            }
+            onChange();
+            if ($('paqueteActivo').checked) $('paqueteDe').focus();
+        });
 
         EMISOR_FIELDS.forEach(f => $('em-' + f).addEventListener('input', () => {
             readEmisor();
@@ -1427,7 +1814,13 @@
             if (!item) return;
             item[field] = el.value;
             if (field === 'servicio') {
+                const srv = findServicio(el.value);
+                if (srv) item.precio = srv.precio == null ? '' : srv.precio;
                 renderItems();
+                if (srv && srv.precio == null) {
+                    const price = $('price-' + el.dataset.index);
+                    if (price) price.focus();
+                }
                 if (el.value === OTRO) {
                     const custom = $('custom-' + el.dataset.index);
                     if (custom) custom.focus();
@@ -1460,9 +1853,8 @@
             const rec = historial[i];
             if (!rec) return;
             if (btn.dataset.history === 'open') {
-                nota = JSON.parse(JSON.stringify(rec));
-                delete nota.total;
-                delete nota.guardado;
+                nota = normalizeNote(JSON.parse(JSON.stringify(rec)));
+                ['total', 'pagado', 'saldo', 'guardado'].forEach(k => delete nota[k]);
                 storageSet(STORAGE.borrador, nota);
                 fillForm();
                 renderPreview();
@@ -1487,6 +1879,7 @@
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPreview);
 
         /* ===================== Inicio ===================== */
+        renderPacientesList();
         fillForm();
         renderPreview();
         renderHistory();

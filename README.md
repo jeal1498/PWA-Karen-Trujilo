@@ -35,6 +35,11 @@ PWA-Karen-Trujilo/
 - **Acciones:** Descargar PDF (html2canvas + jsPDF, carga diferida), Imprimir (CSS de impresión, permite "Guardar como PDF"), Compartir (Web Share con el PDF adjunto; respaldo: descarga + WhatsApp) y Nueva nota.
 - **Historial:** las notas guardadas quedan en el dispositivo y pueden reabrirse o eliminarse.
 - **Datos del consultorio:** nombre, especialidad, cédula, contacto y dirección; se guardan una sola vez.
+- **Catálogo con precios:** Terapia psicológica $650 · Terapia infantil $650 · Primera sesión $800 · Primera consulta de valoración $1,000 · Valoración TDAH $8,300 · Valoración Autismo $8,500 · Valoración Completa TDAH y Autismo $10,500 · Valoración Personalizada (precio abierto). Se editan en `SERVICIOS` dentro de `notas/index.html`.
+- **Pacientes frecuentes:** al escribir el nombre se sugieren pacientes anteriores y se completan teléfono, correo y tutor.
+- **Descuentos:** por porcentaje o monto fijo; la nota muestra subtotal, descuento y total.
+- **Estado de pago:** Pagada, Anticipo (con monto) o Pendiente; la nota muestra lo pagado y el saldo pendiente.
+- **Paquetes de sesiones:** "Sesión N de M" con costo del paquete, abonado a la fecha y saldo. Al elegir un paciente con paquete sin terminar, la nueva nota lo continúa con la siguiente sesión.
 
 | Key `localStorage` | Contenido |
 |-----|-----------|
@@ -42,6 +47,7 @@ PWA-Karen-Trujilo/
 | `kt_notas_historial` | Notas emitidas |
 | `kt_notas_folio_siguiente` | Siguiente folio |
 | `kt_notas_borrador` | Nota en edición |
+| `kt_notas_pacientes` | Pacientes frecuentes |
 
 ---
 
