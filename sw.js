@@ -1,10 +1,10 @@
 /* Service Worker · Karen Trujillo Tools
- * - Precarga el shell de las tres vistas (hub, horarios, notas) para uso offline.
+ * - Precarga el shell de las vistas (hub, horarios, notas, sincronizar) para uso offline.
  * - Navegaciones: network-first (siempre la versión más reciente si hay red), con caché de respaldo.
  * - Recursos estáticos y CDNs: stale-while-revalidate.
  * - /api/*: siempre red, nunca se cachea (datos de Calendar en vivo).
  */
-const VERSION = 'v2.1.0';
+const VERSION = 'v2.2.0';
 const SHELL_CACHE = `kt-shell-${VERSION}`;
 const RUNTIME_CACHE = `kt-runtime-${VERSION}`;
 
@@ -13,7 +13,8 @@ const SHELL_URLS = [
   '/horarios/',
   '/horarios-v2/',
   '/notas/',
-  '/notas/sync.js',
+  '/sincronizar/',
+  '/sync.js',
   '/manifest.json',
   '/Logo_Karen_Trujillo.webp',
   '/icons/icon-192.png',

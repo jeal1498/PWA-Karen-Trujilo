@@ -172,8 +172,8 @@
             text-align: center;
         }
 
-        /* Pantallas bajas (celulares): que los cuatro botones se vean sin hacer scroll */
-        @media (max-height: 780px) {
+        /* Pantallas bajas (celulares): que los cinco botones se vean sin hacer scroll */
+        @media (max-height: 900px) {
             body { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
             .hub { gap: 14px; }
             .brand-logo { width: 84px; height: 84px; padding: 6px; }
@@ -241,11 +241,40 @@
                 </span>
                 <svg class="menu-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
             </a>
+
+            <a class="menu-btn" href="/sincronizar/">
+                <span class="menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </span>
+                <span class="menu-text">
+                    <strong>Sincronizar</strong>
+                    <span id="sync-sub">Respalda tus notas en Google Sheets</span>
+                </span>
+                <svg class="menu-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
         </nav>
 
         <footer>Psic. Karen Trujillo · Neuropsicología</footer>
     </main>
 
+    <script>
+    // Estado de la conexión con Google Sheets (se configura en /sincronizar/).
+    (function () {
+        try {
+            const c = JSON.parse(localStorage.getItem('kt_notas_sheets')) || {};
+            const el = document.getElementById('sync-sub');
+            if (!c.url || !c.token) { el.textContent = 'Sin conectar · respalda tus notas en Google Sheets'; return; }
+            if (c.error) { el.textContent = '⚠️ No se pudo sincronizar · toca para revisar'; return; }
+            if (c.dirty) { el.textContent = 'Cambios por subir a Google Sheets'; return; }
+            const m = c.last ? Math.round((Date.now() - c.last) / 60000) : null;
+            el.textContent = m === null ? 'Conectada a Google Sheets'
+                : m < 1 ? 'Sincronizada justo ahora'
+                : m < 60 ? `Sincronizada hace ${m} min`
+                : m < 1440 ? `Sincronizada hace ${Math.round(m / 60)} h`
+                : `Sincronizada hace ${Math.round(m / 1440)} días`;
+        } catch (e) { /* sin almacenamiento: se queda el texto por defecto */ }
+    })();
+    </script>
     <script src="/pwa.js" defer></script>
 </body>
 </html>
