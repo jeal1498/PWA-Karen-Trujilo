@@ -18,6 +18,8 @@ PWA-Karen-Trujilo/
 ├── vercel.json                 # Headers de sw.js / manifest
 ├── icons/                      # Íconos PWA (192, 512, maskable, apple-touch)
 ├── api/busy-events.js          # Función serverless (Google Calendar)
+├── notas/sync.js               # Conexión con la hoja de Google (URL, clave, subir/traer)
+├── apps-script/Code.gs         # Script que se pega en la hoja de Google de las notas
 └── Logo_Karen_Trujillo.webp
 ```
 
@@ -48,7 +50,7 @@ Versión nueva en paralelo; la original en `/horarios/` no se modifica. Misma l�
 - **Acciones:** Descargar PDF (html2canvas + jsPDF, carga diferida), Imprimir (CSS de impresión, permite "Guardar como PDF"), Compartir (Web Share con el PDF adjunto; respaldo: descarga + WhatsApp) y Nueva nota.
 - **Folios sin repetir:** el folio se asigna solo y está bloqueado (botón *Editar* para cambiarlo a mano). Cada nota tiene un identificador interno; antes de guardar se relee el historial y, si el folio ya pertenece a otra nota, una nota nueva recibe el siguiente folio libre y una nota existente no se guarda. Los folios de notas eliminadas no se reutilizan. Si hay otra pestaña abierta, su nota nueva se actualiza al siguiente folio.
 - **Respaldo:** *Descargar respaldo* genera un `.json` con notas, folio siguiente y pacientes; *Restaurar* lo combina sin borrar nada (si un folio choca con otra nota, la restaurada recibe el sufijo `-R`); *Exportar a Excel* genera un `.csv`. La tarjeta avisa si hay notas sin respaldar por más de 7 días.
-- **Google Sheets (folios que no se reinician):** la tarjeta *Google Sheets* conecta la app con una hoja de la usuaria mediante un Apps Script (el código se genera en la propia tarjeta, con una clave privada). Cada vez que se guarda, descarga o elimina una nota se sincroniza sola (3 s después, agrupando cambios) y al abrir la app o volver a ella. La hoja tiene pestañas legibles (*Notas*, *Pacientes*, *Ajustes*) y una pestaña oculta `_respaldo` con el JSON exacto. Antes de cada subida se lee la hoja y se **combina** sin borrar nada: el folio siguiente sale de ahí, de modo que aunque se borren los datos del navegador o se abra desde otro dispositivo, el folio sigue donde quedó. Si dos dispositivos emiten el mismo folio sin conexión, la nota que llega después pasa al siguiente folio libre y se avisa. Las notas eliminadas se recuerdan (`kt_notas_eliminadas`) para que otro dispositivo no las reviva. Con la hoja conectada no se asigna folio hasta leerla (máx. ~6 s sin red). *Copiar enlace de conexión* genera una URL `/notas/#conectar=…` que conecta cualquier dispositivo de un toque (lleva la clave: es privada). Al conectar, si la hoja y el dispositivo ya tienen notas, se pide confirmación y se combinan.
+- **Google Sheets (folios que no se reinician):** igual que en PWA-Finance: la tarjeta *Respaldo en Google Sheets* pide la **URL** de la aplicación web y la **clave** del script (`apps-script/Code.gs`, se pega en la hoja de la usuaria y se le cambia `CLAVE`), con el interruptor *Sincronizar sola después de cada cambio* (activo por defecto). La conexión vive en el dispositivo (`notas/sync.js`, clave `kt_notas_sheets`). La hoja recibe las pestañas *Notas · Remisiones*, *Notas · Pacientes* y *Notas · Ajustes*, más una copia exacta oculta (`_respaldo`). Al abrir la app (y al volver a ella) se **lee y combina** la hoja sin borrar nada, así el folio siguiente sale de ahí aunque se borren los datos del navegador o se use otro dispositivo; con *auto* encendido, lo nuevo se sube 4 s después de cada cambio. *Sincronizar ahora* sube siempre; *Traer de la hoja* solo combina. Si dos dispositivos emiten el mismo folio sin conexión, la nota que llega después pasa al siguiente folio libre y se avisa. Las notas eliminadas se recuerdan (`kt_notas_eliminadas`) para que otro dispositivo no las reviva. Con la hoja conectada no se asigna folio hasta leerla (máx. ~6 s sin red). *Copiar enlace de conexión* genera `/notas/#conectar=…` para conectar otro dispositivo de un toque (lleva la clave: es privado). El repo es público: la URL y la clave nunca van en el código.
 - **Historial:** las notas guardadas quedan en el dispositivo (y en la hoja, si está conectada) y pueden reabrirse o eliminarse.
 - **Datos del consultorio:** fijos y no editables (constante `EMISOR` en `notas/index.html`), tomados de psicologakarentrujillo.com.mx: cédula 11009616, teléfono, correo, sitio web y dirección del consultorio en Cancún.
 - **Catálogo con precios:** Terapia psicológica $650 · Terapia infantil $650 · Primera sesión $800 · Primera consulta de valoración $1,000 · Valoración TDAH $8,300 · Valoración Autismo $8,500 · Valoración Completa TDAH y Autismo $10,500 · Valoración Personalizada (precio abierto). Se editan en `SERVICIOS` dentro de `notas/index.html`.
@@ -64,7 +66,7 @@ Versión nueva en paralelo; la original en `/horarios/` no se modifica. Misma l�
 | `kt_notas_borrador` | Nota en edición |
 | `kt_notas_pacientes` | Pacientes frecuentes |
 | `kt_notas_ultimo_respaldo` | Fecha del último respaldo |
-| `kt_notas_sheets` | Conexión con Google Sheets (`url`, `token`, `last`, `error`, `dirty`) |
+| `kt_notas_sheets` | Conexión con Google Sheets (`url`, `token`, `auto`, `last`, `error`, `dirty`) |
 | `kt_notas_eliminadas` | Notas eliminadas por `uid` (para la sincronización) |
 
 ---

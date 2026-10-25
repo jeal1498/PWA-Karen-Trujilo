@@ -13,6 +13,7 @@ const SHELL_URLS = [
   '/horarios/',
   '/horarios-v2/',
   '/notas/',
+  '/notas/sync.js',
   '/manifest.json',
   '/Logo_Karen_Trujillo.webp',
   '/icons/icon-192.png',

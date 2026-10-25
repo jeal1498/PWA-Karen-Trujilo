@@ -206,14 +206,10 @@
         .backup-actions .btn-primary { grid-column: 1 / -1; }
 
         .backup-actions[hidden] { display: none; }
-        .steps { margin: 0 0 12px; padding-left: 20px; font-size: 0.86rem; display: grid; gap: 10px; }
-        .steps textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; min-height: 96px; margin-top: 8px; }
-        .steps .btn { margin-top: 8px; padding: 9px 14px; font-size: 0.82rem; }
-        .sheets-form { display: grid; gap: 8px; margin-top: 8px; }
-        .sheets-more { margin-top: 8px; }
-        .sheets-more summary { cursor: pointer; font-size: 0.8rem; color: var(--text-muted); }
-        .sheets-more input { margin-top: 8px; }
-        #sheets-setup > summary { cursor: pointer; font-weight: 800; font-size: 0.86rem; margin-bottom: 10px; }
+        .switch-row { display: flex; align-items: center; gap: 10px; font-size: 0.86rem; font-weight: 600; margin: 4px 0 14px; cursor: pointer; }
+        .switch-row input { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--purple); padding: 0; }
+        #sheets-card .btn-primary { margin-bottom: 10px; }
+        #sheets-card a { color: var(--purple); font-weight: 700; }
 
         input[readonly] { background: color-mix(in srgb, var(--field) 70%, var(--surface)); cursor: default; }
 
@@ -810,33 +806,26 @@
                 </div>
 
                 <div class="card" id="sheets-card">
-                    <h2>Google Sheets</h2>
+                    <h2>Respaldo en Google Sheets</h2>
                     <p class="backup-status" id="sheets-status"></p>
+                    <p class="hint" id="sheets-help" style="margin:0 0 12px">Conecta una hoja de tu Drive: crea una hoja nueva, pega ahí el <a href="https://github.com/jeal1498/PWA-Karen-Trujilo/blob/main/apps-script/Code.gs" target="_blank" rel="noopener">script</a> (Extensiones → Apps Script), cambia la clave, impleméntalo como aplicación web (acceso: cualquier persona) y copia aquí la URL y la clave.</p>
+                    <div class="field">
+                        <label for="sheets-url">URL de la aplicación web</label>
+                        <input id="sheets-url" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
+                    </div>
+                    <div class="field">
+                        <label for="sheets-token">Clave</label>
+                        <input id="sheets-token" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    </div>
+                    <label class="switch-row" for="sheets-auto"><input type="checkbox" id="sheets-auto" checked> Sincronizar sola después de cada cambio</label>
+                    <button type="button" class="btn btn-primary btn-block" id="sheets-connect">Conectar y sincronizar</button>
                     <div class="backup-actions" id="sheets-actions" hidden>
-                        <button type="button" class="btn btn-primary" id="sheets-now">Sincronizar ahora</button>
+                        <button type="button" class="btn" id="sheets-now">Sincronizar ahora</button>
+                        <button type="button" class="btn" id="sheets-pull">Traer de la hoja</button>
                         <button type="button" class="btn" id="sheets-link">Copiar enlace de conexión</button>
                         <button type="button" class="btn" id="sheets-off">Desconectar</button>
                     </div>
-                    <details id="sheets-setup">
-                        <summary id="sheets-setup-title">Configurar (una sola vez, ~5 min)</summary>
-                        <ol class="steps">
-                            <li>En tu Drive crea una hoja nueva de <b>Google Sheets</b> (ej. "Notas de remisión").</li>
-                            <li>En la hoja: <b>Extensiones → Apps Script</b>. Borra lo que haya y pega este código:
-                                <textarea readonly rows="4" id="sheets-script"></textarea>
-                                <button type="button" class="btn" id="sheets-copy">Copiar código</button></li>
-                            <li>Guarda (💾) y luego <b>Implementar → Nueva implementación</b>. Tipo <b>Aplicación web</b>; "Ejecutar como": <b>Yo</b>; "Quién tiene acceso": <b>Cualquier persona</b>. Autoriza con tu cuenta (si dice "no verificada": Configuración avanzada → Ir a…).</li>
-                            <li>Copia la <b>URL de la aplicación web</b> y pégala aquí:
-                                <div class="sheets-form">
-                                    <input id="sheets-url" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
-                                    <details class="sheets-more">
-                                        <summary>¿Otro dispositivo? Usa la clave de tu hoja</summary>
-                                        <input id="sheets-token" type="text" autocomplete="off" placeholder="Clave (línea const TOKEN del Apps Script)">
-                                    </details>
-                                    <button type="button" class="btn btn-primary" id="sheets-connect">Conectar</button>
-                                </div></li>
-                        </ol>
-                    </details>
-                    <p class="hint" style="margin:12px 0 0">Cada nota guardada se sube sola a tu hoja y el <strong>folio siguiente</strong> se toma de ahí, así nunca vuelve a empezar en 1 aunque se borren los datos del navegador. El enlace de conexión lleva tu clave: guárdalo solo para ti.</p>
+                    <p class="hint" style="margin:12px 0 0">Cada nota se sube a tu hoja y el <strong>folio siguiente</strong> se toma de ahí, así nunca vuelve a empezar en 1 aunque se borren los datos del navegador. «Traer de la hoja» combina sin borrar nada. El enlace de conexión lleva tu clave: guárdalo solo para ti.</p>
                 </div>
 
                 <div class="card">
@@ -876,6 +865,7 @@
     <div id="render-stage" aria-hidden="true"></div>
     <div id="toast" role="status" aria-live="polite"></div>
 
+    <script src="/notas/sync.js"></script>
     <script>
     (function () {
         'use strict';
@@ -887,7 +877,6 @@
             borrador: 'kt_notas_borrador',
             pacientes: 'kt_notas_pacientes',
             respaldo: 'kt_notas_ultimo_respaldo',
-            sheets: 'kt_notas_sheets',
             eliminadas: 'kt_notas_eliminadas'
         };
 
@@ -2172,37 +2161,20 @@
         // Misma idea que el respaldo de SecondBrain: Apps Script en la hoja de la usuaria. La hoja guarda una pestaña
         // legible por tipo de dato y una pestaña oculta "_respaldo" con la copia exacta (JSON) para sincronizar.
         // Antes de cada subida se lee la hoja y se combina, así dos dispositivos nunca se pisan y el folio sigue de donde quedó.
-        const SHEETS_DEBOUNCE_MS = 3000;
+        const SHEETS_DEBOUNCE_MS = 4000;
         const SHEETS_STALE_MS = 30000;
         const SHEETS_GATE_MS = 6000;
-        const SHEETS_HELP = 'Google no respondió a la app. Revisa: 1) en la implementación, "Quién tiene acceso" = Cualquier persona (no "con cuenta de Google"); 2) la URL termina en /exec; 3) si cambiaste el código, haz Implementar → Gestionar implementaciones → editar → Nueva versión.';
 
         let sheetsSyncing = false;
         let sheetsAgain = false;
         let sheetsTimer = null;
         let sheetsLastPull = 0;
         // Con la hoja conectada, no se asigna folio hasta leerla (o hasta que pasen unos segundos sin red).
-        let sheetsGateOpen = !(sheetsGet().url && sheetsGet().token);
+        let sheetsGateOpen = !KTSync.connection();
 
-        function sheetsGet() {
-            const c = storageGet(STORAGE.sheets, {});
-            return c && typeof c === 'object' ? c : {};
-        }
-
-        function sheetsSet(patch) {
-            const c = Object.assign(sheetsGet(), patch);
-            storageSet(STORAGE.sheets, c);
-            return c;
-        }
-
-        function sheetsConnected() {
-            const c = sheetsGet();
-            return !!(c.url && c.token);
-        }
-
-        function newToken() {
-            return Array.from(crypto.getRandomValues(new Uint8Array(18)), b => b.toString(16).padStart(2, '0')).join('');
-        }
+        const sheetsGet = () => KTSync.getCfg();
+        const sheetsSet = patch => KTSync.setCfg(patch);
+        const sheetsConnected = () => !!KTSync.connection();
 
         // Notas eliminadas: se recuerdan para que otro dispositivo no las vuelva a subir.
         function tombstonesGet() {
@@ -2232,7 +2204,7 @@
             const notas = historial.slice().sort((a, b) => folioNumber(a.folio) - folioNumber(b.folio));
             return [
                 {
-                    name: 'Notas',
+                    name: 'Notas · Remisiones',
                     headers: ['Folio', 'Fecha', 'Paciente', 'Teléfono', 'Correo', 'Responsable', 'Conceptos', 'Subtotal', 'Descuento',
                         'Total', 'Estado', 'Pagado', 'Saldo', 'Método de pago', 'Paquete', 'Observaciones'],
                     rows: notas.map(n => [
@@ -2244,14 +2216,14 @@
                     ].map(sheetCell))
                 },
                 {
-                    name: 'Pacientes',
+                    name: 'Notas · Pacientes',
                     headers: ['Paciente', 'Teléfono', 'Correo', 'Responsable'],
                     rows: Object.values(pacientes)
                         .sort((a, b) => a.paciente.localeCompare(b.paciente, 'es'))
                         .map(p => [p.paciente, p.telefono, p.correo, p.responsable].map(sheetCell))
                 },
                 {
-                    name: 'Ajustes',
+                    name: 'Notas · Ajustes',
                     headers: ['Dato', 'Valor'],
                     rows: [
                         ['Folio siguiente', formatFolio(nextFolioNumber())],
@@ -2260,31 +2232,6 @@
                     ]
                 }
             ];
-        }
-
-        async function sheetsCall(url, opts) {
-            let res;
-            try { res = await fetch(url, opts); } catch (e) { throw new Error(navigator.onLine === false ? 'Sin conexión a internet' : SHEETS_HELP); }
-            try { return await res.json(); } catch (e) { throw new Error(SHEETS_HELP); }
-        }
-
-        // null = la hoja aún no tiene respaldo.
-        async function sheetsPull() {
-            const c = sheetsGet();
-            const out = await sheetsCall(`${c.url}?token=${encodeURIComponent(c.token)}`);
-            if (!out.ok) {
-                if (/Aún no hay respaldo/.test(out.error || '')) return null;
-                throw new Error(out.error || 'Error en la hoja');
-            }
-            return out.data;
-        }
-
-        // Body como text/plain para que el navegador no haga preflight (Apps Script no lo soporta).
-        async function sheetsPush() {
-            const c = sheetsGet();
-            const data = backupData();
-            const out = await sheetsCall(c.url, { method: 'POST', body: JSON.stringify({ token: c.token, tables: sheetsTables(), raw: JSON.stringify(data) }) });
-            if (!out.ok) throw new Error(out.error || 'Error en la hoja');
         }
 
         // Combina lo que hay en la hoja con lo local sin borrar nada (salvo notas eliminadas a propósito).
@@ -2415,19 +2362,19 @@
                 text = `⚠️ No se pudo sincronizar: ${c.error}` + (c.last ? ` · última vez ${agoText(c.last)}` : '');
                 warn = true;
             } else if (c.dirty) {
-                text = 'Google Sheets · cambios por subir…';
+                text = c.auto ? 'Google Sheets · cambios por subir…' : 'Hay cambios sin subir. Toca «Sincronizar ahora».';
+                warn = !c.auto;
             } else {
-                text = c.last ? `Google Sheets ✓ · sincronizado ${agoText(c.last)}` : 'Google Sheets · pendiente';
+                text = c.last ? `Google Sheets ✓ · sincronizado ${agoText(c.last)}` : 'Google Sheets · conectado';
             }
             el.textContent = text;
             el.classList.toggle('warn', warn);
             $('sheets-actions').hidden = !connected;
-            $('sheets-setup-title').textContent = connected ? 'Configuración' : 'Configurar (una sola vez, ~5 min)';
-            $('sheets-connect').textContent = connected ? 'Guardar cambios' : 'Conectar';
-            if (connected && !$('sheets-url').value) $('sheets-url').value = c.url;
-            if (!connected) $('sheets-setup').open = true;
+            $('sheets-help').hidden = connected;
+            $('sheets-connect').textContent = connected ? 'Guardar' : 'Conectar y sincronizar';
         }
 
+        // push: true = subir siempre; false = solo leer y combinar; sin indicar = sube solo si «auto» y hay algo nuevo.
         async function syncNow(opts) {
             opts = opts || {};
             if (!sheetsConnected()) return null;
@@ -2439,12 +2386,18 @@
             renderSheetsStatus();
             const started = Date.now();
             try {
-                const remote = opts.remote !== undefined ? opts.remote : await sheetsPull();
+                const remote = opts.remote !== undefined ? opts.remote : await KTSync.pull();
                 sheetsLastPull = Date.now();
                 const res = remote ? mergeRemote(remote) : { added: 0, updated: 0, removed: 0, renumbered: 0, needPush: true };
-                if (res.needPush || sheetsGet().dirty || !sheetsGet().last) await sheetsPush();
-                const dirty = sheetsGet().dirty;
-                sheetsSet({ last: Date.now(), error: '', dirty: dirty > started ? dirty : 0 });
+                res.empty = !remote;
+                const cfg = sheetsGet();
+                if (opts.push === true || (opts.push !== false && cfg.auto && (res.needPush || cfg.dirty || !cfg.last))) {
+                    await KTSync.push(sheetsTables(), JSON.stringify(backupData()));
+                    const dirty = sheetsGet().dirty;
+                    sheetsSet({ dirty: dirty > started ? dirty : 0 });
+                } else {
+                    sheetsSet({ error: '' });
+                }
                 if (res.renumbered) {
                     toast(`Había folios repetidos con la hoja: ${res.renumbered} nota${res.renumbered === 1 ? '' : 's'} pasó al siguiente folio libre. Revisa el historial.`, false, true);
                 } else if (res.bumped) {
@@ -2478,29 +2431,30 @@
             if (!sheetsConnected()) return;
             sheetsSet({ dirty: Date.now() });
             renderSheetsStatus();
-            scheduleSheetsSync(SHEETS_DEBOUNCE_MS);
+            if (sheetsGet().auto) scheduleSheetsSync(SHEETS_DEBOUNCE_MS);
         }
 
-        async function connectSheets(url, token) {
+        async function connectSheets(url, token, auto) {
             if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) {
                 throw new Error('La URL debe empezar con https://script.google.com/');
             }
+            if (!token) throw new Error('Escribe la clave que pusiste en el script.');
             const previous = sheetsGet();
-            sheetsSet({ url, token, error: '' });
+            sheetsSet({ url, token, auto, error: '' });
             try {
-                const remote = await sheetsPull();
+                const remote = await KTSync.pull();
                 reloadHistorial();
                 const remoteCount = remote && Array.isArray(remote.historial) ? remote.historial.length : 0;
                 if (remoteCount && historial.length && !confirm(`Tu hoja ya tiene ${remoteCount} nota${remoteCount === 1 ? '' : 's'} y este dispositivo ${historial.length}.\n\nSe combinarán sin borrar nada. ¿Continuar?`)) {
-                    storageSet(STORAGE.sheets, previous);
+                    KTSync.replaceCfg(previous);
                     return false;
                 }
                 sheetsSet({ last: 0, dirty: 0 });
-                await syncNow({ remote });
+                await syncNow({ remote, push: true });
                 toast(remoteCount ? `¡Conectado! Folio siguiente: ${formatFolio(nextFolioNumber())}` : '¡Conectado! Notas subidas a la hoja.', false, true);
                 return true;
             } catch (err) {
-                storageSet(STORAGE.sheets, previous);
+                KTSync.replaceCfg(previous);
                 throw err;
             }
         }
@@ -2522,7 +2476,7 @@
                 if (!cfg.u || !cfg.t) throw new Error('bad');
                 if (sheetsConnected() && sheetsGet().url === cfg.u) return false;
                 if (!confirm('¿Conectar este dispositivo a la hoja de Google de las notas?')) return false;
-                await connectSheets(cfg.u, cfg.t);
+                await connectSheets(cfg.u, cfg.t, true);
                 return true;
             } catch (err) {
                 toast(err.message === 'bad' || err instanceof SyntaxError ? 'El enlace de conexión no es válido.' : err.message, true);
@@ -2530,62 +2484,11 @@
             }
         }
 
-        function sheetsScript(token) {
-            return `// Karen Trujillo · notas de remisión en Google Sheets
-const TOKEN = '${token}';
-
-function doPost(e) {
-  const req = JSON.parse(e.postData.contents);
-  if (req.token !== TOKEN) return out({ ok: false, error: 'Clave incorrecta' });
-  const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    req.tables.forEach(function (t) {
-      const sh = ss.getSheetByName(t.name) || ss.insertSheet(t.name);
-      sh.clearContents();
-      const rows = [t.headers].concat(t.rows);
-      sh.getRange(1, 1, rows.length, t.headers.length).setValues(rows);
-      sh.getRange(1, 1, 1, t.headers.length).setFontWeight('bold');
-      sh.setFrozenRows(1);
-    });
-    // Copia exacta para sincronizar (en trozos: una celda admite 50 mil caracteres).
-    const raw = ss.getSheetByName('_respaldo') || ss.insertSheet('_respaldo');
-    raw.clearContents();
-    const parts = [];
-    for (let i = 0; i < req.raw.length; i += 40000) parts.push([req.raw.slice(i, i + 40000)]);
-    const range = raw.getRange(1, 1, parts.length, 1);
-    range.setNumberFormat('@');
-    range.setValues(parts);
-    raw.hideSheet();
-    ['Hoja 1', 'Sheet1'].forEach(function (n) {
-      const s = ss.getSheetByName(n);
-      if (s && s.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(s);
-    });
-  } finally {
-    lock.releaseLock();
-  }
-  return out({ ok: true });
-}
-
-function doGet(e) {
-  if (e.parameter.token !== TOKEN) return out({ ok: false, error: 'Clave incorrecta' });
-  const raw = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('_respaldo');
-  if (!raw || raw.getLastRow() === 0) return out({ ok: false, error: 'Aún no hay respaldo' });
-  const text = raw.getRange(1, 1, raw.getLastRow(), 1).getValues().map(function (r) { return r[0]; }).join('');
-  return out({ ok: true, data: JSON.parse(text) });
-}
-
-function out(o) {
-  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
-}
-`;
-        }
-
         function initSheetsUi() {
-            let c = sheetsGet();
-            if (!c.token) c = sheetsSet({ token: newToken() });
-            $('sheets-script').value = sheetsScript(c.token);
+            const c = sheetsGet();
+            $('sheets-url').value = c.url || '';
+            $('sheets-token').value = c.token || '';
+            $('sheets-auto').checked = c.auto !== false;
             renderSheetsStatus();
         }
 
@@ -2712,26 +2615,31 @@ function out(o) {
         $('btn-excel').addEventListener('click', onExportExcel);
         $('btn-restore').addEventListener('click', () => $('restore-file').click());
 
-        $('sheets-copy').addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText($('sheets-script').value);
-                toast('Código copiado');
-            } catch (e) {
-                $('sheets-script').select();
-            }
-        });
         $('sheets-connect').addEventListener('click', e => {
             const url = $('sheets-url').value.trim();
-            const token = $('sheets-token').value.trim() || sheetsGet().token;
+            const token = $('sheets-token').value.trim();
+            const auto = $('sheets-auto').checked;
             if (!url) { toast('Pega la URL de la aplicación web.', true); return; }
-            guarded(e.currentTarget, async () => { await connectSheets(url, token); initSheetsUi(); });
+            const c = sheetsGet();
+            if (sheetsConnected() && c.url === url && c.token === token) {
+                sheetsSet({ auto });
+                renderSheetsStatus();
+                toast('Guardado.');
+                if (auto && c.dirty) scheduleSheetsSync(300);
+                return;
+            }
+            guarded(e.currentTarget, async () => { await connectSheets(url, token, auto); initSheetsUi(); });
         });
         $('sheets-now').addEventListener('click', e => guarded(e.currentTarget, async () => {
-            sheetsSet({ dirty: Date.now() });
-            await syncNow();
+            await syncNow({ push: true });
             toast('Sincronizado con Google Sheets.');
         }));
-        $('sheets-link').addEventListener('click', async e => {
+        $('sheets-pull').addEventListener('click', e => guarded(e.currentTarget, async () => {
+            const res = await syncNow({ push: false });
+            if (!res) return;
+            toast(res.empty ? 'La hoja aún no tiene una copia. Sincroniza primero.' : 'Notas combinadas con la hoja.');
+        }));
+        $('sheets-link').addEventListener('click', async () => {
             const link = sheetsLinkFor(sheetsGet());
             try {
                 await navigator.clipboard.writeText(link);
@@ -2742,15 +2650,15 @@ function out(o) {
         });
         $('sheets-off').addEventListener('click', () => {
             if (!confirm('¿Desconectar Google Sheets? Las notas de este dispositivo se quedan; la hoja ya no se actualiza.')) return;
-            storageSet(STORAGE.sheets, {});
+            KTSync.replaceCfg({});
             sheetsGateOpen = true;
-            $('sheets-url').value = '';
-            $('sheets-token').value = '';
             initSheetsUi();
         });
 
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && sheetsConnected() && (sheetsGet().dirty || Date.now() - sheetsLastPull > SHEETS_STALE_MS)) scheduleSheetsSync(300);
+            if (document.visibilityState !== 'visible' || !sheetsConnected()) return;
+            const c = sheetsGet();
+            if ((c.auto && c.dirty) || Date.now() - sheetsLastPull > SHEETS_STALE_MS) scheduleSheetsSync(300);
         });
         window.addEventListener('online', () => scheduleSheetsSync(500));
         $('restore-file').addEventListener('change', onRestoreFile);
