@@ -8,7 +8,7 @@ Herramienta de gestión de agenda diseñada para uso interno de la **Psic. Karen
 
 ```
 PWA-Karen-Trujilo/
-├── index.html                  # Hub: menú principal con los dos módulos
+├── index.html                  # Hub: menú principal (Horarios, Notas, Videos y Sincronizar)
 ├── horarios/index.html         # Módulo 1 · Horarios de Atención (póster de disponibilidad)
 ├── horarios-v2/index.html      # Módulo 1 · Horarios v2 (nuevo diseño, en paralelo)
 ├── notas/index.html            # Módulo 2 · Generador de Notas de Remisión
@@ -18,17 +18,19 @@ PWA-Karen-Trujilo/
 ├── vercel.json                 # Headers de sw.js / manifest
 ├── icons/                      # Íconos PWA (192, 512, maskable, apple-touch)
 ├── api/busy-events.js          # Función serverless (Google Calendar)
-├── notas/sync.js               # Conexión con la hoja de Google (URL, clave, subir/traer)
+├── sincronizar/index.html      # Módulo · Sincronizar: conexión con la hoja de Google (URL, clave, auto)
+├── sync.js                     # Motor de sincronización (conexión, combinar notas, folios); lo usan menú, notas y sincronizar
 ├── apps-script/Code.gs         # Script que se pega en la hoja de Google de las notas
 └── Logo_Karen_Trujillo.webp
 ```
 
 | Ruta | Vista |
 |------|-------|
-| `/` | Menú principal: **Horarios de Atención** y **Generar Nota de Remisión** |
+| `/` | Menú principal: **Horarios de Atención**, **Generar Nota de Remisión**, **Videos** y **Sincronizar** (con el estado de la última sincronización) |
 | `/horarios/` | Herramienta de agenda y póster (vista anterior de `index.html`) |
 | `/horarios-v2/` | Horarios con el nuevo diseño (mismo póster y datos) |
 | `/notas/` | Formulario y vista previa de la nota de remisión |
+| `/sincronizar/` | Respaldo en Google Sheets: conectar, sincronizar ahora, traer de la hoja |
 
 ---
 
@@ -50,7 +52,7 @@ Versión nueva en paralelo; la original en `/horarios/` no se modifica. Misma l�
 - **Acciones:** Descargar PDF (html2canvas + jsPDF, carga diferida), Imprimir (CSS de impresión, permite "Guardar como PDF"), Compartir (Web Share con el PDF adjunto; respaldo: descarga + WhatsApp) y Nueva nota.
 - **Folios sin repetir:** el folio se asigna solo y está bloqueado (botón *Editar* para cambiarlo a mano). Cada nota tiene un identificador interno; antes de guardar se relee el historial y, si el folio ya pertenece a otra nota, una nota nueva recibe el siguiente folio libre y una nota existente no se guarda. Los folios de notas eliminadas no se reutilizan. Si hay otra pestaña abierta, su nota nueva se actualiza al siguiente folio.
 - **Respaldo:** *Descargar respaldo* genera un `.json` con notas, folio siguiente y pacientes; *Restaurar* lo combina sin borrar nada (si un folio choca con otra nota, la restaurada recibe el sufijo `-R`); *Exportar a Excel* genera un `.csv`. La tarjeta avisa si hay notas sin respaldar por más de 7 días.
-- **Google Sheets (folios que no se reinician):** igual que en PWA-Finance: la tarjeta *Respaldo en Google Sheets* pide la **URL** de la aplicación web y la **clave** del script (`apps-script/Code.gs`, se pega en la hoja de la usuaria y se le cambia `CLAVE`), con el interruptor *Sincronizar sola después de cada cambio* (activo por defecto). La conexión vive en el dispositivo (`notas/sync.js`, clave `kt_notas_sheets`). La hoja recibe las pestañas *Notas · Remisiones*, *Notas · Pacientes* y *Notas · Ajustes*, más una copia exacta oculta (`_respaldo`). Al abrir la app (y al volver a ella) se **lee y combina** la hoja sin borrar nada, así el folio siguiente sale de ahí aunque se borren los datos del navegador o se use otro dispositivo; con *auto* encendido, lo nuevo se sube 4 s después de cada cambio. *Sincronizar ahora* sube siempre; *Traer de la hoja* solo combina. Si dos dispositivos emiten el mismo folio sin conexión, la nota que llega después pasa al siguiente folio libre y se avisa. Las notas eliminadas se recuerdan (`kt_notas_eliminadas`) para que otro dispositivo no las reviva. Con la hoja conectada no se asigna folio hasta leerla (máx. ~6 s sin red). *Copiar enlace de conexión* genera `/notas/#conectar=…` para conectar otro dispositivo de un toque (lleva la clave: es privado). El repo es público: la URL y la clave nunca van en el código.
+- **Google Sheets (folios que no se reinician):** se conecta en el módulo **Sincronizar** del menú (`/sincronizar/`), igual que en PWA-Finance: **URL** de la aplicación web + **clave** del script (`apps-script/Code.gs`, se pega en la hoja de la usuaria y se le cambia `CLAVE`) e interruptor *Sincronizar sola después de cada cambio* (activo por defecto). La conexión vive en el dispositivo (`sync.js`, clave `kt_notas_sheets`). La hoja recibe las pestañas *Notas · Remisiones*, *Notas · Pacientes* y *Notas · Ajustes*, más una copia exacta oculta (`_respaldo`). Al abrir Notas (y al volver a ella) se **lee y combina** la hoja sin borrar nada, así el folio siguiente sale de ahí aunque se borren los datos del navegador o se use otro dispositivo; con *auto* encendido, lo nuevo se sube 4 s después de cada cambio. *Sincronizar ahora* sube siempre; *Traer de la hoja* solo combina. Si dos dispositivos emiten el mismo folio sin conexión, la nota que llega después pasa al siguiente folio libre y se avisa. Las notas eliminadas se recuerdan (`kt_notas_eliminadas`) para que otro dispositivo no las reviva. Con la hoja conectada no se asigna folio hasta leerla (máx. ~6 s sin red). *Copiar enlace de conexión* genera `/sincronizar/#conectar=…` para conectar otro dispositivo de un toque (lleva la clave: es privado). La tarjeta *Google Sheets* de Notas solo muestra el estado y enlaza a Sincronizar. El repo es público: la URL y la clave nunca van en el código.
 - **Historial:** las notas guardadas quedan en el dispositivo (y en la hoja, si está conectada) y pueden reabrirse o eliminarse.
 - **Datos del consultorio:** fijos y no editables (constante `EMISOR` en `notas/index.html`), tomados de psicologakarentrujillo.com.mx: cédula 11009616, teléfono, correo, sitio web y dirección del consultorio en Cancún.
 - **Catálogo con precios:** Terapia psicológica $650 · Terapia infantil $650 · Primera sesión $800 · Primera consulta de valoración $1,000 · Valoración TDAH $8,300 · Valoración Autismo $8,500 · Valoración Completa TDAH y Autismo $10,500 · Valoración Personalizada (precio abierto). Se editan en `SERVICIOS` dentro de `notas/index.html`.

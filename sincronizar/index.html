@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Respaldo de las notas de remisión en Google Sheets - Karen Trujillo">
+    <title>Karen Trujillo | Sincronizar</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Karen Tools">
+    <meta name="theme-color" content="#F2ECF2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#301E5B" media="(prefers-color-scheme: dark)">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #301E5B;
+            --purple: #583C83;
+            --purple-soft: #715F92;
+            --lavender: #B09CC8;
+            --surface: #F2ECF2;
+            --card: #FFFFFF;
+            --field: #FFFFFF;
+            --text: #301E5B;
+            --text-muted: #715F92;
+            --border: rgba(138, 117, 167, 0.30);
+            --shadow: 0 10px 30px rgba(48, 30, 91, 0.10);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --surface: #1E1240;
+                --card: #301E5B;
+                --field: #24164A;
+                --text: #FAF8F8;
+                --text-muted: #CDB0D6;
+                --border: rgba(205, 176, 214, 0.28);
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            }
+        }
+
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        html, body { margin: 0; overflow-x: hidden; }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+            background: color-mix(in srgb, var(--surface) 88%, transparent);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: var(--text);
+            background: var(--card);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            flex: 0 0 auto;
+        }
+
+        .topbar h1 {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 1.1rem;
+            margin: 0;
+            flex: 1;
+        }
+
+        .wrap { max-width: 520px; margin: 0 auto; padding: 16px; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 0 0 14px;
+            font-weight: 800;
+        }
+
+        .status { font-size: 0.9rem; margin: 0 0 14px; }
+        .status.warn { color: #B26A00; font-weight: 700; }
+        @media (prefers-color-scheme: dark) { .status.warn { color: #F3C27A; } }
+
+        .note { font-size: 0.86rem; margin: 0 0 14px; line-height: 1.45; }
+        .note a, .hint a { color: var(--purple); font-weight: 700; }
+        @media (prefers-color-scheme: dark) { .note a, .hint a { color: var(--lavender); } }
+        .hint { font-size: 0.76rem; color: var(--text-muted); line-height: 1.45; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; min-width: 0; }
+        label { font-size: 0.82rem; font-weight: 700; }
+
+        input[type="url"], input[type="text"] {
+            font: inherit;
+            font-size: 16px; /* evita zoom en iOS */
+            color: var(--text);
+            background: var(--field);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 11px 12px;
+            width: 100%;
+            min-width: 0;
+            outline: none;
+        }
+        input[type="url"]:focus, input[type="text"]:focus {
+            border-color: var(--purple-soft);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--lavender) 40%, transparent);
+        }
+
+        .switch-row { display: flex; align-items: center; gap: 10px; font-size: 0.86rem; font-weight: 600; margin: 4px 0 14px; cursor: pointer; }
+        .switch-row input { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--purple); margin: 0; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font: inherit;
+            font-weight: 800;
+            font-size: 0.92rem;
+            letter-spacing: 0.02em;
+            border-radius: 14px;
+            padding: 13px 16px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            text-decoration: none;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.55; cursor: progress; }
+        .btn-primary { background: linear-gradient(135deg, var(--purple), var(--ink)); color: #FAF8F8; border-color: transparent; }
+        .btn-block { width: 100%; }
+
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+        ol.steps { margin: 0; padding-left: 20px; font-size: 0.86rem; line-height: 1.5; display: grid; gap: 8px; }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            transform: translate(-50%, calc(100% + 40px));
+            visibility: hidden;
+            background: #301E5B;
+            color: #FAF8F8;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            transition: transform 0.25s ease, visibility 0s linear 0.25s;
+            z-index: 100;
+            max-width: calc(100vw - 32px);
+            text-align: center;
+        }
+        #toast.show { transform: translate(-50%, 0); visibility: visible; transition: transform 0.25s ease, visibility 0s; }
+        #toast.error { background: #B3261E; }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="back-btn" href="/" aria-label="Volver al menú principal" title="Menú principal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <h1>Sincronizar</h1>
+    </header>
+
+    <main class="wrap">
+        <section class="card" aria-label="Google Sheets">
+            <h2>Respaldo en Google Sheets</h2>
+            <p class="status" id="status" role="status"></p>
+            <p class="note" id="help">Conecta una hoja de tu Drive: crea una hoja nueva, pega ahí el <a href="https://github.com/jeal1498/PWA-Karen-Trujilo/blob/main/apps-script/Code.gs" target="_blank" rel="noopener">script</a> (Extensiones → Apps Script), cambia la clave, impleméntalo como aplicación web (acceso: cualquier persona) y copia aquí la URL y la clave.</p>
+
+            <form id="form" autocomplete="off">
+                <div class="field">
+                    <label for="url">URL de la aplicación web</label>
+                    <input id="url" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" required>
+                </div>
+                <div class="field">
+                    <label for="token">Clave</label>
+                    <input id="token" type="text" autocapitalize="off" spellcheck="false" required>
+                </div>
+                <label class="switch-row" for="auto"><input type="checkbox" id="auto" checked> Sincronizar sola después de cada cambio</label>
+                <button type="submit" class="btn btn-primary btn-block" id="connect">Conectar y sincronizar</button>
+            </form>
+
+            <div class="actions" id="actions" hidden>
+                <button type="button" class="btn" id="now">Sincronizar ahora</button>
+                <button type="button" class="btn" id="pull">Traer de la hoja</button>
+                <button type="button" class="btn" id="link">Copiar enlace de conexión</button>
+                <button type="button" class="btn" id="off">Desconectar</button>
+            </div>
+
+            <p class="hint" style="margin:14px 0 0">Cada nota se sube a tu hoja y el <strong>folio siguiente</strong> se toma de ahí, así nunca vuelve a empezar en 1 aunque se borren los datos del navegador. «Traer de la hoja» combina sin borrar nada. El enlace de conexión lleva tu clave: guárdalo solo para ti.</p>
+        </section>
+
+        <section class="card" aria-label="Cómo conectarla">
+            <h2>Cómo conectarla (una vez)</h2>
+            <ol class="steps">
+                <li>En tu Drive crea una hoja nueva de <b>Google Sheets</b> (ej. "Notas de remisión").</li>
+                <li>En la hoja: <b>Extensiones → Apps Script</b>. Borra lo que haya, pega el <a href="https://github.com/jeal1498/PWA-Karen-Trujilo/blob/main/apps-script/Code.gs" target="_blank" rel="noopener">código</a> y cambia <b>CLAVE</b> por una palabra larga que solo tú sepas.</li>
+                <li>Guarda y luego <b>Implementar → Nueva implementación</b>. Tipo <b>Aplicación web</b>; "Ejecutar como": <b>Yo</b>; "Quién tiene acceso": <b>Cualquier persona</b>. Autoriza con tu cuenta (si dice "no verificada": Configuración avanzada → Ir a…).</li>
+                <li>Copia la <b>URL de la aplicación web</b> (termina en /exec) y pégala arriba junto con la clave.</li>
+            </ol>
+        </section>
+    </main>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script src="/sync.js"></script>
+    <script>
+    (function () {
+        'use strict';
+        const $ = id => document.getElementById(id);
+
+        let toastTimer = null;
+        function toast(message, isError) {
+            const el = $('toast');
+            el.textContent = message;
+            el.classList.toggle('error', !!isError);
+            el.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => el.classList.remove('show'), 3600);
+        }
+
+        function render() {
+            const e = KTSync.estado();
+            const st = $('status');
+            st.textContent = e.text;
+            st.classList.toggle('warn', e.warn);
+            $('actions').hidden = !e.connected;
+            $('help').hidden = e.connected;
+            $('connect').textContent = e.connected ? 'Guardar' : 'Conectar y sincronizar';
+        }
+
+        function fill() {
+            const c = KTSync.getCfg();
+            $('url').value = c.url || '';
+            $('token').value = c.token || '';
+            $('auto').checked = c.auto !== false;
+            render();
+        }
+
+        async function busy(button, task) {
+            button.disabled = true;
+            try {
+                await task();
+            } catch (err) {
+                toast('No se pudo: ' + (err.message || err), true);
+            } finally {
+                button.disabled = false;
+                render();
+            }
+        }
+
+        function resumen(res) {
+            if (!res) return '';
+            if (res.renumbered) return ` · ${res.renumbered} nota${res.renumbered === 1 ? '' : 's'} pasó al siguiente folio por folios repetidos`;
+            return '';
+        }
+
+        $('form').addEventListener('submit', e => {
+            e.preventDefault();
+            const url = $('url').value.trim();
+            const token = $('token').value.trim();
+            const auto = $('auto').checked;
+            const c = KTSync.getCfg();
+            if (KTSync.connection() && c.url === url && c.token === token) {
+                KTSync.setCfg({ auto });
+                render();
+                toast('Guardado.');
+                if (auto && c.dirty) KTSync.syncNow().catch(() => {});
+                return;
+            }
+            busy($('connect'), async () => {
+                const out = await KTSync.connect(url, token, auto, (remotas, locales) => confirm(
+                    `Tu hoja ya tiene ${remotas} nota${remotas === 1 ? '' : 's'} y este dispositivo ${locales}.\n\nSe combinarán sin borrar nada. ¿Continuar?`));
+                if (!out) return;
+                fill();
+                toast((out.remoteCount ? '¡Conectado! Notas combinadas con la hoja.' : '¡Conectado! Notas subidas a la hoja.') + resumen(out.res));
+            });
+        });
+
+        $('now').addEventListener('click', e => busy(e.currentTarget, async () => {
+            const res = await KTSync.syncNow({ push: true });
+            if (res) toast('Sincronizado con Google Sheets.' + resumen(res));
+        }));
+
+        $('pull').addEventListener('click', e => busy(e.currentTarget, async () => {
+            const res = await KTSync.syncNow({ push: false });
+            if (!res) return;
+            toast(res.empty ? 'La hoja aún no tiene una copia. Sincroniza primero.' : 'Notas combinadas con la hoja.' + resumen(res));
+        }));
+
+        $('link').addEventListener('click', async () => {
+            const link = KTSync.linkFor();
+            try {
+                await navigator.clipboard.writeText(link);
+                toast('Enlace copiado. Ábrelo en el otro dispositivo para conectarlo.');
+            } catch (err) {
+                prompt('Copia este enlace:', link);
+            }
+        });
+
+        $('off').addEventListener('click', () => {
+            if (!confirm('¿Desconectar Google Sheets? Las notas de este dispositivo se quedan; la hoja ya no se actualiza.')) return;
+            KTSync.replaceCfg({});
+            fill();
+        });
+
+        // Enlace de conexión: abre la pantalla ya con la hoja conectada (dispositivo nuevo o datos borrados).
+        async function connectFromHash() {
+            const link = KTSync.parseLink(location.hash);
+            if (link === null) return;
+            history.replaceState(null, '', location.pathname + location.search);
+            if (link === false) { toast('El enlace de conexión no es válido.', true); return; }
+            const c = KTSync.getCfg();
+            if (KTSync.connection() && c.url === link.url) return;
+            if (!confirm('¿Conectar este dispositivo a la hoja de Google de las notas?')) return;
+            $('url').value = link.url;
+            $('token').value = link.token;
+            await busy($('connect'), async () => {
+                const out = await KTSync.connect(link.url, link.token, true, (remotas, locales) => confirm(
+                    `Tu hoja ya tiene ${remotas} nota${remotas === 1 ? '' : 's'} y este dispositivo ${locales}.\n\nSe combinarán sin borrar nada. ¿Continuar?`));
+                if (!out) return;
+                fill();
+                toast('¡Conectado! Notas combinadas con la hoja.' + resumen(out.res));
+            });
+        }
+
+        KTSync.onSync(render);
+        window.addEventListener('hashchange', connectFromHash);
+        fill();
+        connectFromHash().then(() => { if (KTSync.connection()) KTSync.auto(); });
+    })();
+    </script>
+    <script src="/pwa.js" defer></script>
+</body>
+</html>
